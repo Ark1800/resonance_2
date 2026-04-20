@@ -1,0 +1,12 @@
+let mut enemy = Enemy::new(
+        "assets/slime.png",
+        50.0, // width
+        50.0, // height
+        200.0, // x position
+        0.0,  // y position
+        true, // Enable stretching
+        1.0,  // Normal zoom (100%)
+        20,
+        10,
+    )
+    .await;

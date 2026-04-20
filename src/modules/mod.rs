@@ -24,3 +24,6 @@ pub mod scale;
 pub mod still_image;
 pub mod text_button;
 pub mod text_input; 
+pub mod enemy;
+pub mod player;
+pub mod projectile;
