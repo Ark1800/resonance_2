@@ -1,10 +1,14 @@
-//pub mod player;
-
-//use crate::modules::player::Player;
-
-use crate::modules::collision::check_collision;
-use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
+use crate::modules::still_image::StillImage;
+use crate::modules::collision::check_collision;
+
+//IMPLEMENTATION
+//in every screen write
+/* 
+player.handle_keypresses().await;
+player.move_player();
+player.draw();
+*/
 pub struct Player {
     view: StillImage,
     move_speed: f32,
@@ -12,20 +16,27 @@ pub struct Player {
 }
 
 impl Player {
-    pub async fn new(asset_path: &str, width: f32, height: f32, x: f32, y: f32, stretch_enabled: bool, zoom_level: f32) -> Player {
+    pub async fn new(image_path: &str, x: f32, y: f32) -> Self {
+        let view = StillImage::new(
+            image_path,
+            60.0,  // width 
+            110.0,  // height
+            x,     // x position
+            y,     // y position
+            true,   // Enable stretching
+            1.0,    // Normal zoom (100%)
+        ).await;
+
         Player {
-            view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
-            move_speed: 400.0, // Default speed
-            movement: Vec2::ZERO,
+            view,
+            move_speed: 200.0, // Movement speed in pixels per second
+            movement: vec2(0.0, 0.0),
         }
     }
-
-    #[allow(unused)]
-    pub fn moveing(&mut self) {
-        // Direction to move in
+    //movement functions
+    pub async fn handle_keypresses(&mut self) {
         let mut move_dir = vec2(0.0, 0.0);
 
-        // Keyboard input
         if is_key_down(KeyCode::D) {
             move_dir.x += 1.0;
         }
@@ -38,89 +49,90 @@ impl Player {
         if is_key_down(KeyCode::W) {
             move_dir.y -= 1.0;
         }
-        self.movement = move_dir * self.move_speed * get_frame_time();
-        // Normalize the movement to prevent faster diagonal movement
+
         if move_dir.length() > 0.0 {
             move_dir = move_dir.normalize();
         }
 
-        // Apply movement based on frame time
+        let movement = move_dir * self.move_speed * get_frame_time();
+        self.movement = movement;
+        self.handle_image().await;
     }
 
-    pub fn draw(&self) {
-        // Only draw if the label is visible
-        self.view.draw();
+    pub async fn handle_image(&mut self) {
+        if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) {
+            self.view.set_image("assets/player_files/player_tr.png").await;
+        } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) {
+            self.view.set_image("assets/player_files/player_tl.png").await;
+        } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::D) {
+            self.view.set_image("assets/player_files/player_br.png").await;
+        } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::A) {
+            self.view.set_image("assets/player_files/player_bl.png").await;
+        }
+          else if is_key_down(KeyCode::D) {
+            self.view.set_image("assets/player_files/player_r.png").await;
+        } else if is_key_down(KeyCode::A) {
+            self.view.set_image("assets/player_files/player_l.png").await;
+        } else if is_key_down(KeyCode::S) {
+            self.view.set_image("assets/player_files/player_b.png").await;
+        } else if is_key_down(KeyCode::W) {
+            self.view.set_image("assets/player_files/player_t.png").await;
+        }
     }
 
-    #[allow(unused)]
-    //change speed
-    pub fn set_speed(&mut self, move_speed: f32) -> &mut Self {
-        self.move_speed = move_speed;
-        self
+    pub fn move_x(&mut self) {
+        self.view.set_x(self.view.get_x() + self.movement.x);
     }
 
-    // Getter for position as Vec2
-    #[allow(unused)]
-    pub fn get_position(&self) -> Vec2 {
-        Vec2::new(self.view.get_x(), self.view.get_y())
+    pub fn move_y(&mut self) {
+        self.view.set_y(self.view.get_y() + self.movement.y);
     }
 
-    // Getter for visibility
-    #[allow(unused)]
-
-    pub fn view_player(&self) -> &StillImage {
-        &self.view
-    }
-    // Setter for position
-    #[allow(unused)]
-    pub fn set_position(&mut self, x: f32, y: f32) -> &mut Self {
-        self.view.set_x(x);
-        self.view.set_y(y);
-        self
-    }
-    pub fn get_x(&self) -> f32 {
-        self.view.get_x()
+    pub fn move_player(&mut self) {
+        self.move_x();
+        self.move_y();
     }
 
-    #[allow(unused)]
+    pub fn check_x_collision(&self, img2: &StillImage) -> bool {
+        let mut collided = false; // Placeholder for collision check
+        if check_collision(self.view_player(), img2, 1) {
+            collided = true;
+        }
+        collided
+    }
+
+    pub fn check_y_collision(&self, img2: &StillImage) -> bool {
+        let mut collided = false; // Placeholder for collision check
+        if check_collision(self.view_player(), img2, 1) {
+            collided = true;
+        }
+        collided
+    }
+    
+    //general functions
+    pub fn get_oldpos(&self) -> Vec2 {
+        vec2(self.view.get_x(), self.view.get_y())
+    }
+
     pub fn set_x(&mut self, x: f32) {
         self.view.set_x(x);
     }
 
-    // Get and set y position
-    #[allow(unused)]
-    pub fn get_y(&self) -> f32 {
-        self.view.get_y()
-    }
-
-    #[allow(unused)]
     pub fn set_y(&mut self, y: f32) {
         self.view.set_y(y);
     }
-    pub fn pos(&self) -> Vec2 {
-        vec2(self.view.get_x(), self.view.get_y())
+
+    pub fn set_position(&mut self, x: f32, y: f32) {
+        self.view.set_x(x);
+        self.view.set_y(y);
+    }
+    
+    pub fn draw(&self) {
+        self.view.draw();
     }
 
-    pub fn move_check_collision_y(&mut self,) -> bool {
-        let mut answer = false;
-        if self.movement.y != 0.0 {
-            self.set_y(self.get_y() + self.movement.y);
-            // if check_collision(self.view_player(), img_other, 1) {
-            //     answer = true;
-            // }
-        }
-
-        answer
+    pub fn view_player(&self) -> &StillImage {
+        &self.view
     }
-    pub fn move_check_collision_x(&mut self,) -> bool {
-        let mut answer = false;
-        if self.movement.x != 0.0 {
-            self.set_x(self.get_x() + self.movement.x);
-            // if check_collision(self.view_player(), img_other, 1) {
-            //     answer = true;
-            // }
-        }
 
-        answer
-    }
 }

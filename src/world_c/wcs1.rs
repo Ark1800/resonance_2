@@ -9,23 +9,12 @@ use crate::modules::label::Label;
 use crate::modules::player::Player;
 use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
+use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::{VIRTUAL_HEIGHT, modules::scale::use_virtual_resolution};
-use macroquad::{color, prelude::*};
+use macroquad::prelude::*;
 
-pub async fn run(virtual_height: f32, virtual_width: f32) -> String {
-    use_virtual_resolution(virtual_height, virtual_width);
-    let mut player = Player::new(
-        "assets/person.png",
-        50.0, // width
-        50.0, // height
-        70.0, // x position
-        0.0,  // y position
-        true, // Enable stretching
-        1.0,  // Normal zoom (100%)
-    )
-    .await;
-
+pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -> String {
+    player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let mut cyric = StillImage::new(
         "assets/person.png",
         50.0, // width
@@ -62,19 +51,18 @@ pub async fn run(virtual_height: f32, virtual_width: f32) -> String {
     let mut cutscene = false;
     let mut projectile_list: Vec<Projectile> = vec![];
     loop {
+        use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
+        player.handle_keypresses().await;
+        player.move_player();
         background.draw();
         draw_grid(50.0, BLACK);
         if !cutscene {
-        player.moveing();
-        /*
-        player.move_check_collision_x()
-        player.move_check_collision_y();*/
-            
+            /*
+            player.move_check_collision_x()
+            player.move_check_collision_y();*/
         } else {
-            
         }
-
         player.draw();
         cyric.draw();
         hp_bar.draw();
