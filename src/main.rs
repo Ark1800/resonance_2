@@ -34,7 +34,7 @@ const VIRTUAL_HEIGHT: f32 = 1200.0;
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let mut current_screen = "title_screen".to_string();
+    let mut current_screen = "wcs1".to_string();
     let mut last_switch = get_time() - 0.02;
     let mut player = Player::new("assets/player_files/player_b.png",  30.0, 30.0).await;
     loop {

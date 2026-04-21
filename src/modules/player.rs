@@ -25,11 +25,12 @@ impl Player {
             y,     // y position
             true,   // Enable stretching
             1.0,    // Normal zoom (100%)
+
         ).await;
 
         Player {
             view,
-            move_speed: 200.0, // Movement speed in pixels per second
+            move_speed: 400.0, // Movement speed in pixels per second
             movement: vec2(0.0, 0.0),
         }
     }
@@ -93,7 +94,8 @@ impl Player {
         self.move_y();
     }
 
-    pub fn check_x_collision(&self, img2: &StillImage) -> bool {
+    pub fn check_x_collision(&mut self, img2: &StillImage) -> bool {
+        self.move_x();
         let mut collided = false; // Placeholder for collision check
         if check_collision(self.view_player(), img2, 1) {
             collided = true;
@@ -101,7 +103,8 @@ impl Player {
         collided
     }
 
-    pub fn check_y_collision(&self, img2: &StillImage) -> bool {
+    pub fn check_y_collision(&mut self, img2: &StillImage) -> bool {
+        self.move_y();
         let mut collided = false; // Placeholder for collision check
         if check_collision(self.view_player(), img2, 1) {
             collided = true;
@@ -118,8 +121,16 @@ impl Player {
         self.view.set_x(x);
     }
 
+    pub fn get_x(&self) -> f32 {
+        self.view.get_x()
+    }
+
     pub fn set_y(&mut self, y: f32) {
         self.view.set_y(y);
+    }
+
+    pub fn get_y(&self) -> f32 {
+        self.view.get_y()
     }
 
     pub fn set_position(&mut self, x: f32, y: f32) {
@@ -135,4 +146,11 @@ impl Player {
         &self.view
     }
 
+    pub fn dash_start(&mut self) {
+        self.move_speed *= 5.0;
+    }
+
+    pub fn dash_end(&mut self) {
+        self.move_speed /= 5.0;
+    }
 }
