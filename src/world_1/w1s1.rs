@@ -16,11 +16,11 @@ use macroquad::prelude::*;
 pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -> String {
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let mut enemy = Enemy::new(
-        "assets/slime.png",
+        "assets/archer_files/archer_readyR.png",
         50.0,  // width
         50.0,  // height
         200.0, // x position
-        0.0,   // y position
+        200.0,   // y position
         true,  // Enable stretching
         1.0,   // Normal zoom (100%)
         20,
@@ -49,29 +49,39 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
         if get_time() - timer > 1.0 {
             timer = get_time();
             let mut projectile = Projectile::new(
-                "assets/slime.png",
-                20.0,          // width
-                20.0,          // height
+                "assets/arrow.png",
+                50.0,          // width
+                50.0,          // height
                 enemy.get_x(), // x position (centered on player)
                 enemy.get_y(), // y position (same as player)
                 true,          // Enable stretching
                 1.0,           // Normal zoom (100%)
             )
             .await;
-            // projectile.set_direction(player.get_position());
-            //  projectile_list.push(projectile);
-            //
+        /*
+        let place1 = (player.get_x() - enemy.get_x()).powf(2.0);
+        let place2 = (player.get_y() - enemy.get_y()).powf(2.0);
+        let distance = (place1 + place2).sqrt();
+        let angle = (distance.tan());
+        projectile.set_angle(angle);
+        projectile.set_direction(player.get_oldpos());
+         */
+        let angle = projectile.set_rotation(projectile, player.get_x(), player.get_y(), enemy.get_x(), enemy.get_y());
+        projectile.set_angle(angle);
+        projectile.set_direction(player.get_oldpos());
+        println!("angle: {}", angle);
+        projectile_list.push(projectile);
+
+        
+             
+              
+            
         }
 
         player.draw();
         for projectile in 0..projectile_list.len() {
-            //    projectile_list[projectile].move_projectiles(player.get_position());
+                projectile_list[projectile].move_projectiles(player.get_oldpos());
             projectile_list[projectile].draw();
-            //projectile_list[projectile].move_projectiles(projectile_list);
-
-            // let movement = self.direction * self.move_speed * get_frame_time();
-            // projectile.set_x(projectile.get_x() + movement.x);
-            //projectile.set_y(projectile.get_y() + movement.y);
         }
 
         enemy.draw();

@@ -29,7 +29,14 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
         10.0, 10.0, // Position (x, y)
         200.0, 30.0, // Size (width, height)
         0.0, 100.0, // Range (min, max)
-        100.0, // Initial value
+        player.get_health(), // Initial value
+    );
+
+    let mut coin_purse = Label::new(
+        "",
+        10.0,
+        50.0,
+        30,
     );
 
     let background = StillImage::new(
@@ -47,7 +54,7 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
     let start_time = get_time();
     let mut current_time: f64;
     let mut time_dif = start_time;
-    let mut lbl_speech = Label::new("", 600.0, 50.0, 75);
+    let mut lbl_speech = Label::new("", 50.0, 600.0, 75);
     lbl_speech.set_visible(false);
     let mut speech_duration = 0.0;
     let mut speech_num = 0;
@@ -99,9 +106,6 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
             speech_bubble_show(&speech_list[0], &mut lbl_speech, &mut speech_duration);
         } else if speech_num == 1 {
             speech_bubble_show(&speech_list[1], &mut lbl_speech, &mut speech_duration);
-        
-
-
         }
         player.draw();
         cyric.draw();

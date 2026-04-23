@@ -49,7 +49,9 @@ impl Projectile {
     pub fn get_speed(&self) -> f32 {
         self.move_speed
     }
-
+    pub fn set_angle(&mut self, angle: f32) {
+        self.view.set_angle(angle);
+    }
     #[allow(unused)]
     // Sets X and Y
     pub fn set_pos(&mut self, x: f32, y: f32) {
@@ -91,7 +93,18 @@ impl Projectile {
     pub fn get_direction(&self) -> Vec2 {
         self.direction
     }
-
+pub fn set_rotation(&mut self, mut projectile: Projectile, playerx: f32, playery: f32, enemyx: f32, enemyy: f32) -> f32{
+        let oppositelen = playery - enemyy;
+        let adjacentlen = playerx - enemyx;
+        let result = oppositelen/adjacentlen;
+        let mut angle = result.atan();
+        if playerx < enemyx {
+            angle += std::f32::consts::PI;
+        }
+        
+        return angle;
+    
+    }
     #[allow(unused)]
      pub fn move_projectiles(&mut self, player_pos: Vec2) { 
            

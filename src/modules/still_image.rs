@@ -132,6 +132,7 @@ impl StillImage {
         }
     }
 
+    
     // Method to draw the image with current settings
     pub fn draw(&self) {
         // Get the size to use for drawing

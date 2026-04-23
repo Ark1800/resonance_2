@@ -13,14 +13,15 @@ pub struct Player {
     view: StillImage,
     move_speed: f32,
     movement: Vec2,
+    health: f32
 }
 
 impl Player {
     pub async fn new(image_path: &str, x: f32, y: f32) -> Self {
         let view = StillImage::new(
             image_path,
-            60.0,  // width 
-            110.0,  // height
+            40.0,  // width 
+            80.0,  // height
             x,     // x position
             y,     // y position
             true,   // Enable stretching
@@ -32,6 +33,7 @@ impl Player {
             view,
             move_speed: 400.0, // Movement speed in pixels per second
             movement: vec2(0.0, 0.0),
+            health: 100.0
         }
     }
     //movement functions
@@ -152,5 +154,9 @@ impl Player {
 
     pub fn dash_end(&mut self) {
         self.move_speed /= 5.0;
+    }
+
+    pub fn get_health(&self) -> f32 {
+        self.health
     }
 }
