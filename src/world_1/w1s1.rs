@@ -66,7 +66,7 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
         projectile.set_angle(angle);
         projectile.set_direction(player.get_oldpos());
          */
-        let angle = projectile.set_rotation(projectile, player.get_x(), player.get_y(), enemy.get_x(), enemy.get_y());
+        let angle = projectile.set_rotation(player.get_x(), player.get_y(), enemy.get_x(), enemy.get_y());
         projectile.set_angle(angle);
         projectile.set_direction(player.get_oldpos());
         println!("angle: {}", angle);
