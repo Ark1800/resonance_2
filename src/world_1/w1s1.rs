@@ -20,7 +20,7 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
         50.0,  // width
         50.0,  // height
         200.0, // x position
-        200.0,   // y position
+        200.0, // y position
         true,  // Enable stretching
         1.0,   // Normal zoom (100%)
         20,
@@ -42,45 +42,34 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
         player.handle_keypresses().await;
         player.move_player();
         draw_grid(50.0, BLACK);
-        // player.move_check_collision_x();
-        //  player.move_check_collision_y();
-        //enemy.moveing(player.get_x(), player.get_y());
 
-        if get_time() - timer > 1.0 {
-            timer = get_time();
-            let mut projectile = Projectile::new(
-                "assets/arrow.png",
-                50.0,          // width
-                50.0,          // height
-                enemy.get_x(), // x position (centered on player)
-                enemy.get_y(), // y position (same as player)
-                true,          // Enable stretching
-                1.0,           // Normal zoom (100%)
-            )
-            .await;
-        /*
-        let place1 = (player.get_x() - enemy.get_x()).powf(2.0);
-        let place2 = (player.get_y() - enemy.get_y()).powf(2.0);
-        let distance = (place1 + place2).sqrt();
-        let angle = (distance.tan());
-        projectile.set_angle(angle);
-        projectile.set_direction(player.get_oldpos());
-         */
-        let angle = projectile.set_rotation(projectile, player.get_x(), player.get_y(), enemy.get_x(), enemy.get_y());
-        projectile.set_angle(angle);
-        projectile.set_direction(player.get_oldpos());
-        println!("angle: {}", angle);
-        projectile_list.push(projectile);
+        if ((enemy.get_x() - player.get_x()).abs() < 450.0) && ((enemy.get_y() - player.get_y()).abs() < 450.0) {
+           
+            if get_time() - timer > 0.1 {
+                timer = get_time();
+                let mut projectile = Projectile::new(
+                    "assets/arrow.png",
+                    50.0,          // width
+                    50.0,          // height
+                    enemy.get_x(), // x position (centered on player)
+                    enemy.get_y(), // y position (same as player)
+                    true,          // Enable stretching
+                    1.0,           // Normal zoom (100%)
+                )
+                .await;
 
-        
-             
-              
-            
+                let angle = projectile.set_rotation(player.get_x(), player.get_y(), enemy.get_x(), enemy.get_y());
+                projectile.set_angle(angle);
+                projectile.set_direction(player.get_oldpos());
+                projectile_list.push(projectile);
+            }
+        } else {
+            enemy.moveing(player.get_x(), player.get_y());
         }
 
         player.draw();
         for projectile in 0..projectile_list.len() {
-                projectile_list[projectile].move_projectiles(player.get_oldpos());
+            projectile_list[projectile].move_projectiles(player.get_oldpos());
             projectile_list[projectile].draw();
         }
 

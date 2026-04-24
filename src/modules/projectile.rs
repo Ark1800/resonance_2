@@ -93,7 +93,7 @@ impl Projectile {
     pub fn get_direction(&self) -> Vec2 {
         self.direction
     }
-pub fn set_rotation(&mut self, mut projectile: Projectile, playerx: f32, playery: f32, enemyx: f32, enemyy: f32) -> f32{
+pub fn set_rotation(&mut self, playerx: f32, playery: f32, enemyx: f32, enemyy: f32) -> f32{
         let oppositelen = playery - enemyy;
         let adjacentlen = playerx - enemyx;
         let result = oppositelen/adjacentlen;
