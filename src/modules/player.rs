@@ -13,7 +13,7 @@ pub struct Player {
     view: StillImage,
     move_speed: f32,
     movement: Vec2,
-    health: f32
+    health: f32,
 }
 
 impl Player {
@@ -63,22 +63,22 @@ impl Player {
     }
 
     pub async fn handle_image(&mut self) {
-        if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) {
+        if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) && self.view.get_filename() != "assets/player_files/player_tr.png" {
             self.view.set_image("assets/player_files/player_tr.png").await;
-        } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) {
+        } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) && self.view.get_filename() != "assets/player_files/player_tl.png"{
             self.view.set_image("assets/player_files/player_tl.png").await;
-        } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::D) {
+        } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::D) && self.view.get_filename() != "assets/player_files/player_br.png" {
             self.view.set_image("assets/player_files/player_br.png").await;
-        } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::A) {
+        } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::A) && self.view.get_filename() != "assets/player_files/player_bl.png" {
             self.view.set_image("assets/player_files/player_bl.png").await;
         }
-          else if is_key_down(KeyCode::D) {
+          else if is_key_down(KeyCode::D) && self.view.get_filename() != "assets/player_files/player_r.png"  {
             self.view.set_image("assets/player_files/player_r.png").await;
-        } else if is_key_down(KeyCode::A) {
+        } else if is_key_down(KeyCode::A) && self.view.get_filename() != "assets/player_files/player_l.png" {
             self.view.set_image("assets/player_files/player_l.png").await;
-        } else if is_key_down(KeyCode::S) {
+        } else if is_key_down(KeyCode::S) && self.view.get_filename() != "assets/player_files/player_b.png" {
             self.view.set_image("assets/player_files/player_b.png").await;
-        } else if is_key_down(KeyCode::W) {
+        } else if is_key_down(KeyCode::W) && self.view.get_filename() != "assets/player_files/player_t.png" {
             self.view.set_image("assets/player_files/player_t.png").await;
         }
     }
@@ -159,4 +159,10 @@ impl Player {
     pub fn get_health(&self) -> f32 {
         self.health
     }
+
+    //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+    pub fn create_inventory(&mut self) {
+        
+    }
+
 }

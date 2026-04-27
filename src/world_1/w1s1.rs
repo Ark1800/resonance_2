@@ -11,6 +11,7 @@ use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
+use crate::modules::listview::ListView;
 use macroquad::prelude::*;
 
 pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -> String {
@@ -74,6 +75,8 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
         }
 
         enemy.draw();
+        //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+        //let mut list_view = ListView::new(&items, x, y, font_size);
         next_frame().await;
     }
 }
