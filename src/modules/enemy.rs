@@ -71,7 +71,9 @@ impl Enemy {
         self.dmg = dmg;
         self
     }
-
+pub async fn set_image(&mut self, image_path: &str) {
+        self.view.set_texture(image_path).await;
+    }
     #[allow(unused)]
     pub fn set_health(&mut self, health: i32) -> &mut Self {
         self.health = health;
@@ -161,7 +163,7 @@ projectiles_list
     }
 
 
-    pub async fn draw_bullet(&mut self) {
+    pub async fn draw_bullet(&mut self, enemy_type: &str) {
         let bullet = Projectile::new(
         "assets/slime.png",
         25.0,  // width
