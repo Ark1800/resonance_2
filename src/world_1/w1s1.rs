@@ -13,6 +13,7 @@ use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::map::Map;
 use macroquad::prelude::*;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager) -> String {
@@ -23,28 +24,33 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         10.0, 10.0, // Position (x, y)
         200.0, 30.0, // Size (width, height)
         0.0, 100.0, // Range (min, max)
-        100.0, // Initial value
+        player.get_health(), // Initial value
     );
 
     let mut archer_time = get_time();
     let mut mage_time = get_time();
     let mut projectile_list: Vec<Projectile> = vec![];
+    let mut map = Map::new().await;
+    map.create_map_array(0, 0, 4, 0, vec![1, 2, 3, 4]).await;
+    map.change_map(vec![1, 1, 1, 1, 2], vec![vec![2,2], vec![2,3], vec![7, 2], vec![7, 3], vec![1, 1]]);
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
+        map.draw_map().await;
         player.handle_keypresses().await;
-        player.move_player();
+        let old_pos = player.get_oldpos();
+        player.move_player(&map, old_pos);
         draw_grid(50.0, BLACK);
 
         if ((archer.get_x() - player.get_x()).abs() < 450.0) && ((archer.get_y() - player.get_y()).abs() < 450.0) {
             if get_time() - archer_time > 0.5 {
-                archer = archer_img_change(player.get_x(), archer.get_x(), "ready", archer).await;
+                 archer.archer_img_change(player.get_x(), archer.get_x(), "move").await;
             }
 
-            if get_time() - archer_time > 1.0 {
+             if get_time() - archer_time > 1.0 {
                 archer_time = get_time();
                 let mut projectile = Projectile::new("assets/arrow.png", 50.0, 50.0, archer.get_x(), archer.get_y(), true, 1.0).await;
-                archer = archer_img_change(player.get_x(), archer.get_x(), "attack", archer).await;
+                archer.archer_img_change(player.get_x(), archer.get_x(), "move").await;
                 let angle = projectile.set_rotation(player.get_x(), player.get_y(), archer.get_x(), archer.get_y());
                 projectile.set_angle(angle);
                 projectile.set_direction(player.get_oldpos());
@@ -52,19 +58,19 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             }
         } else {
             archer.moveing(player.get_x(), player.get_y());
-            archer = archer_img_change(player.get_x(), archer.get_x(), "move", archer).await;
+            archer.archer_img_change(player.get_x(), archer.get_x(), "move").await;
         }
 
 
          if ((mage.get_x() - player.get_x()).abs() < 300.0) && ((mage.get_y() - player.get_y()).abs() < 300.0) {
             if get_time() - mage_time > 0.5 {
-                mage = mage_img_change(player.get_x(), mage.get_x(), "ready", mage).await;
+               mage.mage_img_change(player.get_x(), mage.get_x(), "ready").await;
             }
 
             if get_time() - mage_time > 2.0 {
                 mage_time = get_time();
                 let mut projectile = Projectile::new("assets/fireball.png", 80.0, 80.0, mage.get_x(), mage.get_y(), true, 1.0).await;
-                mage = mage_img_change(player.get_x(), mage.get_x(), "attack", mage).await;
+                mage.mage_img_change(player.get_x(), mage.get_x(), "ready").await;
                 let angle = projectile.set_rotation(player.get_x(), player.get_y(), mage.get_x(), mage.get_y());
                 projectile.set_angle(angle);
                 projectile.set_direction(player.get_oldpos());
@@ -72,7 +78,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             }
         } else {
             mage.moveing(player.get_x(), player.get_y());
-            mage = mage_img_change(player.get_x(), mage.get_x(), "ready", mage).await;
+             mage.mage_img_change(player.get_x(), mage.get_x(), "ready").await;
         }
 
         player.draw();
@@ -81,52 +87,22 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             projectile_list[projectile].draw();
         }
 
-        player.handle_inventory();
+        let tm = player.handle_inventory();
         mage.draw();
         archer.draw();
+        archer.draw_bullet();
         //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
         //let mut list_view = ListView::new(&items, x, y, font_size);
         next_frame().await;
     }
 }
 
-pub async fn archer_img_change(playerx: f32, archerx: f32, action: &str, mut archer: Enemy) -> Enemy {
-    let mut way = "";
-    if archerx < playerx {
-        way = "R";
-    } else {
-        way = "L";
-    }
-    match action {
-        "move" => {
-            archer.set_image(format!("assets/archer_files/archer_run{}.png", way).as_str()).await;
-        }
-        "ready" => {
-            archer.set_image(format!("assets/archer_files/archer_ready{}.png", way).as_str()).await;
-        }
-        "attack" => {
-            archer.set_image(format!("assets/archer_files/archer_shoot{}.png", way).as_str()).await;
-        }
-        _ => {}
-    }
-    archer
-}
 
-pub async fn mage_img_change(playerx: f32, magex: f32, action: &str, mut mage: Enemy) -> Enemy {
-    let mut way = "";
-    if magex < playerx {
-        way = "R";
-    } else {
-        way = "L";
-    }
-    match action {
-        "ready" => {
-            mage.set_image(format!("assets/mage_files/mage_stand{}.png", way).as_str()).await;
-        }
-        "attack" => {
-            mage.set_image(format!("assets/mage_files/mage_shoot{}.png", way).as_str()).await;
-        }
-        _ => {}
-    }
-    mage
-}
+
+
+
+
+
+
+
+

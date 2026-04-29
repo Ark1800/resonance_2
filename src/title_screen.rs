@@ -7,14 +7,10 @@ use crate::modules::scale::use_virtual_resolution;
 use macroquad::prelude::*;
 use crate::modules::preload_image::TextureManager;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager) -> String {
-    player.set_position(virtual_width / 2.0, virtual_height / 2.0);
+pub async fn run(virtual_width: f32, virtual_height: f32, tm: &TextureManager) -> String {
     loop {
-        player.handle_keypresses().await;
-        player.move_player();
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLUE);
-        player.draw();
         next_frame().await;
     }
 }

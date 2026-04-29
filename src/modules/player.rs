@@ -1,14 +1,20 @@
 use crate::modules;
-use macroquad::prelude::*;
-use crate::modules::still_image::StillImage;
 use crate::modules::collision::check_collision;
-use crate::modules::listview::ListView;
-use crate::modules::text_button::TextButton;
 use crate::modules::label::Label;
+use crate::modules::listview::ListView;
+use crate::modules::still_image::StillImage;
+use crate::modules::text_button::TextButton;
+use crate::modules::map::Map;
+use crate::modules::preload_image::TextureManager;
+use macroquad::prelude::*;
 
 //IMPLEMENTATION
 //in every screen write
-/* 
+/*
+with other crates
+use crate::modules::player::Player;
+
+funcs
 player.handle_keypresses().await;
 player.move_player();
 player.handle_inventory();
@@ -29,17 +35,18 @@ pub struct Player {
 }
 
 impl Player {
-    pub async fn new(image_path: (Texture2D, Option<Vec<u8>>, String), x: f32, y: f32) -> Self {
+    pub async fn new(vec<macroquad::texture::Texture2D, Option<Vec<u8>>, String>, x: f32, y: f32) -> Self {
         let mut view = StillImage::new(
-            "",
-            40.0,  // width 
-            80.0,  // height
-            x,     // x position
-            y,     // y position
-            true,   // Enable stretching
-            1.0,    // Normal zoom (100%)
-        ).await;
-        view.set_preload(image_path);
+            "", 
+            40.0, // width
+            80.0, // height
+            x,    // x position
+            y,    // y position
+            true, // Enable stretching
+            1.0,  // Normal zoom (100%)
+        )
+        .await;
+        view.set_preload(preloadlist[0]);
 
         Player {
             view,
@@ -87,13 +94,13 @@ impl Player {
     pub async fn handle_image(&mut self) {
         if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) && self.view.get_filename() != "assets/player_files/player_tr.png" {
             self.view.set_image("assets/player_files/player_tr.png").await;
-        } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) && self.view.get_filename() != "assets/player_files/player_tl.png"{
+        } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) && self.view.get_filename() != "assets/player_files/player_tl.png" {
             self.view.set_image("assets/player_files/player_tl.png").await;
         } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::D) && self.view.get_filename() != "assets/player_files/player_br.png" {
-            self.view.set_image("assets/player_files/player_br.png").await;      
+            self.view.set_image("assets/player_files/player_br.png").await;
         } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::A) && self.view.get_filename() != "assets/player_files/player_bl.png" {
             self.view.set_image("assets/player_files/player_bl.png").await;
-        } else if is_key_down(KeyCode::D) && self.view.get_filename() != "assets/player_files/player_r.png"  {
+        } else if is_key_down(KeyCode::D) && self.view.get_filename() != "assets/player_files/player_r.png" {
             self.view.set_image("assets/player_files/player_r.png").await;
         } else if is_key_down(KeyCode::A) && self.view.get_filename() != "assets/player_files/player_l.png" {
             self.view.set_image("assets/player_files/player_l.png").await;
@@ -112,9 +119,15 @@ impl Player {
         self.view.set_y(self.view.get_y() + self.movement.y);
     }
 
-    pub fn move_player(&mut self) {
+    pub fn move_player(&mut self, map: &Map, old_pos: Vec2) {
         self.move_x();
+        if map.map_collision(&self.view_player()).0 {
+            &self.set_x(old_pos.x);
+        }
         self.move_y();
+        if map.map_collision(&self.view_player()).0 {
+            &self.set_x(old_pos.x);
+        }
     }
 
     pub fn check_x_collision(&mut self, img2: &StillImage) -> bool {
@@ -134,7 +147,7 @@ impl Player {
         }
         collided
     }
-    
+
     //general functions
     pub fn get_oldpos(&self) -> Vec2 {
         vec2(self.view.get_x(), self.view.get_y())
@@ -160,7 +173,7 @@ impl Player {
         self.view.set_x(x);
         self.view.set_y(y);
     }
-    
+
     pub fn draw(&self) {
         self.view.draw();
     }
@@ -199,143 +212,53 @@ impl Player {
 
     //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
     async fn create_inventory() -> (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
-    let mut list: Vec<&str> = vec!["item 1", "item 2", "item 3", "item 4", "item 5", "item 6", "item 7", "item 8", "item 9", "item 10", "item 11", "item 12"];
-    let mut lst_inventory = ListView::new(&list, 340.0, 50.0, 60);
-    lst_inventory.with_colors(BLACK, Some(BROWN), Some(LIGHTGRAY));
-    lst_inventory.set_width(340.0);
-    lst_inventory.with_max_visible_items(11);
-    let mut item_img = StillImage::new(
-        "assets/fireball.png",
-        285.0,  // width
-        275.0,  // height
-        25.0,  // x position
-        25.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut helmet_img = StillImage::new(
-        "assets/fireball.png",
-        100.0,  // width
-        100.0,  // height
-        825.0,  // x position
-        50.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut bodyarmor_img = StillImage::new(
-        "assets/fireball.png",
-        100.0,  // width
-        100.0,  // height
-        825.0,  // x position
-        280.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut boots_img = StillImage::new(
-        "assets/fireball.png",
-        100.0,  // width
-        100.0,  // height
-        825.0,  // x position
-        550.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut sword_img = StillImage::new(
-        "assets/fireball.png",
-        100.0,  // width
-        100.0,  // height
-        750.0,  // x position
-        400.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut bow_img = StillImage::new(
-        "assets/fireball.png",
-        100.0,  // width
-        100.0,  // height
-        900.0,  // x position
-        400.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut shadow_img = StillImage::new(
-        "assets/player_files/player_shadow.png",
-        250.0,  // width
-        650.0,  // height
-        750.0,  // x position
-        50.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut disc1_img = StillImage::new(
-        "assets/fireball.png",
-        100.0,  // width
-        100.0,  // height
-        700.0,  // x position
-        660.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut disc2_img = StillImage::new(
-        "assets/fireball.png",
-        100.0,  // width
-        100.0,  // height
-        810.0,  // x position
-        660.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut disc3_img = StillImage::new(
-        "assets/fireball.png",
-        100.0,  // width
-        100.0,  // height
-        920.0,  // x position
-        660.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-    ).await;
-    let mut lbl_title = Label::new(format!("Title"), 50.0, 375.0, 60);
-    lbl_title.with_alignment(modules::label::TextAlign::Center);
-    lbl_title.with_fixed_size(250.0, 75.0);
-    lbl_title.with_colors(WHITE, Some(BROWN));
-    let mut lbl_description = Label::new(format!("Description"), 50.0, 425.0, 20);
-    lbl_description.with_fixed_size(250.0, 150.0);
-    lbl_description.with_colors(WHITE, Some(BROWN));
-    let mut btn_equip = TextButton::new(
-        10.0,
-        580.0,
-        150.0,
-        100.0,
-        "Equip",
-        BLACK,
-        GREEN,
-        30
-    );
-    btn_equip.with_text_color(WHITE); 
-    let mut btn_unequip = TextButton::new(
-        175.0,
-        580.0,
-        150.0,
-        100.0,
-        "Unequip",
-        BLACK,
-        GREEN,
-        30
-    );
-    btn_unequip.with_text_color(WHITE); 
-    let mut btn_trash = TextButton::new(
-        10.0,
-        690.0,
-        315.0,
-        75.0,
-        "Trash",
-        BLACK,
-        RED,
-        30
-    );
-    btn_trash.with_text_color(WHITE);   
-    (vec![lst_inventory], vec![shadow_img, item_img, helmet_img, bodyarmor_img, boots_img, sword_img, bow_img, disc1_img, disc2_img, disc3_img], vec![lbl_title, lbl_description], vec![btn_equip, btn_unequip, btn_trash])
-}
+        let list = vec!["Helmet", "Body Armor", "Boots"];
+        let mut lst_inventory = ListView::new(&list, 340.0, 50.0, 60);
+        lst_inventory.with_colors(BLACK, Some(BROWN), Some(LIGHTGRAY));
+        lst_inventory.set_width(340.0);
+        lst_inventory.with_max_visible_items(11);
+        let mut item_img = StillImage::new("", 285.0, 275.0, 25.0, 25.0, true, 1.0).await;
+        //item_img.set_preload(tm.get_preload("assets/SpaceInvadersLogo.png").unwrap());
+        let mut helmet_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 825.0, 50.0, true, 1.0).await;
+        let mut bodyarmor_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 825.0, 280.0, true, 1.0).await;
+        let mut boots_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 825.0, 550.0, true, 1.0).await;
+        let mut sword_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 750.0, 400.0, true, 1.0).await;
+        let mut bow_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 900.0, 400.0, true, 1.0).await;
+        let mut shadow_img = StillImage::new("assets/player_files/player_shadow.png", 250.0, 650.0, 750.0, 50.0, true, 1.0).await;
+        let mut disc1_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 700.0, 660.0, true, 1.0).await;
+        let mut disc2_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 810.0, 660.0, true, 1.0).await;
+        let mut disc3_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 920.0, 660.0, true, 1.0).await;
+        let mut lbl_title = Label::new(format!("Title"), 50.0, 375.0, 60);
+        lbl_title.with_alignment(modules::label::TextAlign::Center);
+        lbl_title.with_fixed_size(250.0, 75.0);
+        lbl_title.with_colors(WHITE, Some(BROWN));
+        let mut lbl_description = Label::new(format!("Description"), 50.0, 425.0, 20);
+        lbl_description.with_fixed_size(250.0, 150.0);
+        lbl_description.with_colors(WHITE, Some(BROWN));
+        let mut btn_equip = TextButton::new(10.0, 580.0, 150.0, 100.0, "Equip", BLACK, GREEN, 30);
+        btn_equip.with_text_color(WHITE);
+        let mut btn_unequip = TextButton::new(175.0, 580.0, 150.0, 100.0, "Unequip", BLACK, GREEN, 30);
+        btn_unequip.with_text_color(WHITE);
+        let mut btn_trash = TextButton::new(10.0, 690.0, 315.0, 75.0, "Trash", BLACK, RED, 30);
+        btn_trash.with_text_color(WHITE);
+        (
+            vec![lst_inventory],
+            vec![
+                shadow_img,
+                item_img,
+                helmet_img,
+                bodyarmor_img,
+                boots_img,
+                sword_img,
+                bow_img,
+                disc1_img,
+                disc2_img,
+                disc3_img,
+            ],
+            vec![lbl_title, lbl_description],
+            vec![btn_equip, btn_unequip, btn_trash],
+        )
+    }
 
     pub fn handle_inventory(&mut self) {
         if self.inventoryopen {

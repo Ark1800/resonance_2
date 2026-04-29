@@ -9,11 +9,14 @@ use crate::modules::player::Player;
 use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
+use crate::modules::map::Map;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 use crate::modules::preload_image::TextureManager;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager) -> String {
+    let mut map = Map::new().await;
+    map.create_map_array(0, 0, 4, 0, vec![1, 2, 3, 4]).await;
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let cyric = StillImage::new(
         "assets/player_files/player_t.png",
@@ -87,12 +90,9 @@ let start_time = get_time();
             dash_cooldown = 0.6;
         }
 
+        
         let old_pos = player.get_oldpos();
-        if player.check_x_collision(&cyric) || player.get_x() > virtual_width - 40.0 || player.get_x() < 40.0 {
-            player.set_x(old_pos.x);
-        } if player.check_y_collision(&cyric) || player.get_y() > virtual_height - 40.0 || player.get_y() < 10.0 {
-            player.set_y(old_pos.y);
-        }
+        player.move_player(&map, old_pos);
 
         if speech_num == 0 {
             speech_bubble_show(&speech_list[0], &mut lbl_speech, &mut speech_duration);

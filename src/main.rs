@@ -48,10 +48,11 @@ async fn main() {
        ..Default::default()
     };
     tm.preload_with_loading_screen(&all_assets, Some(loading_options)).await;
-    //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+    //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+    let preloadlist = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap()];
     let mut current_screen = "w1s1".to_string();
     let mut last_switch = get_time() - 0.02;
-    let mut player = Player::new(tm.get_preload("assets/player_files/player_b.png").unwrap(),  30.0, 30.0).await;
+    let mut player = Player::new(preloadlist, 30.0, 30.0).await;
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {
@@ -75,7 +76,7 @@ async fn main() {
                 "smith" => world_hub_and_otherscreens::smith::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm).await,
                 "casino" => world_hub_and_otherscreens::casino::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm).await,
                 "shop" => world_hub_and_otherscreens::shop::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm).await,
-                "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm).await,
+                "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &tm).await,
                 _ => break,
             };
             last_switch = get_time();

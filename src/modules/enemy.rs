@@ -4,6 +4,7 @@
 
 use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
+use crate::modules::player::Player;
 use macroquad::prelude::*;
 pub struct Enemy {
     view: StillImage,
@@ -11,7 +12,7 @@ pub struct Enemy {
     movement: Vec2,
     health: i32,
     dmg: i32,
-    projectiles: Vec<Projectile>,
+     projectiles: Vec<Projectile>,
 }
 
 impl Enemy {
@@ -35,7 +36,45 @@ impl Enemy {
             projectiles: Vec::new(),
         }
     }
-
+   pub async fn archer_img_change(&mut self, playerx: f32, archerx: f32, action: &str) -> &Enemy {
+    let mut way = "";
+    if archerx < playerx {
+        way = "R";
+    } else {
+        way = "L";
+    }
+    match action {
+        "move" => {
+            self.set_image(format!("assets/archer_files/archer_run{}.png", way).as_str()).await;
+        }
+        "ready" => {
+            self.set_image(format!("assets/archer_files/archer_ready{}.png", way).as_str()).await;
+        }
+        "attack" => {
+            self.set_image(format!("assets/archer_files/archer_shoot{}.png", way).as_str()).await;
+        }
+        _ => {}
+    }
+    self
+}
+pub async fn mage_img_change(&mut self, playerx: f32, magex: f32, action: &str) -> &Enemy {
+    let mut way = "";
+    if magex < playerx {
+        way = "R";
+    } else {
+        way = "L";
+    }
+    match action {
+        "ready" => {
+            self.set_image(format!("assets/mage_files/mage_stand{}.png", way).as_str()).await;
+        }
+        "attack" => {
+            self.set_image(format!("assets/mage_files/mage_shoot{}.png", way).as_str()).await;
+        }
+        _ => {}
+    }
+    self
+}
     #[allow(unused)]
     pub fn moveing(&mut self, player_x: f32, player_y: f32) {
         // Direction to move in
@@ -145,41 +184,32 @@ pub fn get_pos(&self) -> Vec2 {
         movement
     }
 
-    pub async fn shoot(&self,  mut projectiles_list: Vec<Projectile>,) -> Vec<Projectile> {
-        // Implement shooting logic here
-        let img = Projectile::new(
-        "assets/slime.png",
-        25.0,  // width
-        25.0,  // height
-        self.get_x(),  // x position
-        self.get_y(),   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-        
-    ).await;
+    pub async fn shoot(&mut self,  player: &mut Player) -> &Vec<Projectile>  {
+           
+        let mut projectile = Projectile::new("assets/arrow.png", 50.0, 50.0, self.get_x(), self.get_y(), true, 1.0).await;
+                
+                let angle = projectile.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
+                projectile.set_angle(angle);
+                projectile.set_direction(player.get_oldpos());
+                self.projectiles.push(projectile);
     
-projectiles_list.push(img);
-projectiles_list
+//projectile_list.push(projectile);
+
+&self.projectiles
     }
+     
 
 
-    pub async fn draw_bullet(&mut self, enemy_type: &str) {
-        let bullet = Projectile::new(
-        "assets/slime.png",
-        25.0,  // width
-        25.0,  // height
-        self.get_x(),  // x position
-        self.get_y(),   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-        
-    ).await;
-        self.projectiles.push(bullet);
+    pub async fn draw_bullet(&mut self) {
+       for projectile in &mut self.projectiles {
+            projectile.draw();
+        }
     }
    
     pub fn get_projectiles(&self) -> &Vec<Projectile> {
         &self.projectiles
     }
+ 
 }
 
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {

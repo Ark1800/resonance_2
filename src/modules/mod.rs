@@ -27,3 +27,4 @@ pub mod text_input;
 pub mod enemy;
 pub mod player;
 pub mod projectile;
+pub mod map;
