@@ -12,9 +12,10 @@ use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
+use crate::modules::preload_image::TextureManager;
 use macroquad::prelude::*;
 
-pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager) -> String {
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let mut archer = Enemy::new("assets/archer_files/archer_standR.png", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10).await;
     let mut mage = Enemy::new("assets/mage_files/mage_standR.png", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10).await;
@@ -73,13 +74,14 @@ pub async fn run(virtual_height: f32, virtual_width: f32, player: &mut Player) -
             mage.moveing(player.get_x(), player.get_y());
             mage = mage_img_change(player.get_x(), mage.get_x(), "ready", mage).await;
         }
+
         player.draw();
         for projectile in 0..projectile_list.len() {
             projectile_list[projectile].move_projectiles(player.get_oldpos());
             projectile_list[projectile].draw();
         }
 
-
+        player.handle_inventory();
         mage.draw();
         archer.draw();
         //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
