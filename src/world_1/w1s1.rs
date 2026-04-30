@@ -19,8 +19,17 @@ use macroquad::prelude::*;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager) -> String {
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-    let mut archer = Enemy::new("assets/archer_files/archer_standR.png", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10).await;
-    let mut mage = Enemy::new("assets/mage_files/mage_standR.png", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10).await;
+   
+
+   
+    let mut archer = Enemy::new("assets/archer_files/archer_standR.png", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "assets/arrow.png").await;
+    let mut mage = Enemy::new("assets/mage_files/mage_standR.png", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "assets/fireball.png").await;
+   
+   
+   
+   
+   
+   
     let mut hp_bar = ProgressBar::new(
         10.0, 10.0, // Position (x, y)
         200.0, 30.0, // Size (width, height)
@@ -34,7 +43,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     let mut slimeitem = Item::new("assets/slime.png".to_string(), "Slime Essence".to_string(), "A viscous substance that can be used to craft various items.".to_string(), 1, 0, 1.0, 0.9, 0, 0).await;
 
     map.create_map_array(0, 0, 4, 0, vec![1, 2, 3, 4]).await;
-    map.change_map(vec![1, 1, 1, 1, 2], vec![vec![2,2], vec![2,3], vec![7, 2], vec![7, 3], vec![1, 1]]);
+    map.change_map(vec![1, 1, 1, 1, 2, 3], vec![vec![2,2], vec![2,3], vec![12, 2], vec![12, 3], vec![1, 1], vec![13, 1]]);
     loop {
         //Base functions
         player.handle_keypresses().await;
@@ -47,20 +56,17 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         player.move_player(&map, old_pos);
         draw_grid(50.0, BLACK);
 
+        
         if ((archer.get_x() - player.get_x()).abs() < 450.0) && ((archer.get_y() - player.get_y()).abs() < 450.0) {
+           
             if get_time() - archer_time > 0.5 {
-                 archer.archer_img_change(player.get_x(), archer.get_x(), "move").await;
+                 archer.archer_img_change(player.get_x(), archer.get_x(), "ready").await;
             }
 
              if get_time() - archer_time > 1.0 {
-                
+                archer.archer_img_change(player.get_x(), archer.get_x(), "attack").await;
                 archer_time = get_time();
-                let mut projectile = Projectile::new("assets/arrow.png", 50.0, 50.0, archer.get_x(), archer.get_y(), true, 1.0).await;
-                archer.archer_img_change(player.get_x(), archer.get_x(), "move").await;
-                let angle = projectile.set_rotation(player.get_x(), player.get_y(), archer.get_x(), archer.get_y());
-                projectile.set_angle(angle);
-                projectile.set_direction(player.get_oldpos());
-                projectile_list.push(projectile);
+                archer.shoot(player).await;
             }
         } else {
             archer.moveing(player.get_x(), player.get_y());
@@ -74,13 +80,13 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             }
 
             if get_time() - mage_time > 2.0 {
-                mage_time = get_time();
-                let mut projectile = Projectile::new("assets/fireball.png", 80.0, 80.0, mage.get_x(), mage.get_y(), true, 1.0).await;
-                mage.mage_img_change(player.get_x(), mage.get_x(), "ready").await;
-                let angle = projectile.set_rotation(player.get_x(), player.get_y(), mage.get_x(), mage.get_y());
-                projectile.set_angle(angle);
-                projectile.set_direction(player.get_oldpos());
-                projectile_list.push(projectile);
+             //   mage_time = get_time();
+              //  let mut projectile = Projectile::new("assets/fireball.png", 80.0, 80.0, mage.get_x(), mage.get_y(), true, 1.0).await;
+              //  mage.mage_img_change(player.get_x(), mage.get_x(), "ready").await;
+             //   let angle = projectile.set_rotation(player.get_x(), player.get_y(), mage.get_x(), mage.get_y());
+             //   projectile.set_angle(angle);
+             //   projectile.set_direction(player.get_oldpos());
+             //   projectile_list.push(projectile);
             }
         } else {
             mage.moveing(player.get_x(), player.get_y());
@@ -88,14 +94,11 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         }
 
         player.draw();
-        for projectile in 0..projectile_list.len() {
-            projectile_list[projectile].move_projectiles(player.get_oldpos());
-            projectile_list[projectile].draw();
-        }
+        
 
         mage.draw();
         archer.draw();
-        archer.draw_bullet();
+        archer.draw_bullet(player);
         //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
         //let mut list_view = ListView::new(&items, x, y, font_size);
         next_frame().await;

@@ -6,13 +6,16 @@ use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
 use crate::modules::player::Player;
 use macroquad::prelude::*;
+
 pub struct Enemy {
     view: StillImage,
+    projectile_image: StillImage,
     move_speed: f32,
     movement: Vec2,
     health: i32,
     dmg: i32,
-     projectiles: Vec<Projectile>,
+    projectiles: Vec<Projectile>,
+
 }
 
 impl Enemy {
@@ -26,6 +29,8 @@ impl Enemy {
         zoom_level: f32,
         health: i32,
         dmg: i32,
+        projectile_path: &str,
+
     ) -> Enemy {
         Enemy {
             view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
@@ -33,7 +38,10 @@ impl Enemy {
             movement: Vec2::ZERO,
             health,
             dmg,
+            projectile_image: StillImage::new(projectile_path, width, height, 0.0, 0.0, false, 1.0).await,
             projectiles: Vec::new(),
+
+
         }
     }
    pub async fn archer_img_change(&mut self, playerx: f32, archerx: f32, action: &str) -> &Enemy {
@@ -75,6 +83,8 @@ pub async fn mage_img_change(&mut self, playerx: f32, magex: f32, action: &str) 
     }
     self
 }
+
+
     #[allow(unused)]
     pub fn moveing(&mut self, player_x: f32, player_y: f32) {
         // Direction to move in
@@ -184,24 +194,21 @@ pub fn get_pos(&self) -> Vec2 {
         movement
     }
 
-    pub async fn shoot(&mut self,  player: &mut Player) -> &Vec<Projectile>  {
-           
-        let mut projectile = Projectile::new("assets/arrow.png", 50.0, 50.0, self.get_x(), self.get_y(), true, 1.0).await;
-                
+    pub async fn shoot(&mut self,  player: &mut Player) {
+         
+        let mut projectile = Projectile::new(self.projectile_image.clone(), 50.0, 50.0, self.get_x(), self.get_y(), true, 1.0).await;
                 let angle = projectile.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
                 projectile.set_angle(angle);
                 projectile.set_direction(player.get_oldpos());
                 self.projectiles.push(projectile);
-    
-//projectile_list.push(projectile);
+           
 
-&self.projectiles
     }
      
 
-
-    pub async fn draw_bullet(&mut self) {
+    pub fn draw_bullet(&mut self, player: &mut Player) {
        for projectile in &mut self.projectiles {
+        projectile.move_projectiles(player.get_oldpos());
             projectile.draw();
         }
     }

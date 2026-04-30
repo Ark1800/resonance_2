@@ -70,7 +70,7 @@ Additional functionality:
 */
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
-
+#[derive(Clone)]
 pub struct StillImage {
     texture: Texture2D,
     x: f32,
@@ -281,7 +281,13 @@ impl StillImage {
             self.zoom_level = 0.1; // Minimum zoom level
         }
     }
-    
+     #[allow(unused)]
+    pub fn set_size(&mut self, width: f32, height: f32) {
+        self.width = width;
+        self.height = height;
+        
+    }
+  
     #[allow(unused)]
     pub fn get_zoom_level(&self) -> f32 {
         self.zoom_level

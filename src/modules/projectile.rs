@@ -25,8 +25,14 @@ pub struct Projectile {
 impl Projectile {
     
     #[allow(unused)]
-    pub async fn new(asset_path: &str, width: f32, height: f32, x: f32, y: f32, stretch_enabled: bool, zoom_level: f32) -> Projectile {
-        Projectile { view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await, move_speed: 400.0, direction: vec2(0.0, 0.0) }
+    pub async fn new(asset_path: StillImage, width: f32, height: f32, x: f32, y: f32, stretch_enabled: bool, zoom_level: f32) -> Projectile {
+        let mut bob = asset_path;
+        bob.set_x(x);
+        bob.set_y(y);
+        bob.set_size(width, height);
+        bob.set_stretch(stretch_enabled);
+        bob.set_zoom(zoom_level);
+        Projectile { view: bob, move_speed: 400.0, direction: vec2(0.0, 0.0) }
     }
 
     #[allow(unused)]
