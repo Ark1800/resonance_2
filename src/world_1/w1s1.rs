@@ -53,6 +53,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             }
 
              if get_time() - archer_time > 1.0 {
+                
                 archer_time = get_time();
                 let mut projectile = Projectile::new("assets/arrow.png", 50.0, 50.0, archer.get_x(), archer.get_y(), true, 1.0).await;
                 archer.archer_img_change(player.get_x(), archer.get_x(), "move").await;
