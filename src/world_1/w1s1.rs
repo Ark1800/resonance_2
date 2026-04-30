@@ -12,6 +12,7 @@ use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
+use crate::modules::item::Item;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::map::Map;
 use macroquad::prelude::*;
@@ -26,18 +27,22 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         0.0, 100.0, // Range (min, max)
         player.get_health(), // Initial value
     );
-
     let mut archer_time = get_time();
     let mut mage_time = get_time();
     let mut projectile_list: Vec<Projectile> = vec![];
     let mut map = Map::new().await;
+    let mut slimeitem = Item::new("assets/slime.png".to_string(), "Slime Essence".to_string(), "A viscous substance that can be used to craft various items.".to_string(), 1, 0, 1.0, 0.9, 0, 0).await;
+
     map.create_map_array(0, 0, 4, 0, vec![1, 2, 3, 4]).await;
     map.change_map(vec![1, 1, 1, 1, 2], vec![vec![2,2], vec![2,3], vec![7, 2], vec![7, 3], vec![1, 1]]);
     loop {
+        //Base functions
+        player.handle_keypresses().await;
+        player.handle_inventory();
+        //
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         map.draw_map().await;
-        player.handle_keypresses().await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos);
         draw_grid(50.0, BLACK);
@@ -87,7 +92,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             projectile_list[projectile].draw();
         }
 
-        let tm = player.handle_inventory();
         mage.draw();
         archer.draw();
         archer.draw_bullet();

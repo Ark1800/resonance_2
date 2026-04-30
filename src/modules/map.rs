@@ -103,14 +103,14 @@ impl Map {
                 if self.change_wall {
                     if self.map_array[x][y] == 1 {
                         self.wall_list
-                            .push(StillImage::new("assets/wall.png", 80.0, 80.0, y as f32 * 80.0, x as f32 * 80.0, true, 1.0).await);
+                            .push(StillImage::new("assets/fireball.png", 80.0, 80.0, y as f32 * 80.0, x as f32 * 80.0, true, 1.0).await);
                     }
-                    changed_wall = true;
-                }
+                    changed_wall = true;                       //sorry leo had to change so we could run
+                }                                             //add yo assets gangggggggggggggggggggggg
                 if self.change_chest {
                     if self.map_array[x][y] == 2 {
                         self.chest_list
-                            .push(StillImage::new("assets/chest.png", 80.0, 80.0, y as f32 * 80.0, x as f32 * 80.0, true, 1.0).await);
+                            .push(StillImage::new("assets/fireball.png", 80.0, 80.0, y as f32 * 80.0, x as f32 * 80.0, true, 1.0).await);
                     }
                     changed_chest = true;
                 }

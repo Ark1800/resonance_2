@@ -5,8 +5,9 @@ use crate::modules::listview::ListView;
 use crate::modules::still_image::StillImage;
 use crate::modules::text_button::TextButton;
 use crate::modules::map::Map;
-use crate::modules::preload_image::TextureManager;
 use macroquad::prelude::*;
+use macroquad::texture::Texture2D;
+use crate::modules::item::Item;
 
 //IMPLEMENTATION
 //in every screen write
@@ -22,20 +23,24 @@ player.draw();
 */
 pub struct Player {
     view: StillImage,
+    preloads: Vec<(Texture2D, Option<Vec<u8>>, String)>,
     move_speed: f32,
     movement: Vec2,
     health: f32,
     mledmg: i32,
     rngdmg: i32,
+    movespeedmult: f32,
     cooldownmult: f32,
     musicoins: i32,
-    items: Vec<Vec<String>>,
+    items: Vec<Item>,
+    itemstats: (Vec<String>, Vec<i32>, Vec<f32>), 
     inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>),
     inventoryopen: bool,
+    armor: i32,
 }
 
 impl Player {
-    pub async fn new(vec<macroquad::texture::Texture2D, Option<Vec<u8>>, String>, x: f32, y: f32) -> Self {
+    pub async fn new(preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)>, x: f32, y: f32) -> Self {
         let mut view = StillImage::new(
             "", 
             40.0, // width
@@ -46,7 +51,8 @@ impl Player {
             1.0,  // Normal zoom (100%)
         )
         .await;
-        view.set_preload(preloadlist[0]);
+        // Apply first preload to the player view if available
+        view.set_preload(preloadlist[0].clone());
 
         Player {
             view,
@@ -55,11 +61,15 @@ impl Player {
             health: 100.0,
             mledmg: 3,
             rngdmg: 2,
+            movespeedmult: 1.0,
             cooldownmult: 1.0,
             musicoins: 0,
             items: Vec::new(),
-            inventory: Player::create_inventory().await,
+            itemstats: (Vec::new(), Vec::new(), Vec::new()),
+            preloads: preloadlist.clone(),
+            inventory: Player::create_inventory(&preloadlist).await,
             inventoryopen: false,
+            armor: 0,
         }
     }
     //movement functions
@@ -83,7 +93,7 @@ impl Player {
             move_dir = move_dir.normalize();
         }
 
-        let movement = move_dir * self.move_speed * get_frame_time();
+        let movement = move_dir * self.move_speed * get_frame_time()*self.movespeedmult;
         self.movement = movement;
         self.handle_image().await;
         if is_key_pressed(KeyCode::Tab) {
@@ -198,8 +208,8 @@ impl Player {
         (self.health, self.mledmg, self.rngdmg, self.cooldownmult)
     }
 
-    pub fn get_items(&self) -> &Vec<Vec<String>> {
-        &self.items
+    pub fn get_items(&self) -> &(Vec<String>, Vec<i32>, Vec<f32>) {
+        &self.itemstats
     }
 
     pub fn getcoins(&self) -> i32 {
@@ -211,23 +221,34 @@ impl Player {
     }
 
     //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
-    async fn create_inventory() -> (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
+    async fn create_inventory(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
         let list = vec!["Helmet", "Body Armor", "Boots"];
         let mut lst_inventory = ListView::new(&list, 340.0, 50.0, 60);
         lst_inventory.with_colors(BLACK, Some(BROWN), Some(LIGHTGRAY));
         lst_inventory.set_width(340.0);
         lst_inventory.with_max_visible_items(11);
         let mut item_img = StillImage::new("", 285.0, 275.0, 25.0, 25.0, true, 1.0).await;
-        //item_img.set_preload(tm.get_preload("assets/SpaceInvadersLogo.png").unwrap());
-        let mut helmet_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 825.0, 50.0, true, 1.0).await;
-        let mut bodyarmor_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 825.0, 280.0, true, 1.0).await;
-        let mut boots_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 825.0, 550.0, true, 1.0).await;
-        let mut sword_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 750.0, 400.0, true, 1.0).await;
-        let mut bow_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 900.0, 400.0, true, 1.0).await;
-        let mut shadow_img = StillImage::new("assets/player_files/player_shadow.png", 250.0, 650.0, 750.0, 50.0, true, 1.0).await;
-        let mut disc1_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 700.0, 660.0, true, 1.0).await;
-        let mut disc2_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 810.0, 660.0, true, 1.0).await;
-        let mut disc3_img = StillImage::new("assets/fireball.png", 100.0, 100.0, 920.0, 660.0, true, 1.0).await;
+        // Use the second preload (inv slot) for inventory placeholders if available
+        let mut helmet_img = StillImage::new("", 100.0, 100.0, 825.0, 50.0, true, 1.0).await;
+        let mut bodyarmor_img = StillImage::new("", 100.0, 100.0, 825.0, 280.0, true, 1.0).await;
+        let mut boots_img = StillImage::new("", 100.0, 100.0, 825.0, 550.0, true, 1.0).await;
+        let mut sword_img = StillImage::new("", 100.0, 100.0, 750.0, 400.0, true, 1.0).await;
+        let mut bow_img = StillImage::new("", 100.0, 100.0, 900.0, 400.0, true, 1.0).await;
+        let mut shadow_img = StillImage::new("", 250.0, 650.0, 750.0, 50.0, true, 1.0).await;
+        let mut disc1_img = StillImage::new("", 100.0, 100.0, 700.0, 660.0, true, 1.0).await;
+        let mut disc2_img = StillImage::new("", 100.0, 100.0, 810.0, 660.0, true, 1.0).await;
+        let mut disc3_img = StillImage::new("", 100.0, 100.0, 920.0, 660.0, true, 1.0).await;
+        // Set inventory images to use invslot preload if available
+        shadow_img.set_preload(preloads[2].clone());
+        item_img.set_preload(preloads[1].clone());
+        helmet_img.set_preload(preloads[1].clone());
+        bodyarmor_img.set_preload(preloads[1].clone());
+        boots_img.set_preload(preloads[1].clone());
+        sword_img.set_preload(preloads[1].clone());
+        bow_img.set_preload(preloads[1].clone());
+        disc1_img.set_preload(preloads[1].clone());
+        disc2_img.set_preload(preloads[1].clone());
+        disc3_img.set_preload(preloads[1].clone());
         let mut lbl_title = Label::new(format!("Title"), 50.0, 375.0, 60);
         lbl_title.with_alignment(modules::label::TextAlign::Center);
         lbl_title.with_fixed_size(250.0, 75.0);
@@ -281,5 +302,11 @@ impl Player {
                 // Handle trash button click
             }
         }
+    }
+
+    pub fn add_inventory_item(&mut self, item: Item) {
+        self.items.push(item);
+       // self.itemstats.0.push(item.get_itemtitle());
+        //self.itemstats.0.push()
     }
 }
