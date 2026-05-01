@@ -15,7 +15,7 @@ use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager) -> String {
-    let mut map = Map::new().await;
+    let mut map = Map::new(virtual_width, virtual_height).await;
     map.create_map_array(0, 0, 0, 0, vec![]).await;
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let cyric = StillImage::new(

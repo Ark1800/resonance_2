@@ -72,15 +72,15 @@ use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 #[derive(Clone)]
 pub struct StillImage {
-    texture: Texture2D,
+    pub texture: Texture2D,
     x: f32,
     y: f32,
     width: f32,
     height: f32,
-    transparency_mask: Option<Vec<u8>>, // Changed to Option<Vec<u8>> to make it optional
+   pub transparency_mask: Option<Vec<u8>>, // Changed to Option<Vec<u8>> to make it optional
     stretch_enabled: bool, // Flag to control image stretching
     zoom_level: f32, // Zoom factor to scale the image
-    filename: String, // Store the original filename/path
+   pub filename: String, // Store the original filename/path
     angle: f32, // Angle of rotation
 }
 

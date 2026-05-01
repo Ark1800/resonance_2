@@ -4,6 +4,7 @@
 
 use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
+use crate::modules::preload_image::TextureManager;
 use crate::modules::player::Player;
 use macroquad::prelude::*;
 
@@ -34,6 +35,7 @@ impl Enemy {
     ) -> Enemy {
         Enemy {
             view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
+            
             move_speed: 200.0, // Default speed
             movement: Vec2::ZERO,
             health,
@@ -44,7 +46,7 @@ impl Enemy {
 
         }
     }
-   pub async fn archer_img_change(&mut self, playerx: f32, archerx: f32, action: &str) -> &Enemy {
+   pub async fn archer_img_change(&mut self, playerx: f32, archerx: f32, action: &str, tm: &TextureManager) -> &Enemy {
     let mut way = "";
     if archerx < playerx {
         way = "R";
@@ -53,19 +55,20 @@ impl Enemy {
     }
     match action {
         "move" => {
-            self.set_image(format!("assets/archer_files/archer_run{}.png", way).as_str()).await;
+           
+            self.set_preload(tm.get_preload(format!("assets/archer_files/archer_run{}.png", way).as_str()).unwrap());
         }
         "ready" => {
-            self.set_image(format!("assets/archer_files/archer_ready{}.png", way).as_str()).await;
+             self.set_preload(tm.get_preload(format!("assets/archer_files/archer_ready{}.png", way).as_str()).unwrap());
         }
         "attack" => {
-            self.set_image(format!("assets/archer_files/archer_shoot{}.png", way).as_str()).await;
+            self.set_preload(tm.get_preload(format!("assets/archer_files/archer_shoot{}.png", way).as_str()).unwrap());
         }
         _ => {}
     }
     self
 }
-pub async fn mage_img_change(&mut self, playerx: f32, magex: f32, action: &str) -> &Enemy {
+pub async fn mage_img_change(&mut self, playerx: f32, magex: f32, action: &str, tm: &TextureManager) -> &Enemy {
     let mut way = "";
     if magex < playerx {
         way = "R";
@@ -74,17 +77,28 @@ pub async fn mage_img_change(&mut self, playerx: f32, magex: f32, action: &str) 
     }
     match action {
         "ready" => {
-            self.set_image(format!("assets/mage_files/mage_stand{}.png", way).as_str()).await;
+            self.set_preload(tm.get_preload(format!("assets/mage_files/mage_stand{}.png", way).as_str()).unwrap());
         }
         "attack" => {
-            self.set_image(format!("assets/mage_files/mage_shoot{}.png", way).as_str()).await;
+            self.set_preload(tm.get_preload(format!("assets/mage_files/mage_shoot{}.png", way).as_str()).unwrap());
         }
         _ => {}
     }
     self
 }
-
-
+pub fn set_projectile_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
+        let (texture, mask, filename) = preloaded;
+        self.projectile_image.texture = texture;
+        self.projectile_image.transparency_mask = mask;
+        self.projectile_image.filename = filename;
+    }
+ #[allow(unused)]
+    pub fn set_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
+        let (texture, mask, filename) = preloaded;
+        self.view.texture = texture;
+        self.view.transparency_mask = mask;
+        self.view.filename = filename;
+    }
     #[allow(unused)]
     pub fn moveing(&mut self, player_x: f32, player_y: f32) {
         // Direction to move in
@@ -194,9 +208,9 @@ pub fn get_pos(&self) -> Vec2 {
         movement
     }
 
-    pub async fn shoot(&mut self,  player: &mut Player) {
+    pub async fn shoot(&mut self,  player: &mut Player, width: f32, height: f32) {
          
-        let mut projectile = Projectile::new(self.projectile_image.clone(), 50.0, 50.0, self.get_x(), self.get_y(), true, 1.0).await;
+        let mut projectile = Projectile::new(self.projectile_image.clone(), width, height, self.get_x(), self.get_y(), true, 1.0).await;
                 let angle = projectile.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
                 projectile.set_angle(angle);
                 projectile.set_direction(player.get_oldpos());

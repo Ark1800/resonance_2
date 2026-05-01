@@ -4,9 +4,11 @@
 
 
 
+
 use crate::modules::collision::check_collision;
 use crate::modules::still_image::StillImage;
 use crate::modules::player::Player;
+use crate::modules::preload_image::TextureManager;
 use macroquad::prelude::*;
 use crate::modules::enemy::Enemy;
 
@@ -98,6 +100,13 @@ impl Projectile {
     }
     pub fn get_direction(&self) -> Vec2 {
         self.direction
+    }
+    #[allow(unused)]
+    pub fn set_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
+        let (texture, mask, filename) = preloaded;
+        self.view.texture = texture;
+        self.view.transparency_mask = mask;
+        self.view.filename = filename;
     }
 pub fn set_rotation(&mut self, playerx: f32, playery: f32, enemyx: f32, enemyy: f32) -> f32{
         let oppositelen = playery - enemyy;

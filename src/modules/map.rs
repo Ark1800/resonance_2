@@ -7,11 +7,11 @@ Randomized map generation based on set objects
 0 - Empty
 1 - Wall
 2 - Chest
-3 - Enemy spawn
 */
 
 use crate::modules::collision::check_collision;
 use crate::modules::still_image::StillImage;
+use crate::modules::preload_image::TextureManager;
 use macroquad::prelude::*;
 
 pub struct Map {
@@ -20,20 +20,20 @@ pub struct Map {
     change_wall: bool,
     chest_list: Vec<StillImage>,
     change_chest: bool,
-    enemy_list: Vec<Vec<i32>>,
+    map_dimensions: Vec2,
 }
 impl Map {
-    pub async fn new() -> Self {
+    pub async fn new(width: f32, height: f32) -> Self {
         Map {
             map_array: [[0; 10]; 15],
             wall_list: Vec::new(),
             change_wall: true,
             chest_list: Vec::new(),
             change_chest: true,
-            enemy_list: Vec::new(),
+            map_dimensions: vec2(width, height)
         }
     }
-
+#[allow(unused)]
     pub async fn create_map_array(&mut self, enemy_num: i32, chest_num: i32, entrance_num: i32, wall_num: i32, entrance_sides: Vec<i32>) {
         for x in 0..self.map_array.len() {
             for y in 0..self.map_array[0].len() {
@@ -66,18 +66,6 @@ impl Map {
                 }
             }
         }
-        for _enemy in 0..enemy_num {
-            let mut pass = false;
-            while !pass {
-                let rand_num: Vec2 = vec2(rand::gen_range(1.0, 8.0), rand::gen_range(1.0, 13.0));
-                if self.map_array[rand_num.y as usize][rand_num.x as usize] == 0 {
-                    self.map_array[rand_num.y as usize][rand_num.x as usize] = 3;
-                    self.enemy_list.push(vec![rand_num.x as i32, rand_num.y as i32]);
-                    pass = true;
-                }
-            }
-        }
-
         for entrance in 0..entrance_num {
             // 1 = up, 2 = left, 3 = down, 4 = right
             match entrance_sides[entrance as usize] {
@@ -96,8 +84,8 @@ impl Map {
             }
         }
     }
-
-    pub async fn draw_map(&mut self) {
+#[allow(unused)]
+    pub async fn draw_map(&mut self, tm: &TextureManager) {
         let mut changed_wall = false;
         let mut changed_chest = false;
 
@@ -108,17 +96,21 @@ impl Map {
             self.chest_list.clear();
         }
 
-        for y in 0..self.map_array.len() {
-            for x in 0..self.map_array[y].len() {
+        for x in 0..self.map_array.len() {
+            for y in 0..self.map_array[x].len() {
                 if self.change_wall {
-                    if self.map_array[y][x] == 1 {
-                        self.wall_list.push(StillImage::new("assets/map_files/wall.png", 80.0, 80.0, y as f32 * 80.0, x as f32 * 80.0, true, 1.0).await);
+                    if self.map_array[x][y] == 1 {
+                        self.wall_list.push(StillImage::new("", self.map_dimensions.x / 15.0, self.map_dimensions.y / 10.0, x as f32 * self.map_dimensions.x / 15.0, y as f32 * self.map_dimensions.y / 10.0, true, 1.0).await);
+                        let wall_list_len = self.wall_list.len() - 1;
+                        self.wall_list[wall_list_len].set_preload(tm.get_preload(format!("assets/map_files/wall.png").as_str()).unwrap());
                     }
-                    changed_wall = true;                       //sorry leo had to change so we could run
-                }                                             //add yo assets gangggggggggggggggggggggg
+                    changed_wall = true;
+                }
                 if self.change_chest {
-                    if self.map_array[y][x] == 2 {
-                        self.chest_list.push(StillImage::new("assets/fireball.png", 80.0, 80.0, y as f32 * 80.0, x as f32 * 80.0, true, 1.0).await);
+                    if self.map_array[x][y] == 2 {
+                        self.chest_list.push(StillImage::new("", self.map_dimensions.x / 15.0, self.map_dimensions.y / 10.0, x as f32 * self.map_dimensions.x / 15.0, y as f32 * self.map_dimensions.y / 10.0, true, 1.0).await);
+                        let chest_list_len = self.chest_list.len() - 1;
+                        self.chest_list[chest_list_len].set_preload(tm.get_preload(format!("assets/map_files/chest.png").as_str()).unwrap());
                     }
                     changed_chest = true;
                 }
@@ -139,6 +131,9 @@ impl Map {
         }
     }
 
+    
+
+#[allow(unused)]
     pub fn map_collision(&self, player: &StillImage) -> (bool, bool) {
         // If the player enters a wall space, it returns true
         let mut wall = false;
@@ -158,62 +153,28 @@ impl Map {
 
         (wall, chest)
     }
-
+#[allow(unused)]
     // Change list is a list of what the changes are, change coords is a list of what coords to change based on the change list
     pub fn change_map(&mut self, change_list: Vec<i32>, change_coords: Vec<Vec<i32>>) {
-        let mut new_coords: Vec<Vec<i32>> = vec![];
         for i in 0..change_list.len() {
-            new_coords.push(vec![change_coords[i as usize][1], change_coords[i as usize][0]]);
-        }
-        for i in 0..change_list.len() {
-            self.map_array[new_coords[i as usize][1] as usize][new_coords[i as usize][0] as usize] = change_list[i];
+            self.map_array[change_coords[i as usize][0] as usize][change_coords[i as usize][1] as usize] = change_list[i];
             if change_list[i] == 1 && !self.change_wall {
                 self.change_wall = true;
-                for enemy in 0..self.enemy_list.len() {
-                    if self.enemy_list[enemy][0] == new_coords[i as usize][1] && self.enemy_list[enemy][1] == new_coords[i as usize][0] {
-                        self.enemy_list.remove(enemy);
-                        break;
-                    }
-                }
             }
             if change_list[i] == 2 && !self.change_chest {
                 self.change_chest = true;
-                for enemy in 0..self.enemy_list.len() {
-                    if self.enemy_list[enemy][0] == new_coords[i as usize][1] && self.enemy_list[enemy][1] == new_coords[i as usize][0] {
-                        self.enemy_list.remove(enemy);
-                        break;
-                    }
-                }
-            }
-            if change_list[i] == 3 {
-                let mut change = true;
-                for enemy in 0..self.enemy_list.len() {
-                    if self.enemy_list[enemy][0] == new_coords[i as usize][1] && self.enemy_list[enemy][1] == new_coords[i as usize][0] {
-                        change = false;
-                        break;
-                    }
-                }
-                if change {
-                    self.enemy_list.push(vec![new_coords[i as usize][1], new_coords[i as usize][0]]);
-                    self.change_wall = true;
-                    self.change_chest = true;
-                }
             }
         }
     }
-
+#[allow(unused)]
     pub fn get_map_array(&self) -> &[[i32; 10]; 15] {
         &self.map_array
     }
-
-    pub fn get_enemy_list(&self) -> &Vec<Vec<i32>> {
-        &self.enemy_list
-    }
-
+#[allow(unused)]
     pub fn get_wall_list(&self) -> &Vec<StillImage> {
         &self.wall_list
     }
-
+#[allow(unused)]
     pub fn get_chest_list(&self) -> &Vec<StillImage> {
         &self.chest_list
     }
