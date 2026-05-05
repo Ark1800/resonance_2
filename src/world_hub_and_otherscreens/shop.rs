@@ -103,7 +103,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
             }
 
             if shop_stock[selected_item].get_itemtype() == "armour" {
-                lbl_desc.set_text(format!("Name: {}\nItem type: {}\nDescription: {}\nArmour: {}\nHealth: {}\n", shop_stock[selected_item].get_itemtitle(), shop_stock[selected_item].get_itemtype(), shop_stock[selected_item].get_itemdescription(), shop_stock[selected_item].get_itemarmor(), shop_stock[selected_item].get_itemhpchng()));
+                lbl_desc.set_text(format!("Name: {}\nItem type: {}\nDescription: {}\nArmour: {}\nHealth: {}\nSpeed: {}", shop_stock[selected_item].get_itemtitle(), shop_stock[selected_item].get_itemtype(), shop_stock[selected_item].get_itemdescription(), shop_stock[selected_item].get_itemarmor(), shop_stock[selected_item].get_itemhpchng(), shop_stock[selected_item].get_itemmovespeedmult()));
             } 
             lbl_price.set_text(&item_price[selected_item].to_string());
         }
