@@ -53,17 +53,40 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let mut summoner = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "",0.0).await;
     summoner.set_preload(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap());
-    let mut archer = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "",0.0).await;
+
     let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "",0.0).await;
-    archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
+
     mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
-    archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
+
     mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
-    let mut summoner_time = get_time();
-    
-    let mut mage_time = get_time();
+ 
     let mut slime_list: Vec<Enemy> = vec![];
-    let mut projectile_list: Vec<Projectile> = vec![];
+    let mut archerx=200.0;
+    let mut archer_list: Vec<Enemy> = vec![];
+    for i in 0..3 {
+        let mut archer = Enemy::new(
+            "",
+            50.0,
+            50.0,
+            archerx,
+            200.0,
+            true,
+            1.0,
+            10,
+            5,
+            "",
+            0.0
+        )
+        .await;
+         archerx += 100.0;
+        archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
+        archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
+        archer_list.push(archer);
+    }
+        
+    
+    
+   
     let mut map = Map::new(virtual_width, virtual_height).await;
     map.create_map_array(0, 0, 4, 0, vec![1, 2, 3, 4]).await;
     map.change_map(
@@ -78,21 +101,23 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos);
         draw_grid(50.0, BLACK);
-archer.archer_action(tm, player).await;
+
+
+
+for archer in archer_list.iter_mut() {
+    archer.archer_action(tm, player).await;
+    archer.draw();
+    archer.draw_bullet(player);
+}
+
+mage.mage_action(tm, player).await;
+summoner.summoner_action(tm, player, &mut slime_list).await;
        
 
        
 
         
-            if get_time() - summoner_time > 0.5 {
-                summoner.summoner_img_change(player.get_x(), summoner.get_x(), "ready", &tm).await;
-            }
-
-            if get_time() - summoner_time > 5.0 {
-                summoner_time = get_time();
-                summoner.summon(&tm, player, &mut slime_list).await;
-                summoner.summoner_img_change(player.get_x(), summoner.get_x(), "attack", &tm).await;
-            }
+           
         
         player.draw();
   for slime in slime_list.iter_mut() {
@@ -101,8 +126,7 @@ archer.archer_action(tm, player).await;
     }
         summoner.draw();
         mage.draw();
-        archer.draw();
-        archer.draw_bullet(player);
+       
         mage.draw_bullet(player);
         player.handle_inventory();
 

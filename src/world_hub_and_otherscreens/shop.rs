@@ -40,7 +40,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         "assets/slime.png".to_string(), // Image path
         "Time Sword".to_string(), // Name
         "A weapon made to slice through time itself".to_string(), // Description
-        "armour".to_string(), // Type
+        "attack".to_string(), // Type
         25, // Melee
         0, // Ranged
         1.0, // Move speed mult
@@ -50,21 +50,28 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     )
     .await;
 
-    let shop_stock: Vec<Item> = vec![diamond_armour, time_sword];
-    let mut item_type: Vec<String> = vec![];
-    let mut item_descs: Vec<String> = vec![];
+    let future_bow = Item::new(
+        tm.get_preload("assets/slime.png").unwrap(), // Preload
+        "assets/slime.png".to_string(), // Image path
+        "Future Bow".to_string(), // Name
+        "A bow that, due to its enchantments, can fire its arrows into the future".to_string(), // Description
+        "attack".to_string(), // Type
+        0, // Melee
+        20, // Ranged
+        1.15, // Move speed mult
+        -0.15, // Cooldown mult
+        0, // Health
+        0, // Armour
+    )
+    .await;
+
+    let mut shop_stock: Vec<Item> = vec![diamond_armour, time_sword, future_bow];
     let mut shop_names: Vec<String> = vec![];
     for i in 0..shop_stock.len() {
-        item_type.push(shop_stock[i].get_itemtype().clone());
-        item_descs.push(shop_stock[i].get_itemdescription().clone());
         shop_names.push(shop_stock[i].get_itemtitle().clone());
     }
     let mut shop_view = ListView::new(&shop_names, 500.0, 500.0, 50);
     let mut lbl_desc = Label::new("", 250.0, 500.0, 50);
-    let item_atk_def = vec![99, 25, 15, 10, 0];
-    let mut lbl_atk_def = Label::new("", 250.0, 550.0, 50);
-    let item_spd_res = vec![0.1, 0.2, 0.25, 0.05, 0.0];
-    let mut lbl_spd_res = Label::new("", 250.0, 600.0, 50);
     let item_price = vec![1000, 500, 500, 750, 9999];
     let mut lbl_price = Label::new("", 250.0, 450.0, 50);
     let btn_buy = TextButton::new(
@@ -87,37 +94,36 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
 
         if shop_view.selected_item().is_some() && &selected_record != shop_view.selected_item().unwrap() {
             selected_record = shop_view.selected_item().unwrap().clone();
-            if selected_record == shop_names[0] {
-                //lbl_desc.set_text(item_descs[0]);
-                lbl_atk_def.set_text(item_atk_def[0].to_string());
-                lbl_spd_res.set_text(item_spd_res[0].to_string());
-                lbl_price.set_text(item_price[0].to_string());
-            } else if selected_record == shop_names[1] {
-                //lbl_desc.set_text(item_descs[1]);
-                lbl_atk_def.set_text(item_atk_def[1].to_string());
-                lbl_spd_res.set_text(item_spd_res[1].to_string());
-                lbl_price.set_text(item_price[1].to_string());
-            } else if selected_record == shop_names[2] {
-                //lbl_desc.set_text(item_descs[2]);
-                lbl_atk_def.set_text(item_atk_def[2].to_string());
-                lbl_spd_res.set_text(item_spd_res[2].to_string());
-                lbl_price.set_text(item_price[2].to_string());
-            } else if selected_record == shop_names[3] {
-                //lbl_desc.set_text(item_descs[3]);
-                lbl_atk_def.set_text(item_atk_def[3].to_string());
-                lbl_spd_res.set_text(item_spd_res[3].to_string());
-                lbl_price.set_text(item_price[3].to_string());
-            } else if selected_record == shop_names[4] {
-                //lbl_desc.set_text(item_descs[4]);
-                lbl_atk_def.set_text(item_atk_def[4].to_string());
-                lbl_spd_res.set_text(item_spd_res[4].to_string());
-                lbl_price.set_text(item_price[4].to_string());
+            let mut selected_item = 0;
+            for i in 0..shop_stock.len() {
+                if &selected_record == &shop_stock[i].get_itemtitle() {
+                    selected_item = i;
+                    break;
+                }
             }
+
+            if shop_stock[selected_item].get_itemtype() == "armour" {
+                lbl_desc.set_text(format!("Name: {}\nItem type: {}\nDescription: {}\nArmour: {}\nHealth: {}\n", shop_stock[selected_item].get_itemtitle(), shop_stock[selected_item].get_itemtype(), shop_stock[selected_item].get_itemdescription(), shop_stock[selected_item].get_itemarmor(), shop_stock[selected_item].get_itemhpchng()));
+            } 
+            lbl_price.set_text(&item_price[selected_item].to_string());
         }
 
         if btn_buy.click() && shop_view.selected_item().is_some() {
+            let mut item_wanted = 0;
             for i in 0..shop_stock.len() {
-        }
+                if &selected_record == &shop_stock[i].get_itemtitle() {
+                    item_wanted = i;
+                    break;
+                }
+            }
+
+            if player.getcoins() >= item_price[item_wanted] {
+                player.addcoins(-item_price[item_wanted]);
+                player.add_inventory_item(shop_stock[item_wanted].clone());
+                shop_stock.remove(item_wanted);
+                shop_names.remove(item_wanted);
+                shop_view = ListView::new(&shop_names, 500.0, 500.0, 50);
+            }
         } else if btn_buy.click() && shop_view.selected_item().is_none() {
             lbl_error.set_text("Please select an item first");
         }

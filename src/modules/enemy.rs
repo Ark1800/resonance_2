@@ -2,6 +2,8 @@
 
 //use crate::modules::enemy::Enemy;
 
+use std::clone;
+
 use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
 use crate::modules::preload_image::TextureManager;
@@ -293,24 +295,37 @@ pub async fn archer_action(&mut self, tm: &TextureManager, player: &mut Player,)
             self.archer_img_change(player.get_x(), self.get_x(), "move", &tm).await;
         }
 }
-}
+
 pub async fn mage_action(&mut self, tm: &TextureManager, player: &mut Player) {
      if ((self.get_x() - player.get_x()).abs() < 300.0) && ((self.get_y() - player.get_y()).abs() < 300.0) {
             if get_time() - self.cooldown > 0.5 {
-                self.self_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
+                self.mage_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
             }
 
             if get_time() - self.cooldown > 2.0 {
                 self.cooldown = get_time();
                 self.shoot(player, 80.0, 80.0).await;
-                self.self_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
+                self.mage_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
             }
         } else {
             self.moveing(player.get_x(), player.get_y());
 
-            self.self_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
+            self.mage_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
         }
 }
+pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player, slime_list: &mut Vec<Enemy>) -> Vec<Enemy>{
+    if get_time() - self.cooldown > 0.5 {
+                self.summoner_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
+            }
+
+            if get_time() - self.cooldown > 5.0 {
+                self.cooldown = get_time();
+                self.summon(&tm, player, slime_list).await;
+                self.summoner_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
+            }
+            slime_list.to_vec()
+
+}}
 
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {
 //         let mut answer = false;
