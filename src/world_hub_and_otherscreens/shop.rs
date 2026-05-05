@@ -65,7 +65,22 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     )
     .await;
 
-    let mut shop_stock: Vec<Item> = vec![diamond_armour, time_sword, future_bow];
+    let hermes_chainmail = Item::new(
+        tm.get_preload("assets/slime.png").unwrap(), // Preload
+        "assets/slime.png".to_string(), // Image path
+        "Chainmail of Hermes".to_string(), // Name
+        "Armour blessed by the messenger god, Hermes. This armour provides the wearer a light feeling, and increases their movement speed".to_string(), // Description
+        "attack".to_string(), // Type
+        0, // Melee
+        0, // Ranged
+        1.5, // Move speed mult
+        -0.25, // Cooldown mult
+        10, // Health
+        5, // Armour
+    )
+    .await;
+
+    let mut shop_stock: Vec<Item> = vec![diamond_armour, time_sword, future_bow, hermes_chainmail];
     let mut shop_names: Vec<String> = vec![];
     for i in 0..shop_stock.len() {
         shop_names.push(shop_stock[i].get_itemtitle().clone());
@@ -122,12 +137,19 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
                 player.add_inventory_item(shop_stock[item_wanted].clone());
                 shop_stock.remove(item_wanted);
                 shop_names.remove(item_wanted);
-                shop_view = ListView::new(&shop_names, 500.0, 500.0, 50);
+                shop_view.clear();
+                for i in 0..shop_names.len() {
+                    shop_view.add_item(&shop_names[i]);
+                }
+                selected_record = "None".to_string();
             }
         } else if btn_buy.click() && shop_view.selected_item().is_none() {
             lbl_error.set_text("Please select an item first");
         }
 
+        lbl_desc.draw();
+        lbl_price.draw();
+        lbl_error.draw();
         shop_view.draw();
         next_frame().await;
     }

@@ -10,7 +10,6 @@ use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 
 //TO DOOOOOO
-//1. inventory unequipping glitch (not always unequpping)
 //2. inventory trashing bug-fixing
 //3. health bar
 //3. updating logs
@@ -362,8 +361,15 @@ impl Player {
             }
             if self.inventory.3[2].click() {
                 let title = self.inventory.0[0].selected_item().unwrap().clone();
+                println!("{:?}", self.items.len());
                 for (i, item) in self.items.iter().enumerate() {
                     if item.get_itemtitle() == *title {
+                        for image in self.inventory.1.iter_mut() {
+                            if image.get_filename() == self.items[0].get_itemassetpath() {
+                                //self.unequip_item(&title);
+                                break;
+                        }
+
                         self.items.remove(i);
                         self.itemstats.0.remove(i);
                         self.itemstats.0.remove(i);
@@ -375,12 +381,10 @@ impl Player {
                         self.itemstats.2.remove(i);
                         self.itemstats.3.remove(i);
                         self.item_titles.remove(i);
-                    for image in self.inventory.1.iter_mut() {
-                        if image.get_filename() == self.items[i].get_itemassetpath() {
-                           // self.unequip_item(&title);
-                            break;
-                        }
                     }
+                        self.inventory.1[1].set_preload(self.preloads[1].clone());
+                        self.inventory.2[0].set_text("Title");
+                        self.inventory.2[1].set_text("Description");
                         self.inventory.0[0].clear();
                         self.inventory.0[0].add_items(&self.item_titles);
                     break;
@@ -392,7 +396,7 @@ impl Player {
 
     pub fn unequip_item(&mut self, title: &str) {
         println!("equipped items: {:?}", self.equipped_items);
-        for index in &self.equipped_items {
+        for (equipped_pos, index) in self.equipped_items.iter().enumerate() {
             println!("{}", title);
             println!("{}", self.items[*index].get_itemtitle());
                 if *title == self.items[*index].get_itemtitle() {
@@ -420,7 +424,7 @@ impl Player {
                         println!("No more equipped items.");
                     }
                     else {
-                        self.equipped_items.remove(*index);
+                        self.equipped_items.remove(equipped_pos);
                         println!("Unequipped item: {}", title);
                     }
                     self.inventory.1[imageboxindex].set_preload(self.preloads[1].clone());
