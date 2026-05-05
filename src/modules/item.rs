@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-
+#[derive(Clone)]
 pub struct Item {
     imgpath: (Texture2D, Option<Vec<u8>>, String),
     assetpath: String,

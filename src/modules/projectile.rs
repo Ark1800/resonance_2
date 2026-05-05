@@ -12,7 +12,7 @@ use crate::modules::preload_image::TextureManager;
 use macroquad::prelude::*;
 use crate::modules::enemy::Enemy;
 
-
+#[derive(Clone)]
 
 
 

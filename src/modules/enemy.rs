@@ -7,7 +7,7 @@ use crate::modules::still_image::StillImage;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::player::Player;
 use macroquad::prelude::*;
-
+#[derive(Clone)]
 pub struct Enemy {
     view: StillImage,
     projectile_image: StillImage,
@@ -16,6 +16,7 @@ pub struct Enemy {
     health: i32,
     dmg: i32,
     projectiles: Vec<Projectile>,
+    cooldown: f64,
 
 }
 
@@ -31,6 +32,7 @@ impl Enemy {
         health: i32,
         dmg: i32,
         projectile_path: &str,
+        cooldown: f64,
 
     ) -> Enemy {
         Enemy {
@@ -42,6 +44,7 @@ impl Enemy {
             dmg,
             projectile_image: StillImage::new(projectile_path, width, height, 0.0, 0.0, false, 1.0).await,
             projectiles: Vec::new(),
+            cooldown,
 
 
         }
@@ -81,6 +84,24 @@ pub async fn mage_img_change(&mut self, playerx: f32, magex: f32, action: &str, 
         }
         "attack" => {
             self.set_preload(tm.get_preload(format!("assets/mage_files/mage_shoot{}.png", way).as_str()).unwrap());
+        }
+        _ => {}
+    }
+    self
+}
+pub async fn summoner_img_change(&mut self, playerx: f32, summonerx: f32, action: &str, tm: &TextureManager) -> &Enemy {
+    let mut way = "";
+    if summonerx < playerx {
+        way = "R";
+    } else {
+        way = "L";
+    }
+    match action {
+        "ready" => {
+            self.set_preload(tm.get_preload(format!("assets/summoner_files/summoner_stand{}.png", way).as_str()).unwrap());
+        }
+        "attack" => {
+            self.set_preload(tm.get_preload(format!("assets/summoner_files/summoner_summon{}.png", way).as_str()).unwrap());
         }
         _ => {}
     }
@@ -231,6 +252,64 @@ pub fn get_pos(&self) -> Vec2 {
         &self.projectiles
     }
  
+
+pub async fn summon(&mut self, tm: &TextureManager, player: &Player, slime_list: &mut Vec<Enemy>)-> Vec<Enemy> {
+    let mut summoned_enemy = Enemy::new(
+        "",
+        30.0,
+        30.0,
+        self.get_x(),
+        self.get_y(),
+        true,
+        1.0,
+        100,
+        10,
+        "",
+        0.0,
+    ).await;
+    summoned_enemy.set_preload(tm.get_preload("assets/slime.png").unwrap());
+    slime_list.push(summoned_enemy.clone());
+  
+    slime_list.to_vec()
+    
+    // Add the summoned enemy to your game world (e.g., a list of enemies)
+
+}
+
+
+pub async fn archer_action(&mut self, tm: &TextureManager, player: &mut Player,) {
+     if ((self.get_x() - player.get_x()).abs() < 450.0) && ((self.get_y() - player.get_y()).abs() < 450.0) {
+            if get_time() - self.cooldown > 0.5 {
+                self.archer_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
+            }
+
+            if get_time() - self.cooldown > 1.0 {
+                self.archer_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
+                self.cooldown = get_time();
+                self.shoot(player, 40.0, 40.0).await;
+            }
+        } else {
+            self.moveing(player.get_x(), player.get_y());
+            self.archer_img_change(player.get_x(), self.get_x(), "move", &tm).await;
+        }
+}
+}
+pub async fn mage_action(&mut self, tm: &TextureManager, player: &mut Player) {
+     if ((self.get_x() - player.get_x()).abs() < 300.0) && ((self.get_y() - player.get_y()).abs() < 300.0) {
+            if get_time() - self.cooldown > 0.5 {
+                self.self_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
+            }
+
+            if get_time() - self.cooldown > 2.0 {
+                self.cooldown = get_time();
+                self.shoot(player, 80.0, 80.0).await;
+                self.self_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
+            }
+        } else {
+            self.moveing(player.get_x(), player.get_y());
+
+            self.self_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
+        }
 }
 
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {

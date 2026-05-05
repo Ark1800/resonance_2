@@ -13,7 +13,7 @@ use crate::modules::collision::check_collision;
 use crate::modules::still_image::StillImage;
 use crate::modules::preload_image::TextureManager;
 use macroquad::prelude::*;
-
+#[derive(Clone)]
 pub struct Map {
     map_array: [[i32; 10]; 15],
     wall_list: Vec<StillImage>,

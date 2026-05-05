@@ -13,7 +13,10 @@ use macroquad::texture::Texture2D;
 //1. inventory unequipping glitch (not always unequpping)
 //2. inventory trashing bug-fixing
 //3. health bar
-//4. player damage
+//3. updating logs
+//4. adding comments to player code
+//5. player damage
+//6. player not switching image 60 times per second 
 
 //IMPLEMENTATION
 //in every screen write
@@ -28,23 +31,23 @@ player.handle_inventory();
 player.draw();
 */
 pub struct Player {
-    view: StillImage,
-    preloads: Vec<(Texture2D, Option<Vec<u8>>, String)>,
-    move_speed: f32,
-    movement: Vec2,
-    health: i32,
-    mledmg: i32,
-    rngdmg: i32,
-    movespeedmult: f32,
-    cooldownmult: f32,
-    musicoins: i32,
-    items: Vec<Item>,
-    item_titles: Vec<String>,
-    equipped_items: Vec<usize>,
-    itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), 
-    inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>),
-    inventoryopen: bool,
-    armor: i32,
+    view: StillImage, //stillimage of player
+    preloads: Vec<(Texture2D, Option<Vec<u8>>, String)>, //vec of preloads for use throughout player (especially for UI and image changing)
+    move_speed: f32, //movement speed in pixels per second
+    movement: Vec2, //movement vector for current frame
+    health: i32, //player health
+    mledmg: i32, //melee damage
+    rngdmg: i32, //ranged damage
+    movespeedmult: f32, //multiplier for movement speed (for items and buffs)
+    cooldownmult: f32, //multiplier for cooldowns (for items and buffs)
+    musicoins: i32, //currency
+    items: Vec<Item>, //vector of items in inventory
+    item_titles: Vec<String>, //vector of item titles for listview
+    equipped_items: Vec<usize>, //vector of indices of equipped items in the items vector
+    itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), //2d list for stats 
+    inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for inventory UI elements (listviews, images, labels, buttons)
+    inventoryopen: bool, //is inventory open
+    armor: i32, //armor value for damage reduction
 }
 
 impl Player {
@@ -52,7 +55,7 @@ impl Player {
         let mut view = StillImage::new(
             "", 
             40.0, // width
-            80.0, // height
+            60.0, // height
             x,    // x position
             y,    // y position
             true, // Enable stretching
@@ -84,6 +87,7 @@ impl Player {
     }
     //movement functions
     pub async fn handle_keypresses(&mut self) {
+        //basic movement input handling (WASD)
         let mut move_dir = vec2(0.0, 0.0);
 
         if is_key_down(KeyCode::D) {
@@ -100,18 +104,18 @@ impl Player {
         }
 
         if move_dir.length() > 0.0 {
-            move_dir = move_dir.normalize();
+            move_dir = move_dir.normalize(); //normnalize diagonal movement to prevent faster movement when moving diagonally
         }
 
-        let movement = move_dir * self.move_speed * get_frame_time()*self.movespeedmult;
-        self.movement = movement;
-        self.handle_image().await;
+        let movement = move_dir * self.move_speed * get_frame_time() * self.movespeedmult; //increasing/decreasing movement speed based on movespeedmult (for items and buffs)
+        self.movement = movement; 
+        self.handle_image().await; //handle if image changes
         if is_key_pressed(KeyCode::Tab) {
-            self.inventoryopen = !self.inventoryopen;
+            self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
         }
     }
 
-    pub async fn handle_image(&mut self) {
+    pub async fn handle_image(&mut self) { //change image based on direction of movement (8 directions)
         if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) {
             self.view.set_preload(self.preloads[7].clone());
         } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) {
@@ -141,11 +145,11 @@ impl Player {
 
     pub fn move_player(&mut self, map: &Map, old_pos: Vec2) {
         self.move_x();
-        if map.map_collision(&self.view_player()).0 {
+        if map.map_collision(&self.view_player()).0 { //collision with map
             self.set_x(old_pos.x);
         }
         self.move_y();
-        if map.map_collision(&self.view_player()).0 {
+        if map.map_collision(&self.view_player()).0 { //collision with map
             self.set_y(old_pos.y);
         }
     }
@@ -202,6 +206,8 @@ impl Player {
         &self.view
     }
 
+    //PLAYER STATS AND MOVEMENTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
     pub fn dash_start(&mut self) {
         self.move_speed *= 5.0;
     }
@@ -230,8 +236,14 @@ impl Player {
         self.musicoins += coins;
     }
 
+    //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+    pub fn create_player_ui(&mut self) {
+        let mut lbl_healthbar = Label::new(format!("Health: {}", self.health), 50.0, 50.0, 30);
+    }
+
     //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
     async fn create_inventory(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
+        //creating all inventory UI elements
         let list: Vec<String> = Vec::new();
         let mut lst_inventory = ListView::new(&list, 340.0, 50.0, 60);
         lst_inventory.with_colors(BLACK, Some(BROWN), Some(LIGHTGRAY));
@@ -252,7 +264,7 @@ impl Player {
         shadow_img.set_preload(preloads[2].clone());
         item_img.set_preload(preloads[1].clone());
         helmet_img.set_preload(preloads[1].clone());
-        bodyarmor_img.set_preload(preloads[1].clone());
+        bodyarmor_img.set_preload(preloads[1].clone()); //set all preloads
         boots_img.set_preload(preloads[1].clone());
         melee_img.set_preload(preloads[1].clone());
         ranged_img.set_preload(preloads[1].clone());
@@ -272,6 +284,7 @@ impl Player {
         btn_unequip.with_text_color(WHITE);
         let mut btn_trash = TextButton::new(10.0, 690.0, 315.0, 75.0, "Trash", BLACK, RED, 30);
         btn_trash.with_text_color(WHITE);
+        //send back 2d vec of all inventory UI elements to be stored in player struct and used in inventory handling function
         (
             vec![lst_inventory],
             vec![shadow_img, item_img, helmet_img, bodyarmor_img, boots_img, melee_img, ranged_img, disc1_img, disc2_img, disc3_img,],
@@ -281,12 +294,12 @@ impl Player {
     }
 
     pub fn handle_inventory(&mut self) {
-        if self.inventoryopen {
-            for list_view in self.inventory.0.iter_mut() {
-                if list_view.selected_item().is_some() && self.inventory.2[0].get_text() != *list_view.selected_item().unwrap() {
-                    let title = list_view.selected_item().unwrap();
-                    for item in &self.items {
-                        if item.get_itemtitle() == *title {
+        if self.inventoryopen { //if inventory is open
+            for list_view in self.inventory.0.iter_mut() { //for each listview
+                if list_view.selected_item().is_some() && self.inventory.2[0].get_text() != *list_view.selected_item().unwrap() { //if an item is selected and it is different from the one currently displayed
+                    let title = list_view.selected_item().unwrap(); //get selected item title
+                    for item in &self.items { 
+                        if item.get_itemtitle() == *title {//find the item and change everything
                             self.inventory.1[1].set_preload(item.get_itemimgpath());
                             self.inventory.2[0].set_text(item.get_itemtitle());
                             self.inventory.2[1].set_text(item.get_itemdescription());
@@ -378,8 +391,12 @@ impl Player {
     }
 
     pub fn unequip_item(&mut self, title: &str) {
+        println!("equipped items: {:?}", self.equipped_items);
         for index in &self.equipped_items {
+            println!("{}", title);
+            println!("{}", self.items[*index].get_itemtitle());
                 if *title == self.items[*index].get_itemtitle() {
+                    println!("SUCCESS");
                     let imageboxindex = match self.items[*index].get_itemtype().as_str() {
                         "helmet" => 2,
                         "bodyarmor" => 3,
@@ -404,17 +421,17 @@ impl Player {
                     }
                     else {
                         self.equipped_items.remove(*index);
+                        println!("Unequipped item: {}", title);
                     }
                     self.inventory.1[imageboxindex].set_preload(self.preloads[1].clone());
                     self.update_stats();
-                    println!("equipped items: {:?}", self.equipped_items);
-                    println!("playerstats: health: {}, mledmg: {}, rngdmg: {}, movespeedmult: {}, cooldownmult: {}, armor: {}", self.health, self.mledmg, self.rngdmg, self.movespeedmult, self.cooldownmult, self.armor);
                     break;
             }
         }
     }
 
     pub fn add_inventory_item(&mut self, item: Item) {
+        //add all item stats 
         self.itemstats.0.push(item.get_itemtitle());
         self.itemstats.0.push(item.get_itemdescription());
         self.itemstats.1.push(item.get_itemmledmg());

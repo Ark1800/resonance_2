@@ -80,7 +80,6 @@ Then in the loop you would use:
     lbl_out.draw();
 */
 use macroquad::prelude::*;
-
 pub struct Label {
     text: String,
     x: f32,
