@@ -29,13 +29,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     )
     .await;
 
-    let mut hp_bar = ProgressBar::new(
-        10.0, 10.0, // Position (x, y)
-        200.0, 30.0, // Size (width, height)
-        0.0, 100.0, // Range (min, max)
-        player.get_health(), // Initial value
-    );
-
     let mut coin_purse = Label::new(
         "",
         10.0,
@@ -109,7 +102,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         }
         player.draw();
         cyric.draw();
-        hp_bar.draw();
         next_frame().await;
     }
 }

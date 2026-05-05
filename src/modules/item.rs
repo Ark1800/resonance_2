@@ -1,69 +1,77 @@
 use macroquad::prelude::*;
 
 pub struct Item {
-    imgpath: String,
+    imgpath: (Texture2D, Option<Vec<u8>>, String),
+    assetpath: String,
     title: String,
     description: String,
+    itemtype: String,
     mledmg: i32,
     rngdmg: i32,
-    cooldownmult: f32,
-    movespeedmult: f32,
     hpchng: i32,
     armor: i32,
+    cooldownmult: f32,
+    movespeedmult: f32,
 }
 
 impl Item {
-    pub async fn new (imgpath: String, title: String, description: String, mledmg: i32, rngdmg: i32, cooldownmult: f32, movespeedmult: f32, hpchng: i32, armor: i32) -> Self {
+    pub async fn new (imgpath: (Texture2D, Option<Vec<u8>>, String), assetpath: String, title: String, description: String, itemtype: String, mledmg: i32, rngdmg: i32, cooldownmult: f32, movespeedmult: f32, hpchng: i32, armor: i32) -> Self {
         Item {
             imgpath,
+            assetpath,
             title,
             description,
+            itemtype,
             mledmg,
             rngdmg,
-            cooldownmult,
-            movespeedmult,
             hpchng,
             armor,
+            cooldownmult,
+            movespeedmult,
         }
     }
-}
-#[allow(unused)]
-pub fn get_allitemstats(item: &Item) -> (String, String, i32, i32, f32, f32, i32, i32) {
-    (item.title.clone(), item.description.clone(), item.mledmg, item.rngdmg, item.cooldownmult, item.movespeedmult, item.hpchng, item.armor)
-}
-#[allow(unused)]
-pub fn get_itemimgpath(item: &Item) -> String {
-    item.imgpath.clone()
-}
-#[allow(unused)]
-pub fn get_itemtitle(item: &Item) -> String {
-    item.title.clone()
-}
-#[allow(unused)]
-pub fn get_itemdescription(item: &Item) -> String {
-    item.description.clone()
-}
-#[allow(unused)]
-pub fn get_itemmledmg(item: &Item) -> i32 {
-    item.mledmg
-}
-#[allow(unused)]
-pub fn get_itemrngdmg(item: &Item) -> i32 {
-    item.rngdmg
-}
-#[allow(unused)]
-pub fn get_itemcooldownmult(item: &Item) -> f32 {
-    item.cooldownmult
-}
-#[allow(unused)]
-pub fn get_itemmovespeedmult(item: &Item) -> f32 {
-    item.movespeedmult
-}
-#[allow(unused)]
-pub fn get_itemhpchng(item: &Item) -> i32 {
-    item.hpchng
-}
-#[allow(unused)]
-pub fn get_itemarmor(item: &Item) -> i32 { 
-    item.armor
+
+    pub fn get_itemassetpath(&self) -> String {
+        self.assetpath.clone()
+    }
+
+    pub fn get_itemimgpath(&self) -> (Texture2D, Option<Vec<u8>>, String) {
+        self.imgpath.clone()
+    }
+
+    pub fn get_itemtitle(&self) -> String {
+        self.title.clone()
+    }
+
+    pub fn get_itemdescription(&self) -> String {
+        self.description.clone()
+    }
+
+    pub fn get_itemtype(&self) -> String {
+        self.itemtype.clone()
+    }
+
+    pub fn get_itemmledmg(&self) -> i32 {
+        self.mledmg
+    }
+
+    pub fn get_itemrngdmg(&self) -> i32 {
+        self.rngdmg
+    }
+
+    pub fn get_itemcooldownmult(&self) -> f32 {
+        self.cooldownmult
+    }
+
+    pub fn get_itemmovespeedmult(&self) -> f32 {
+        self.movespeedmult
+    }
+
+    pub fn get_itemhpchng(&self) -> i32 {
+        self.hpchng
+    }
+
+    pub fn get_itemarmor(&self) -> i32 {
+        self.armor
+    }
 }

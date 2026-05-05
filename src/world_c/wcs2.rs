@@ -29,13 +29,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     )
     .await;
 
-    let mut hp_bar = ProgressBar::new(
-        10.0, 10.0, // Position (x, y)
-        200.0, 30.0, // Size (width, height)
-        0.0, 100.0, // Range (min, max)
-        player.get_health(), // Initial value
-    );
-
     let background = StillImage::new(
         "assets/slime.png",
         virtual_width,  // width
@@ -85,7 +78,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         }
         }
         background.draw();
-        hp_bar.draw();
         lbl_speech.draw();
         clear_background(RED);
         player.handle_keypresses().await;
