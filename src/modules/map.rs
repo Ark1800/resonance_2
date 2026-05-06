@@ -7,6 +7,7 @@ Randomized map generation based on set objects
 0 - Empty
 1 - Wall
 2 - Chest
+map.create_map_array(chest_num, entrance_num, wall_num, entrance_sides)
 */
 
 use crate::modules::collision::check_collision;

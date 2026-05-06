@@ -11,13 +11,16 @@ use crate::modules::preload_image::TextureManager;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager) -> String {
     let mut map = Map::new(virtual_width, virtual_height).await;
+    map.create_map_array(0, 0, 4, 0, vec![1, 2, 3, 4]).await;
+    map.change_map(vec![2], vec![vec![1,1]]);
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
+        map.draw_map(&tm).await;
         player.handle_keypresses().await;
         let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos);
+        player.move_player(&map, old_pos, &vec![]);
         player.draw();
         next_frame().await;
     }

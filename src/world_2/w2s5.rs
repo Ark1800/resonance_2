@@ -13,12 +13,12 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let mut map = Map::new(virtual_width, virtual_height).await;
     map.create_map_array(0, 0, 4, 0, vec![1, 2, 3, 4]).await;
-    loop {
+    loop {         
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         player.handle_keypresses().await;
         let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos);
+        player.move_player(&map, old_pos, &vec![]);
         player.draw();
         next_frame().await;
     }

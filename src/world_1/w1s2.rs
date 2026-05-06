@@ -18,7 +18,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         clear_background(RED);
         player.handle_keypresses().await;
         let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos);
+        player.move_player(&map, old_pos, &vec![]);
         player.draw();
         if is_key_down(KeyCode::P) {
             return "title_screen".to_string();

@@ -51,10 +51,10 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     player.add_inventory_item(testitem2);
     //
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-    let mut summoner = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "",0.0).await;
+    let mut summoner = Enemy::new("", 50.0, 50.0, 70.0, 80.0, true, 1.0, 20, 10, "").await;
     summoner.set_preload(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap());
 
-    let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "",0.0).await;
+    let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "").await;
 
     mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
 
@@ -63,7 +63,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     let mut slime_list: Vec<Enemy> = vec![];
     let mut archerx=200.0;
     let mut archer_list: Vec<Enemy> = vec![];
-    for i in 0..3 {
+    for _i in 0..3 {
         let mut archer = Enemy::new(
             "",
             50.0,
@@ -74,8 +74,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             1.0,
             10,
             5,
-            "",
-            0.0
+            ""
+            
         )
         .await;
          archerx += 100.0;
@@ -99,7 +99,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         clear_background(RED);
         map.draw_map(&tm).await;
         let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos);
+        player.move_player(&map, old_pos, &vec![]);
         draw_grid(50.0, BLACK);
 
 

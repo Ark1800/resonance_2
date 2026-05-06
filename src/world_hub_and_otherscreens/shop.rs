@@ -9,74 +9,74 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::modules::item::Item;
 use crate::modules::label::Label;
 use crate::modules::listview::ListView;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
-use crate::modules::item::Item;
 use crate::modules::still_image::StillImage;
 use crate::modules::text_button::TextButton;
 use macroquad::prelude::*;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager) -> String {
-
     let diamond_armour = Item::new(
-        tm.get_preload("assets/slime.png").unwrap(), // Preload
-        "assets/slime.png".to_string(), // Image path
-        "Diamond Armour".to_string(), // Name
+        tm.get_preload("assets/slime.png").unwrap(),                // Preload
+        "assets/slime.png".to_string(),                             // Image path
+        "Diamond Armour".to_string(),                               // Name
         "Armour made of the toughest gemstone around!".to_string(), // Description
-        "armour".to_string(), // Type
-        0, // Melee
-        0, // Ranged
-        0.9, // Move speed mult
-        0.0, // Cooldown mult
-        50, // Health
-        20, // Armour
+        "armour".to_string(),                                       // Type
+        0,                                                          // Melee
+        0,                                                          // Ranged
+        0.9,                                                        // Move speed mult
+        0.0,                                                        // Cooldown mult
+        50,                                                         // Health
+        20,                                                         // Armour
     )
     .await;
 
     let time_sword = Item::new(
-        tm.get_preload("assets/slime.png").unwrap(), // Preload
-        "assets/slime.png".to_string(), // Image path
-        "Time Sword".to_string(), // Name
+        tm.get_preload("assets/slime.png").unwrap(),              // Preload
+        "assets/slime.png".to_string(),                           // Image path
+        "Time Sword".to_string(),                                 // Name
         "A weapon made to slice through time itself".to_string(), // Description
-        "attack".to_string(), // Type
-        25, // Melee
-        0, // Ranged
-        1.0, // Move speed mult
-        -0.1, // Cooldown mult
-        0, // Health
-        0, // Armour
+        "attack".to_string(),                                     // Type
+        25,                                                       // Melee
+        0,                                                        // Ranged
+        1.0,                                                      // Move speed mult
+        -0.1,                                                     // Cooldown mult
+        0,                                                        // Health
+        0,                                                        // Armour
     )
     .await;
 
     let future_bow = Item::new(
-        tm.get_preload("assets/slime.png").unwrap(), // Preload
-        "assets/slime.png".to_string(), // Image path
-        "Future Bow".to_string(), // Name
+        tm.get_preload("assets/slime.png").unwrap(),                                            // Preload
+        "assets/slime.png".to_string(),                                                         // Image path
+        "Future Bow".to_string(),                                                               // Name
         "A bow that, due to its enchantments, can fire its arrows into the future".to_string(), // Description
-        "attack".to_string(), // Type
-        0, // Melee
-        20, // Ranged
-        1.15, // Move speed mult
-        -0.15, // Cooldown mult
-        0, // Health
-        0, // Armour
+        "attack".to_string(),                                                                   // Type
+        0,                                                                                      // Melee
+        20,                                                                                     // Ranged
+        1.15,                                                                                   // Move speed mult
+        -0.15,                                                                                  // Cooldown mult
+        0,                                                                                      // Health
+        0,                                                                                      // Armour
     )
     .await;
 
     let hermes_chainmail = Item::new(
         tm.get_preload("assets/slime.png").unwrap(), // Preload
-        "assets/slime.png".to_string(), // Image path
-        "Chainmail of Hermes".to_string(), // Name
-        "Armour blessed by the messenger god, Hermes. This armour provides the wearer a light feeling, and increases their movement speed".to_string(), // Description
-        "attack".to_string(), // Type
-        0, // Melee
-        0, // Ranged
-        1.5, // Move speed mult
-        -0.25, // Cooldown mult
-        10, // Health
-        5, // Armour
+        "assets/slime.png".to_string(),              // Image path
+        "Chainmail of Hermes".to_string(),           // Name
+        "Armour blessed by the messenger god, Hermes. This armour provides the wearer a light feeling, and increases their movement speed"
+            .to_string(), // Description
+        "armour".to_string(),                        // Type
+        0,                                           // Melee
+        0,                                           // Ranged
+        1.5,                                         // Move speed mult
+        -0.25,                                       // Cooldown mult
+        10,                                          // Health
+        5,                                           // Armour
     )
     .await;
 
@@ -89,16 +89,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     let mut lbl_desc = Label::new("", 250.0, 500.0, 50);
     let item_price = vec![1000, 500, 500, 750, 9999];
     let mut lbl_price = Label::new("", 250.0, 450.0, 50);
-    let btn_buy = TextButton::new(
-        100.0,
-        200.0,
-        200.0,
-        60.0,
-        "Buy",
-        BLUE,
-        GREEN,
-        30
-    );
+    let btn_buy = TextButton::new(100.0, 200.0, 200.0, 60.0, "Buy", BLUE, GREEN, 30);
     let mut lbl_error = Label::new("", 250.0, 650.0, 50);
 
     let mut selected_record: String = "None".to_string();
@@ -118,8 +109,27 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
             }
 
             if shop_stock[selected_item].get_itemtype() == "armour" {
-                lbl_desc.set_text(format!("Name: {}\nItem type: {}\nDescription: {}\nArmour: {}\nHealth: {}\nSpeed: {}", shop_stock[selected_item].get_itemtitle(), shop_stock[selected_item].get_itemtype(), shop_stock[selected_item].get_itemdescription(), shop_stock[selected_item].get_itemarmor(), shop_stock[selected_item].get_itemhpchng(), shop_stock[selected_item].get_itemmovespeedmult()));
-            } 
+                lbl_desc.set_text(format!(
+                    "Name: {}\nItem type: {}\nDescription: {}\nArmour: {}\nHealth: {}\nSpeed: {}",
+                    shop_stock[selected_item].get_itemtitle(),
+                    shop_stock[selected_item].get_itemtype(),
+                    shop_stock[selected_item].get_itemdescription(),
+                    shop_stock[selected_item].get_itemarmor(),
+                    shop_stock[selected_item].get_itemhpchng(),
+                    shop_stock[selected_item].get_itemmovespeedmult()
+                ));
+            } else if shop_stock[selected_item].get_itemtype() == "attack" {
+                let dmg = shop_stock[selected_item].get_itemmledmg() + shop_stock[selected_item].get_itemrngdmg();
+                lbl_desc.set_text(format!(
+                    "Name: {}\nItem type: {}\nDescription: {}\nDamage: {}\nSpeed: {}\nCooldown: {}",
+                    shop_stock[selected_item].get_itemtitle(),
+                    shop_stock[selected_item].get_itemtype(),
+                    shop_stock[selected_item].get_itemdescription(),
+                    dmg,
+                    shop_stock[selected_item].get_itemmovespeedmult(),
+                    shop_stock[selected_item].get_itemcooldownmult()
+                ));
+            }
             lbl_price.set_text(&item_price[selected_item].to_string());
         }
 

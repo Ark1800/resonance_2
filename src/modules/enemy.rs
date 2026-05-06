@@ -2,13 +2,13 @@
 
 //use crate::modules::enemy::Enemy;
 
-use std::clone;
-
+use crate::modules::player::Player;
+use crate::modules::preload_image::TextureManager;
 use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
-use crate::modules::preload_image::TextureManager;
-use crate::modules::player::Player;
 use macroquad::prelude::*;
+use miniquad::date;
+
 #[derive(Clone)]
 pub struct Enemy {
     view: StillImage,
@@ -19,7 +19,7 @@ pub struct Enemy {
     dmg: i32,
     projectiles: Vec<Projectile>,
     cooldown: f64,
-
+    cooldown2: f64
 }
 
 impl Enemy {
@@ -34,88 +34,100 @@ impl Enemy {
         health: i32,
         dmg: i32,
         projectile_path: &str,
-        cooldown: f64,
-
+       
     ) -> Enemy {
         Enemy {
             view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
-            
+
             move_speed: 200.0, // Default speed
             movement: Vec2::ZERO,
             health,
             dmg,
             projectile_image: StillImage::new(projectile_path, width, height, 0.0, 0.0, false, 1.0).await,
             projectiles: Vec::new(),
-            cooldown,
-
-
+            cooldown: 0.0,
+            cooldown2: 0.0
         }
     }
-   pub async fn archer_img_change(&mut self, playerx: f32, archerx: f32, action: &str, tm: &TextureManager) -> &Enemy {
-    let mut way = "";
-    if archerx < playerx {
-        way = "R";
-    } else {
-        way = "L";
+    #[allow(unused)]
+    pub async fn archer_img_change(&mut self, playerx: f32, archerx: f32, action: &str, tm: &TextureManager) -> &Enemy {
+        let mut way = "";
+        if archerx < playerx {
+            way = "R";
+        } else {
+            way = "L";
+        }
+        match action {
+            "move" => {
+                self.set_preload(tm.get_preload(format!("assets/archer_files/archer_run{}.png", way).as_str()).unwrap());
+            }
+            "ready" => {
+                self.set_preload(tm.get_preload(format!("assets/archer_files/archer_ready{}.png", way).as_str()).unwrap());
+            }
+            "attack" => {
+                self.set_preload(tm.get_preload(format!("assets/archer_files/archer_shoot{}.png", way).as_str()).unwrap());
+            }
+            _ => {}
+        }
+        self
     }
-    match action {
-        "move" => {
-           
-            self.set_preload(tm.get_preload(format!("assets/archer_files/archer_run{}.png", way).as_str()).unwrap());
+    #[allow(unused)]
+    pub async fn mage_img_change(&mut self, playerx: f32, magex: f32, action: &str, tm: &TextureManager) -> &Enemy {
+        let mut way = "";
+        if magex < playerx {
+            way = "R";
+        } else {
+            way = "L";
         }
-        "ready" => {
-             self.set_preload(tm.get_preload(format!("assets/archer_files/archer_ready{}.png", way).as_str()).unwrap());
+        match action {
+            "ready" => {
+                self.set_preload(tm.get_preload(format!("assets/mage_files/mage_stand{}.png", way).as_str()).unwrap());
+            }
+            "attack" => {
+                self.set_preload(tm.get_preload(format!("assets/mage_files/mage_shoot{}.png", way).as_str()).unwrap());
+            }
+            _ => {}
         }
-        "attack" => {
-            self.set_preload(tm.get_preload(format!("assets/archer_files/archer_shoot{}.png", way).as_str()).unwrap());
-        }
-        _ => {}
+        self
     }
-    self
-}
-pub async fn mage_img_change(&mut self, playerx: f32, magex: f32, action: &str, tm: &TextureManager) -> &Enemy {
-    let mut way = "";
-    if magex < playerx {
-        way = "R";
-    } else {
-        way = "L";
-    }
-    match action {
-        "ready" => {
-            self.set_preload(tm.get_preload(format!("assets/mage_files/mage_stand{}.png", way).as_str()).unwrap());
+    #[allow(unused)]
+    pub async fn summoner_img_change(&mut self, playerx: f32, summonerx: f32, action: &str, tm: &TextureManager) -> &Enemy {
+        let mut way = "";
+        if summonerx < playerx {
+            way = "R";
+        } else {
+            way = "L";
         }
-        "attack" => {
-            self.set_preload(tm.get_preload(format!("assets/mage_files/mage_shoot{}.png", way).as_str()).unwrap());
+        match action {
+            "ready" => {
+                self.set_preload(
+                    tm.get_preload(format!("assets/summoner_files/summoner_stand{}.png", way).as_str())
+                        .unwrap(),
+                );
+            }
+            "attack" => {
+                self.set_preload(
+                    tm.get_preload(format!("assets/summoner_files/summoner_summon{}.png", way).as_str())
+                        .unwrap(),
+                );
+            }
+            "move" => {
+                self.set_preload(
+                    tm.get_preload(format!("assets/summoner_files/portal{}.png", way).as_str())
+                        .unwrap(),
+                );
+            }
+            _ => {}
         }
-        _ => {}
+        self
     }
-    self
-}
-pub async fn summoner_img_change(&mut self, playerx: f32, summonerx: f32, action: &str, tm: &TextureManager) -> &Enemy {
-    let mut way = "";
-    if summonerx < playerx {
-        way = "R";
-    } else {
-        way = "L";
-    }
-    match action {
-        "ready" => {
-            self.set_preload(tm.get_preload(format!("assets/summoner_files/summoner_stand{}.png", way).as_str()).unwrap());
-        }
-        "attack" => {
-            self.set_preload(tm.get_preload(format!("assets/summoner_files/summoner_summon{}.png", way).as_str()).unwrap());
-        }
-        _ => {}
-    }
-    self
-}
-pub fn set_projectile_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
+    pub fn set_projectile_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
         let (texture, mask, filename) = preloaded;
         self.projectile_image.texture = texture;
         self.projectile_image.transparency_mask = mask;
         self.projectile_image.filename = filename;
     }
- #[allow(unused)]
+    #[allow(unused)]
     pub fn set_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
         let (texture, mask, filename) = preloaded;
         self.view.texture = texture;
@@ -157,7 +169,8 @@ pub fn set_projectile_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>,
         self.dmg = dmg;
         self
     }
-pub async fn set_image(&mut self, image_path: &str) {
+    #[allow(unused)]
+    pub async fn set_image(&mut self, image_path: &str) {
         self.view.set_texture(image_path).await;
     }
     #[allow(unused)]
@@ -206,7 +219,7 @@ pub async fn set_image(&mut self, image_path: &str) {
     pub fn set_x(&mut self, x: f32) {
         self.view.set_x(x);
     }
-pub fn get_pos(&self) -> Vec2 {
+    pub fn get_pos(&self) -> Vec2 {
         vec2(self.view.get_x(), self.view.get_y())
     }
     // Get and set y position
@@ -219,68 +232,64 @@ pub fn get_pos(&self) -> Vec2 {
     pub fn set_y(&mut self, y: f32) {
         self.view.set_y(y);
     }
+    #[allow(unused)]
     pub fn pos(&self) -> Vec2 {
         vec2(self.view.get_x(), self.view.get_y())
     }
-        
-        #[allow(unused)]
-        pub fn set_direction(&self, player_pos: Vec2) -> Vec2 {
+
+    #[allow(unused)]
+    pub fn set_direction(&self, player_pos: Vec2) -> Vec2 {
         let direction = (player_pos - self.get_pos()).normalize();
         let movement = direction * self.move_speed * get_frame_time();
 
         movement
     }
 
-    pub async fn shoot(&mut self,  player: &mut Player, width: f32, height: f32) {
-         
+    pub async fn shoot(&mut self, player: &mut Player, width: f32, height: f32) {
         let mut projectile = Projectile::new(self.projectile_image.clone(), width, height, self.get_x(), self.get_y(), true, 1.0).await;
-                let angle = projectile.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
-                projectile.set_angle(angle);
-                projectile.set_direction(player.get_oldpos());
-                self.projectiles.push(projectile);
-           
-
+        let angle = projectile.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
+        projectile.set_angle(angle);
+        projectile.set_direction(player.get_oldpos());
+        self.projectiles.push(projectile);
     }
-     
 
     pub fn draw_bullet(&mut self, player: &mut Player) {
-       for projectile in &mut self.projectiles {
-        projectile.move_projectiles(player.get_oldpos());
+        for projectile in &mut self.projectiles {
+            projectile.move_projectiles(player.get_oldpos());
             projectile.draw();
         }
     }
-   
-    pub fn get_projectiles(&self) -> &Vec<Projectile> {
-        &self.projectiles
+
+    pub async fn summon(&mut self, tm: &TextureManager, slime_list: &mut Vec<Enemy>) -> Vec<Enemy> {
+        let mut summonx = self.get_x();
+        let mut summony = self.get_y() + 50.0;
+        for i in 0..3 {
+            if i == 1 {
+                summonx = self.get_x() + 50.0;
+                summony = self.get_y() - 50.0;
+            } else if i == 2 {
+                summonx = self.get_x() - 50.0;
+                summony = self.get_y() - 50.0;
+            }
+            let mut summoned_enemy = Enemy::new("", 25.0, 25.0, summonx, summony, true, 1.0, 100, 10, "").await;
+            summoned_enemy.set_preload(tm.get_preload("assets/slime.png").unwrap());
+            slime_list.push(summoned_enemy.clone());
+        }
+        slime_list.to_vec()
+
+        // Add the summoned enemy to your game world (e.g., a list of enemies)
     }
- 
 
-pub async fn summon(&mut self, tm: &TextureManager, player: &Player, slime_list: &mut Vec<Enemy>)-> Vec<Enemy> {
-    let mut summoned_enemy = Enemy::new(
-        "",
-        30.0,
-        30.0,
-        self.get_x(),
-        self.get_y(),
-        true,
-        1.0,
-        100,
-        10,
-        "",
-        0.0,
-    ).await;
-    summoned_enemy.set_preload(tm.get_preload("assets/slime.png").unwrap());
-    slime_list.push(summoned_enemy.clone());
-  
-    slime_list.to_vec()
-    
-    // Add the summoned enemy to your game world (e.g., a list of enemies)
+    pub fn teleport(&mut self) {
+        rand::srand(date::now() as u64);
+        let rand_x = rand::gen_range(70.0, 900.0);
+        let rand_y = rand::gen_range(80.0, 630.0);
+        self.set_x(rand_x);
+        self.set_y(rand_y);
+    }
 
-}
-
-
-pub async fn archer_action(&mut self, tm: &TextureManager, player: &mut Player,) {
-     if ((self.get_x() - player.get_x()).abs() < 450.0) && ((self.get_y() - player.get_y()).abs() < 450.0) {
+    pub async fn archer_action(&mut self, tm: &TextureManager, player: &mut Player) {
+        if ((self.get_x() - player.get_x()).abs() < 450.0) && ((self.get_y() - player.get_y()).abs() < 450.0) {
             if get_time() - self.cooldown > 0.5 {
                 self.archer_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
             }
@@ -294,10 +303,10 @@ pub async fn archer_action(&mut self, tm: &TextureManager, player: &mut Player,)
             self.moveing(player.get_x(), player.get_y());
             self.archer_img_change(player.get_x(), self.get_x(), "move", &tm).await;
         }
-}
+    }
 
-pub async fn mage_action(&mut self, tm: &TextureManager, player: &mut Player) {
-     if ((self.get_x() - player.get_x()).abs() < 300.0) && ((self.get_y() - player.get_y()).abs() < 300.0) {
+    pub async fn mage_action(&mut self, tm: &TextureManager, player: &mut Player) {
+        if ((self.get_x() - player.get_x()).abs() < 300.0) && ((self.get_y() - player.get_y()).abs() < 300.0) {
             if get_time() - self.cooldown > 0.5 {
                 self.mage_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
             }
@@ -312,20 +321,27 @@ pub async fn mage_action(&mut self, tm: &TextureManager, player: &mut Player) {
 
             self.mage_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
         }
+    }
+    pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player, slime_list: &mut Vec<Enemy>) -> Vec<Enemy> {
+        if get_time() - self.cooldown > 1.0  {
+            self.summoner_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
+        }
+
+        if get_time() - self.cooldown > 5.0 {
+            self.cooldown = get_time();
+            self.summon(&tm, slime_list).await;
+            self.summoner_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
+        }
+        if get_time() - self.cooldown2 > 10.1 {
+            self.summoner_img_change(player.get_x(), self.get_x(), "move", &tm).await;
+            if get_time() - self.cooldown2 > 10.6 {
+                
+            self.teleport();
+            self.cooldown2 = get_time();
+        }}
+        slime_list.to_vec()
+    }
 }
-pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player, slime_list: &mut Vec<Enemy>) -> Vec<Enemy>{
-    if get_time() - self.cooldown > 0.5 {
-                self.summoner_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
-            }
-
-            if get_time() - self.cooldown > 5.0 {
-                self.cooldown = get_time();
-                self.summon(&tm, player, slime_list).await;
-                self.summoner_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
-            }
-            slime_list.to_vec()
-
-}}
 
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {
 //         let mut answer = false;
@@ -350,4 +366,3 @@ pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player
 //         answer
 //     }
 // }
-

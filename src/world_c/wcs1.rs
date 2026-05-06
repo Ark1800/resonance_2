@@ -16,7 +16,7 @@ use crate::modules::preload_image::TextureManager;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager) -> String {
     let mut map = Map::new(virtual_width, virtual_height).await;
-    map.create_map_array(0, 0, 0, 0, vec![]).await;
+    map.create_map_array(0, 0, 2, 0, vec![1, 3]).await;
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let cyric = StillImage::new(
         "assets/player_files/player_t.png",
@@ -26,24 +26,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         1000.0,  // y position
         true, // Enable stretching
         1.0,  // Normal zoom (100%)
-    )
-    .await;
-
-    let mut coin_purse = Label::new(
-        "",
-        10.0,
-        50.0,
-        30,
-    );
-
-    let background = StillImage::new(
-        "assets/slime.png",
-        virtual_width,  // width
-        virtual_height, // height
-        0.0,            // x position
-        0.0,            // y position
-        true,           // Enable stretching
-        1.0,            // Normal zoom (100%)
     )
     .await;
 
@@ -83,17 +65,19 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             }
         }
         clear_background(WHITE);
-        background.draw();
         player.handle_keypresses().await;
-        if is_key_down(KeyCode::LeftShift) && dash_cooldown <= 0.0 {
+        if (is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift)) && dash_cooldown <= 0.0 {
             player.dash_start();
             dash_duration = 0.1;
             dash_cooldown = 0.6;
         }
 
         let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos);
+        player.move_player(&map, old_pos, &vec![]);
         
+        if player.get_y() <= 10.0 {
+            return "wcs2".to_string();
+        }
 
         if speech_num == 0 {
             speech_bubble_show(&speech_list[0], &mut lbl_speech, &mut speech_duration);

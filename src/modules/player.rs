@@ -10,10 +10,7 @@ use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 
 //TO DOOOOOO
-//2. inventory trashing bug-fixing
-//3. health bar
-//3. updating logs
-//4. adding comments to player code
+//3. health bar/ui
 //5. player damage
 //6. player not switching image 60 times per second 
 
@@ -27,6 +24,7 @@ funcs
 player.handle_keypresses().await;
 player.move_player();
 player.handle_inventory();
+player.handle_player_ui();
 player.draw();
 */
 pub struct Player {
@@ -45,6 +43,7 @@ pub struct Player {
     equipped_items: Vec<usize>, //vector of indices of equipped items in the items vector
     itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), //2d list for stats 
     inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for inventory UI elements (listviews, images, labels, buttons)
+    playerui: (Vec<StillImage>, Vec<Label>), //2d list for player UI elements (images, labels)
     inventoryopen: bool, //is inventory open
     armor: i32, //armor value for damage reduction
 }
@@ -82,6 +81,7 @@ impl Player {
             inventory: Player::create_inventory( &preloadlist).await,
             inventoryopen: false,
             armor: 0,
+            playerui: Player::create_player_ui(&preloadlist).await,
         }
     }
     //movement functions
@@ -108,13 +108,13 @@ impl Player {
 
         let movement = move_dir * self.move_speed * get_frame_time() * self.movespeedmult; //increasing/decreasing movement speed based on movespeedmult (for items and buffs)
         self.movement = movement; 
-        self.handle_image().await; //handle if image changes
+        self.handle_image(); //handle if image changes
         if is_key_pressed(KeyCode::Tab) {
             self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
         }
     }
 
-    pub async fn handle_image(&mut self) { //change image based on direction of movement (8 directions)
+    pub fn handle_image(&mut self) { //change image based on direction of movement (8 directions)
         if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) {
             self.view.set_preload(self.preloads[7].clone());
         } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) {
@@ -142,14 +142,30 @@ impl Player {
         self.view.set_y(self.view.get_y() + self.movement.y);
     }
 
-    pub fn move_player(&mut self, map: &Map, old_pos: Vec2) {
+    pub fn move_player(&mut self, map: &Map, old_pos: Vec2, collides: &Vec<StillImage>) {
         self.move_x();
+        let mut collide = false;
+        if !collides.is_empty() {
+            collide = true;
+        }
         if map.map_collision(&self.view_player()).0 { //collision with map
             self.set_x(old_pos.x);
+        } else if collide {
+            for img in collides {
+                if self.check_x_collision(img) {
+                    self.set_x(old_pos.x);
+                }
+            }
         }
         self.move_y();
         if map.map_collision(&self.view_player()).0 { //collision with map
             self.set_y(old_pos.y);
+        } else if collide {
+            for img in collides {
+                if self.check_y_collision(img) {
+                    self.set_y(old_pos.y);
+                }
+            }
         }
     }
 
@@ -236,8 +252,85 @@ impl Player {
     }
 
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-    pub fn create_player_ui(&mut self) {
-        let mut lbl_healthbar = Label::new(format!("Health: {}", self.health), 50.0, 50.0, 30);
+    pub async fn create_player_ui(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>) {
+        let img_heart = StillImage::new(
+        "assets/arrow.png",
+        100.0,  // width
+        50.0,  // height
+        -25.0,  // x position //offset as drawn from center
+        0.0,   // y position
+        true,   // Enable stretching
+        1.0,    // Normal zoom (100%)
+    ).await;
+    let mut lbl_healthbar = Label::new("", 20.0, 40.0, 30);
+    lbl_healthbar.with_fixed_size(400.0, 25.0);
+    lbl_healthbar.with_colors(WHITE, Some(RED));
+    lbl_healthbar.with_border(BLACK, 2.0);
+    let mut lbl_healthbarbg = Label::new("", 20.0, 40.0, 30);
+    lbl_healthbarbg.with_fixed_size(400.0, 25.0);
+    lbl_healthbarbg.with_colors(WHITE, Some(WHITE));
+    lbl_healthbarbg.with_border(BLACK, 2.0);
+    let mut lbl_healthnum = Label::new("100", 6.0, 28.0, 30);
+    let img_arrow = StillImage::new(
+        "assets/arrow.png",
+        40.0,  // width
+        40.0,  // height
+        420.0,  // x position 
+        5.0,   // y position
+        true,   // Enable stretching
+        1.0,    // Normal zoom (100%)
+    ).await;
+    let mut lbl_arrownum = Label::new("99", 427.0, 32.0, 30);
+    lbl_arrownum.with_colors(WHITE, None);
+    let img_disc1 = StillImage::new(
+        "assets/arrow.png",
+        40.0,  // width
+        40.0,  // height
+        465.0,  // x position 
+        5.0,   // y position
+        true,   // Enable stretching
+        1.0,    // Normal zoom (100%)
+    ).await;
+    let mut lbl_disc1num = Label::new("99", 472.0, 32.0, 30);
+    lbl_disc1num.with_colors(WHITE, None);
+    let img_disc2 = StillImage::new(
+        "assets/arrow.png",
+        40.0,  // width
+        40.0,  // height
+        510.0,  // x position 
+        5.0,   // y position
+        true,   // Enable stretching
+        1.0,    // Normal zoom (100%)
+    ).await;
+    let mut lbl_disc2num = Label::new("99", 517.0, 32.0, 30);
+    lbl_disc2num.with_colors(WHITE, None);
+    let img_disc3 = StillImage::new(
+        "assets/arrow.png",
+        40.0,  // width
+        40.0,  // height
+        555.0,  // x position 
+        5.0,   // y position
+        true,   // Enable stretching
+        1.0,    // Normal zoom (100%)
+    ).await;
+    let mut lbl_disc3num = Label::new("99", 562.0, 32.0, 30);
+    lbl_disc3num.with_colors(WHITE, None);
+    (
+        vec![img_heart, img_arrow, img_disc1, img_disc2, img_disc3],
+        vec![lbl_healthbarbg, lbl_healthbar, lbl_healthnum, lbl_arrownum, lbl_disc1num, lbl_disc2num, lbl_disc3num],
+    )
+    }
+
+    pub fn handle_player_ui(&mut self) {
+        //update health number
+        self.playerui.1[2].set_text(format!("{}", self.health));
+
+        for image in self.playerui.0.iter_mut() {
+            image.draw();
+        }
+        for label in self.playerui.1.iter_mut() {
+            label.draw();
+        }
     }
 
     //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
