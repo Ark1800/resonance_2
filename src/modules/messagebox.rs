@@ -160,7 +160,7 @@ pub enum MessageBoxResult {
     ButtonPressed(usize),  // Index of the button pressed
     Closed,                // Dialog was closed via X button or escape key
 }
-
+   #[allow(unused)]
 pub struct MessageBox {
     visible: bool,
     title: String,
@@ -338,6 +338,7 @@ impl MessageBox {
     }
     
     // Show the dialog
+       #[allow(unused)]
     pub fn show(&mut self) -> &mut Self {
         self.visible = true;
         self.result = None;
@@ -394,6 +395,8 @@ impl MessageBox {
     ///     }
     /// }
     /// ```
+    /// 
+       #[allow(unused)]
     pub fn draw(&mut self) -> Option<MessageBoxResult> {
         // Don't do anything if not visible
         if !self.visible {

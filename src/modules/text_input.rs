@@ -337,7 +337,7 @@ impl TextInput {
             )
         }
     }
-
+   #[allow(unused)]
     pub fn new(x: f32, y: f32, width: f32, height: f32, font_size: f32) -> Self {
                 Self {
                         preferred_col: None,

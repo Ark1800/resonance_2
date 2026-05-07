@@ -1,31 +1,21 @@
 // pub mod projectile;
 // use crate::modules::projectile::Projectile;
 
-
-
-
-
 use crate::modules::collision::check_collision;
-use crate::modules::still_image::StillImage;
 use crate::modules::player::Player;
-use crate::modules::preload_image::TextureManager;
+use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
-use crate::modules::enemy::Enemy;
 
 #[derive(Clone)]
-
-
-
 
 pub struct Projectile {
     view: StillImage,
     move_speed: f32,
-    direction: Vec2
-    
+    direction: Vec2,
 }
 
 impl Projectile {
-    
+    // Creates a new projectile with the given parameters and returns it
     #[allow(unused)]
     pub async fn new(asset_path: StillImage, width: f32, height: f32, x: f32, y: f32, stretch_enabled: bool, zoom_level: f32) -> Projectile {
         let mut bob = asset_path;
@@ -34,7 +24,11 @@ impl Projectile {
         bob.set_size(width, height);
         bob.set_stretch(stretch_enabled);
         bob.set_zoom(zoom_level);
-        Projectile { view: bob, move_speed: 400.0, direction: vec2(0.0, 0.0) }
+        Projectile {
+            view: bob,
+            move_speed: 400.0,
+            direction: vec2(0.0, 0.0),
+        }
     }
 
     #[allow(unused)]
@@ -98,6 +92,7 @@ impl Projectile {
     pub fn view_player(&self) -> &StillImage {
         &self.view
     }
+    #[allow(unused)]
     pub fn get_direction(&self) -> Vec2 {
         self.direction
     }
@@ -108,33 +103,33 @@ impl Projectile {
         self.view.transparency_mask = mask;
         self.view.filename = filename;
     }
-pub fn set_rotation(&mut self, playerx: f32, playery: f32, enemyx: f32, enemyy: f32) -> f32{
+    // Sets the rotation of the projectile based on the player's and enemy's positions
+    pub fn set_rotation(&mut self, playerx: f32, playery: f32, enemyx: f32, enemyy: f32) -> f32 {
+        // Calculate the angle using atan2 to get the correct quadrant
         let oppositelen = playery - enemyy;
         let adjacentlen = playerx - enemyx;
-        let result = oppositelen/adjacentlen;
+        let result = oppositelen / adjacentlen;
         let mut angle = result.atan();
         if playerx < enemyx {
+            // If the player is to the left of the enemy, we need to add 180 degrees (PI radians) to the angle
             angle += std::f32::consts::PI;
         }
-        
+
         return angle;
-    
     }
+    // Moves the projectile in the direction it's facing, multiplied by the move speed and frame time
     #[allow(unused)]
-     pub fn move_projectiles(&mut self, player_pos: Vec2) { 
-           
- let movement = self.direction * self.move_speed * get_frame_time();
+    pub fn move_projectiles(&mut self, player_pos: Vec2) {
+        let movement = self.direction * self.move_speed * get_frame_time();
 
-            self.set_x(self.get_x() + movement.x);
-            self.set_y(self.get_y() + movement.y);
-        
-        
+        self.set_x(self.get_x() + movement.x);
+        self.set_y(self.get_y() + movement.y);
     }
-
-    pub fn set_direction (&mut self, player_pos: Vec2)  {
+    // Sets the direction of the projectile based on the player's position and the projectile's current position
+    pub fn set_direction(&mut self, player_pos: Vec2) {
         self.direction = (player_pos - self.get_pos()).normalize();
     }
-
+    // Checks for collision between the projectile and the player, returns true if there is a collision
     #[allow(unused)]
     pub fn check_collide(&mut self, object: &Player) -> bool {
         let mut collide = false;

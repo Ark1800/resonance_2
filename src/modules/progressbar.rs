@@ -123,6 +123,7 @@ impl ProgressBar {
     }
     
     // Set colors for the progress bar
+       #[allow(unused)]
     pub fn with_colors(&mut self, background: Color, fill: Color, text: Color) -> &mut Self {
         self.background_color = background;
         self.fill_color = fill;
@@ -182,6 +183,7 @@ impl ProgressBar {
     }
     
     // Get progress as percentage (0-100)
+       #[allow(unused)]
     pub fn percentage(&self) -> f32 {
         let range = self.max_value - self.min_value;
         if range <= 0.0 {
@@ -191,11 +193,13 @@ impl ProgressBar {
     }
     
     // Check if progress is complete
+       #[allow(unused)]
     pub fn is_complete(&self) -> bool {
         self.current_value >= self.max_value
     }
     
     // Set progress value
+       #[allow(unused)]
     pub fn set_value(&mut self, value: f32) {
         let was_complete = self.is_complete();
         let new_value = value.clamp(self.min_value, self.max_value);
@@ -215,11 +219,13 @@ impl ProgressBar {
     }
     
     // Increment progress by specified amount
+       #[allow(unused)]
     pub fn increment(&mut self, amount: f32) {
         self.set_value(self.current_value + amount);
     }
     
     // Update animation
+       #[allow(unused)]
     pub fn update(&mut self) {
         if self.animate && self.current_value != self.target_value {
             let was_complete = self.is_complete();
@@ -254,6 +260,7 @@ impl ProgressBar {
     }
     
     // Draw the progress bar
+       #[allow(unused)]
     pub fn draw(&mut self) {
         // Update animation state
         self.update();

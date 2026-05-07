@@ -13,6 +13,7 @@ use crate::modules::item::Item;
 use crate::modules::label::Label;
 use crate::modules::listview::ListView;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::grid::draw_grid;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use crate::modules::text_button::TextButton;
@@ -20,8 +21,8 @@ use macroquad::prelude::*;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager) -> String {
     let diamond_armour = Item::new(
-        tm.get_preload("assets/slime.png").unwrap(),                // Preload
-        "assets/slime.png".to_string(),                             // Image path
+        tm.get_preload("assets/item_files/armour/diamond_armor.png").unwrap(),                // Preload
+        "assets/item_files/armour/diamond_armor.png".to_string(),                             // Image path
         "Diamond Armour".to_string(),                               // Name
         "Armour made of the toughest gemstone around!".to_string(), // Description
         "armour".to_string(),                                       // Type
@@ -35,8 +36,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     .await;
 
     let time_sword = Item::new(
-        tm.get_preload("assets/slime.png").unwrap(),              // Preload
-        "assets/slime.png".to_string(),                           // Image path
+        tm.get_preload("assets/item_files/weapons/time_sword.png").unwrap(),              // Preload
+        "assets/item_files/weapons/time_sword.png".to_string(),                           // Image path
         "Time Sword".to_string(),                                 // Name
         "A weapon made to slice through time itself".to_string(), // Description
         "attack".to_string(),                                     // Type
@@ -50,8 +51,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     .await;
 
     let future_bow = Item::new(
-        tm.get_preload("assets/slime.png").unwrap(),                                            // Preload
-        "assets/slime.png".to_string(),                                                         // Image path
+        tm.get_preload("assets/item_files/weapons/future_bow.png").unwrap(),                                         // Preload
+        "assets/item_files/weapons/future_bow.png".to_string(),                                                      // Image path
         "Future Bow".to_string(),                                                               // Name
         "A bow that, due to its enchantments, can fire its arrows into the future".to_string(), // Description
         "attack".to_string(),                                                                   // Type
@@ -64,9 +65,9 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     )
     .await;
 
-    let hermes_chainmail = Item::new(
-        tm.get_preload("assets/slime.png").unwrap(), // Preload
-        "assets/slime.png".to_string(),              // Image path
+    let hermes_armour = Item::new(
+        tm.get_preload("assets/item_files/armour/hermes_armor.png").unwrap(), // Preload
+        "assets/item_files/armour/hermes_armor.png".to_string(),              // Image path
         "Chainmail of Hermes".to_string(),           // Name
         "Armour blessed by the messenger god, Hermes. This armour provides the wearer a light feeling, and increases their movement speed"
             .to_string(), // Description
@@ -80,23 +81,34 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     )
     .await;
 
-    let mut shop_stock: Vec<Item> = vec![diamond_armour, time_sword, future_bow, hermes_chainmail];
+    let mut shop_stock: Vec<Item> = vec![diamond_armour, time_sword, future_bow, hermes_armour];
     let mut shop_names: Vec<String> = vec![];
     for i in 0..shop_stock.len() {
         shop_names.push(shop_stock[i].get_itemtitle().clone());
     }
-    let mut shop_view = ListView::new(&shop_names, 500.0, 500.0, 50);
-    let mut lbl_desc = Label::new("", 250.0, 500.0, 50);
+    let mut shop_view = ListView::new(&shop_names, 650.0, 50.0, 40);
+    let mut lbl_desc = Label::new("", 50.0, 300.0, 40);
     let item_price = vec![1000, 500, 500, 750, 9999];
-    let mut lbl_price = Label::new("", 250.0, 450.0, 50);
+    let mut lbl_price = Label::new("", 250.0, 450.0, 40);
     let btn_buy = TextButton::new(100.0, 200.0, 200.0, 60.0, "Buy", BLUE, GREEN, 30);
-    let mut lbl_error = Label::new("", 250.0, 650.0, 50);
+    let mut lbl_error = Label::new("", 250.0, 650.0, 40);
+
+    let mut item_img = StillImage::new(
+        "", 160.0, // width
+        160.0, // height
+        0.0,   // x position
+        0.0,   // y position
+        true,  // Enable stretching
+        1.0,   // Normal zoom (100%)
+    )
+    .await;
 
     let mut selected_record: String = "None".to_string();
 
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(WHITE);
+        draw_grid(50.0, BLACK);
 
         if shop_view.selected_item().is_some() && &selected_record != shop_view.selected_item().unwrap() {
             selected_record = shop_view.selected_item().unwrap().clone();
@@ -131,36 +143,39 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
                 ));
             }
             lbl_price.set_text(&item_price[selected_item].to_string());
+            item_img.set_image(&shop_stock[selected_item].get_itemassetpath()).await;
         }
 
-        if btn_buy.click() && shop_view.selected_item().is_some() {
-            let mut item_wanted = 0;
-            for i in 0..shop_stock.len() {
-                if &selected_record == &shop_stock[i].get_itemtitle() {
-                    item_wanted = i;
-                    break;
+        if shop_view.selected_item().is_some() {
+            if btn_buy.click() && shop_view.selected_item().is_some() {
+                let mut item_wanted = 0;
+                for i in 0..shop_stock.len() {
+                    if &selected_record == &shop_stock[i].get_itemtitle() {
+                        item_wanted = i;
+                        break;
+                    }
                 }
-            }
 
-            if player.getcoins() >= item_price[item_wanted] {
-                player.addcoins(-item_price[item_wanted]);
-                player.add_inventory_item(shop_stock[item_wanted].clone());
-                shop_stock.remove(item_wanted);
-                shop_names.remove(item_wanted);
-                shop_view.clear();
-                for i in 0..shop_names.len() {
-                    shop_view.add_item(&shop_names[i]);
+                if player.getcoins() >= item_price[item_wanted] {
+                    player.addcoins(-item_price[item_wanted]);
+                    player.add_inventory_item(shop_stock[item_wanted].clone());
+                    shop_stock.remove(item_wanted);
+                    shop_names.remove(item_wanted);
+                    shop_view.clear();
+                    for i in 0..shop_names.len() {
+                        shop_view.add_item(&shop_names[i]);
+                    }
+                    selected_record = "None".to_string();
                 }
-                selected_record = "None".to_string();
+            } else if btn_buy.click() && shop_view.selected_item().is_none() {
+                lbl_error.set_text("Please select an item first");
             }
-        } else if btn_buy.click() && shop_view.selected_item().is_none() {
-            lbl_error.set_text("Please select an item first");
         }
-
         lbl_desc.draw();
         lbl_price.draw();
         lbl_error.draw();
         shop_view.draw();
+        item_img.draw();
         next_frame().await;
     }
 }

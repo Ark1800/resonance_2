@@ -6,7 +6,6 @@ Program Details:
 
 use crate::modules::label::Label;
 use crate::modules::map::Map;
-use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;

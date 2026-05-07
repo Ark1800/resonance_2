@@ -19,7 +19,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     map.create_map_array(0, 0, 1, 0, vec![3]).await;
     player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     let cyric = StillImage::new(
-        "assets/wall_files/player_t.png",
+        "assets/player_files/player_t.png",
         80.0,   // width
         80.0,   // height
         450.0,  // x position
@@ -31,7 +31,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
 
     let podium_list: Vec<StillImage> = vec![
         StillImage::new(
-            "assets/wall_files/wall.png",
+            "assets/map_files/pedestal.png",
             30.0,   // width
             30.0,   // height
             450.0,  // x position
@@ -41,7 +41,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         )
         .await,
         StillImage::new(
-            "assets/wall_files/wall.png",
+            "assets/map_files/pedestal.png",
             30.0,   // width
             30.0,   // height
             450.0,  // x position
@@ -51,7 +51,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         )
         .await,
         StillImage::new(
-            "assets/wall_files/wall.png",
+            "assets/map_files/pedestal.png",
             30.0,   // width
             30.0,   // height
             450.0,  // x position
