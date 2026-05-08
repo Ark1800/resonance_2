@@ -19,7 +19,7 @@ use crate::modules::still_image::StillImage;
 use crate::modules::text_button::TextButton;
 use macroquad::prelude::*;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool) -> String {
     let diamond_armour = Item::new(
         tm.get_preload("assets/item_files/armour/diamond_armor.png").unwrap(),                // Preload
         "assets/item_files/armour/diamond_armor.png".to_string(),                             // Image path
@@ -171,6 +171,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
                 lbl_error.set_text("Please select an item first");
             }
         }
+
         lbl_desc.draw();
         lbl_price.draw();
         lbl_error.draw();

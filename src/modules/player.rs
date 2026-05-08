@@ -99,7 +99,7 @@ impl Player {
         }
     }
     //movement functions
-    pub async fn handle_keypresses(&mut self) {
+    pub async fn handle_keypresses(&mut self, pause: &mut bool) {
         //basic movement input handling (WASD)
         let mut move_dir = vec2(0.0, 0.0);
 
@@ -125,7 +125,13 @@ impl Player {
         self.handle_image(); //handle if image changes
         if is_key_pressed(KeyCode::Tab) {
             self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
+           match pause {
+                true => *pause = false, //unpause game when closing inventory
+                false => *pause = true, //pause game when opening inventory
+            }
         }
+       
+        
     }
 
     pub fn handle_image(&mut self) {

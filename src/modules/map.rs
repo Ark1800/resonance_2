@@ -7,7 +7,9 @@ Randomized map generation based on set objects
 0 - Empty
 1 - Wall
 2 - Chest
+
 map.create_map_array(chest_num, entrance_num, wall_num, entrance_sides)
+
 */
 
 use crate::modules::collision::check_collision;
@@ -35,7 +37,7 @@ impl Map {
         }
     }
 #[allow(unused)]
-    pub async fn create_map_array(&mut self, enemy_num: i32, chest_num: i32, entrance_num: i32, wall_num: i32, entrance_sides: Vec<i32>) {
+    pub async fn create_map_array(&mut self, chest_num: i32, entrance_num: i32, wall_num: i32, entrance_sides: Vec<i32>) {
         for x in 0..self.map_array.len() {
             for y in 0..self.map_array[0].len() {
                 if x == 0 || x == self.map_array.len() - 1 {
