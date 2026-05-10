@@ -36,7 +36,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         background.set_preload(tm.get_preload("assets/map_files/town.png").unwrap());
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(BLACK);
+        background.draw();
         map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
@@ -58,8 +59,9 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
             
         }
 
-        background.draw();
         draw_grid(50.0, BROWN);
+        player.handle_inventory();
+        player.handle_player_ui();
         player.draw();
         next_frame().await;
     }

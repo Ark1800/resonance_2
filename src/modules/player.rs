@@ -58,7 +58,7 @@ pub struct Player {
     equipped_items: Vec<usize>,                          //vector of indices of equipped items in the items vector
     itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), //2d list for stats
     inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for inventory UI elements (listviews, images, labels, buttons)
-    playerui: (Vec<StillImage>, Vec<Label>),             //2d list for player UI elements (images, labels)
+    playerui: (Vec<StillImage>, Vec<Label>, Vec<StillImage>,),             //2d list for player UI elements (images, labels)
     inventoryopen: bool,                                 //is inventory open
     armor: i32,                                          //armor value for damage reduction
 }
@@ -124,7 +124,7 @@ impl Player {
         self.movement = movement;
         self.handle_image(); //handle if image changes
         if is_key_pressed(KeyCode::Tab) {
-            self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
+           self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
            match pause {
                 true => *pause = false, //unpause game when closing inventory
                 false => *pause = true, //pause game when opening inventory
@@ -135,23 +135,32 @@ impl Player {
     }
 
     pub fn handle_image(&mut self) {
-        //change image based on direction of movement (8 directions)
-        if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) {
-            self.view.set_preload(self.preloads[7].clone());
+        // change image based on direction of movement (8 directions)
+        // Determine the desired preload index, then only set it if different from current
+        let desired_index: Option<usize> = if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) {
+            Some(7) //some lets us choose something that might not exist so nothing is triggered with no kepress
         } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) {
-            self.view.set_preload(self.preloads[6].clone());
+            Some(6)
         } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::D) {
-            self.view.set_preload(self.preloads[9].clone());
+            Some(9)
         } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::A) {
-            self.view.set_preload(self.preloads[8].clone());
+            Some(8)
         } else if is_key_down(KeyCode::D) {
-            self.view.set_preload(self.preloads[5].clone());
+            Some(5)
         } else if is_key_down(KeyCode::A) {
-            self.view.set_preload(self.preloads[4].clone());
+            Some(4)
         } else if is_key_down(KeyCode::S) {
-            self.view.set_preload(self.preloads[0].clone());
+            Some(0)
         } else if is_key_down(KeyCode::W) {
-            self.view.set_preload(self.preloads[3].clone());
+            Some(3)
+        } else {
+            None
+        };
+        if let Some(idx) = desired_index { //create an index var from desired_index
+            let desired_fname = &self.preloads[idx].2; //get filename of desired preload
+            if self.view.get_filename() != *desired_fname { //if and ONLY if the filename differs
+                self.view.set_preload(self.preloads[idx].clone()); //Changes filename
+            } 
         }
     }
 
@@ -189,6 +198,10 @@ impl Player {
                     self.set_y(old_pos.y);
                 }
             }
+        }
+        for img in self.playerui.2.iter_mut() {
+            img.set_x(img.get_x() + self.movement.x);
+            img.set_y(img.get_y() + self.movement.y);
         }
     }
 
@@ -234,6 +247,22 @@ impl Player {
     pub fn set_position(&mut self, x: f32, y: f32) {
         self.view.set_x(x);
         self.view.set_y(y);
+        self.playerui.2[0].set_x(x - 15.0);  //must be set manually as each label is distinctly spaced and positioned
+        self.playerui.2[0].set_y(y - 30.0);
+        self.playerui.2[1].set_x(x + 40.0);
+        self.playerui.2[1].set_y(y - 30.0);
+        self.playerui.2[2].set_x(x + 45.0);
+        self.playerui.2[2].set_y(y - 10.0);
+        self.playerui.2[3].set_x(x + 40.0);
+        self.playerui.2[3].set_y(y + 60.0);
+        self.playerui.2[4].set_x(x - 10.0);
+        self.playerui.2[4].set_y(y + 65.0);
+        self.playerui.2[5].set_x(x - 60.0);
+        self.playerui.2[5].set_y(y + 50.0);
+        self.playerui.2[6].set_x(x - 35.0);
+        self.playerui.2[6].set_y(y - 10.0);
+        self.playerui.2[7].set_x(x - 60.0);
+        self.playerui.2[7].set_y(y - 50.0);
     }
 
     pub fn draw(&self) {
@@ -275,7 +304,7 @@ impl Player {
     }
 
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-    pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>) {
+    pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<StillImage>) {
         let mut img_heart = StillImage::new(
             "",
             100.0, // width
@@ -450,14 +479,6 @@ impl Player {
                 img_disc1,
                 img_disc2,
                 img_disc3,
-                img_slash_t,
-                img_slash_tr,
-                img_slash_r,
-                img_slash_dr,
-                img_slash_d,
-                img_slash_dl,
-                img_slash_l,
-                img_slash_tl,
             ],
             vec![
                 lbl_healthbarbg,
@@ -468,19 +489,35 @@ impl Player {
                 lbl_disc2num,
                 lbl_disc3num,
             ],
+            vec![
+                img_slash_t,
+                img_slash_tr,
+                img_slash_r,
+                img_slash_dr,
+                img_slash_d,
+                img_slash_dl,
+                img_slash_l,
+                img_slash_tl,
+            ]
         )
     }
 
     pub fn handle_player_ui(&mut self) {
         //update health number
         self.playerui.1[2].set_text(format!("{}", self.health));
-
         for image in self.playerui.0.iter_mut() {
             image.draw();
         }
         for label in self.playerui.1.iter_mut() {
             label.draw();
         }
+        for image in self.playerui.2.iter_mut() {
+            image.draw();
+        }
+        self.playerui.1[0].draw();
+        self.playerui.1[1].draw(); //label must be redrawn very specifically so for loops cant be used  
+        self.playerui.0[0].draw();
+        self.playerui.1[2].draw();
     }
 
     //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
