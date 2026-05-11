@@ -14,17 +14,33 @@ use std::f32::consts::PI;
 //1. player attacks appearing
 //2. player healthbar and health decreasing
 //3. player ranged attacks
-//5. player damage
-//6. player not switching image 60 times per second
+//4. player damage
+//4.5 player attacks not moving when collision
+//5. World 1 screens
+//6. Song uploads
+//7. All Music Discs
+
+/*
+//Keypresses:
+Move Up - W
+Move Down - S
+Move Left - A
+Move Right - D
+Open/Close Inventory - Tab
+Disc 1 - Q
+Disc 2 - E
+Disc 3 - X
+Dash - Shift
+Melee Attack - Up Arrow
+Ranged Attack - Right Arrow
 
 //IMPLEMENTATION
 //in every screen write
-/*
 with other crates
 use crate::modules::player::Player;
 
 funcs
-player.handle_keypresses().await;
+player.handle_keypresses()
 player.move_player();
 player.handle_inventory();
 player.handle_player_ui();
@@ -32,6 +48,9 @@ player.draw();
 
 ASIDES...
 Angles:
+With your other use commands: use std::f32::consts::PI;
+
+and then call your functions:
 img_bob.set_angle(PI/2); //rotate 90 degrees CCW
 img_bob.set_angle(PI); //rotate 180 degrees CCW
 img_bob.set_angle(PI*3/2); //rotate 270 degrees CCW
@@ -61,6 +80,9 @@ pub struct Player {
     playerui: (Vec<StillImage>, Vec<Label>, Vec<StillImage>,),             //2d list for player UI elements (images, labels)
     inventoryopen: bool,                                 //is inventory open
     armor: i32,                                          //armor value for damage reduction
+    attack: bool,
+    attack_cooldown: f32,
+    player_direction: String, //current direction player is facing for attack purposes (up, down, left, right, etc.)
 }
 
 impl Player {
@@ -96,6 +118,9 @@ impl Player {
             inventoryopen: false,
             armor: 0,
             playerui: Player::create_player_ui(x, y, &preloadlist).await,
+            attack: false,
+            attack_cooldown: 3.0,
+            player_direction: "d".to_string(),
         }
     }
     //movement functions
@@ -130,28 +155,37 @@ impl Player {
                 false => *pause = true, //pause game when opening inventory
             }
         }
-       
-        
+        if is_key_pressed(KeyCode::Up) {
+            self.attack = true;
+        }
     }
 
     pub fn handle_image(&mut self) {
         // change image based on direction of movement (8 directions)
         // Determine the desired preload index, then only set it if different from current
         let desired_index: Option<usize> = if is_key_down(KeyCode::W) && is_key_down(KeyCode::D) {
+            self.player_direction = "tr".to_string();
             Some(7) //some lets us choose something that might not exist so nothing is triggered with no kepress
         } else if is_key_down(KeyCode::W) && is_key_down(KeyCode::A) {
+            self.player_direction = "tl".to_string();
             Some(6)
         } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::D) {
+            self.player_direction = "br".to_string();
             Some(9)
         } else if is_key_down(KeyCode::S) && is_key_down(KeyCode::A) {
+            self.player_direction = "bl".to_string();
             Some(8)
         } else if is_key_down(KeyCode::D) {
+            self.player_direction = "b".to_string();
             Some(5)
         } else if is_key_down(KeyCode::A) {
+            self.player_direction = "l".to_string();
             Some(4)
         } else if is_key_down(KeyCode::S) {
+            self.player_direction = "d".to_string();
             Some(0)
         } else if is_key_down(KeyCode::W) {
+            self.player_direction = "t".to_string();
             Some(3)
         } else {
             None
@@ -173,6 +207,11 @@ impl Player {
     }
 
     pub fn move_player(&mut self, map: &Map, old_pos: Vec2, collides: &Vec<StillImage>) {
+        let mut collided = false;
+        for img in self.playerui.2.iter_mut() {
+            img.set_x(img.get_x() + self.movement.x);
+            img.set_y(img.get_y() + self.movement.y);
+        }
         self.move_x();
         let mut collide = false;
         if !collides.is_empty() {
@@ -185,6 +224,7 @@ impl Player {
             for img in collides {
                 if self.check_x_collision(img) {
                     self.set_x(old_pos.x);
+                    collided = true;
                 }
             }
         }
@@ -196,13 +236,17 @@ impl Player {
             for img in collides {
                 if self.check_y_collision(img) {
                     self.set_y(old_pos.y);
+                    collided = true;
                 }
             }
         }
-        for img in self.playerui.2.iter_mut() {
-            img.set_x(img.get_x() + self.movement.x);
-            img.set_y(img.get_y() + self.movement.y);
+        if collided {
+            for img in self.playerui.2.iter_mut() {
+                img.set_x(img.get_x() - self.movement.x);
+                img.set_y(img.get_y() - self.movement.y);
+            }
         }
+
     }
 
     pub fn check_x_collision(&mut self, img2: &StillImage) -> bool {
@@ -511,13 +555,23 @@ impl Player {
         for label in self.playerui.1.iter_mut() {
             label.draw();
         }
-        for image in self.playerui.2.iter_mut() {
-            image.draw();
-        }
         self.playerui.1[0].draw();
         self.playerui.1[1].draw(); //label must be redrawn very specifically so for loops cant be used  
         self.playerui.0[0].draw();
         self.playerui.1[2].draw();
+        if self.attack {
+            match self.player_direction.as_str() {
+                "t" => self.playerui.2[0].draw(),
+                "tr" => self.playerui.2[1].draw(),
+                "r" => self.playerui.2[2].draw(),
+                "dr" => self.playerui.2[3].draw(),
+                "d" => self.playerui.2[4].draw(),
+                "dl" => self.playerui.2[5].draw(),
+                "l" => self.playerui.2[6].draw(),
+                "tl" => self.playerui.2[7].draw(),
+                _ => (),
+            }
+        }
     }
 
     //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
@@ -693,10 +747,7 @@ impl Player {
     }
 
     pub fn unequip_item(&mut self, title: &str) {
-        println!("equipped items: {:?}", self.equipped_items);
         for (equipped_pos, index) in self.equipped_items.iter().enumerate() {
-            println!("{}", title);
-            println!("{}", self.items[*index].get_itemtitle());
             if *title == self.items[*index].get_itemtitle() {
                 println!("SUCCESS");
                 let imageboxindex = match self.items[*index].get_itemtype().as_str() {
@@ -716,13 +767,10 @@ impl Player {
                     }
                     _ => 2,
                 };
-                println!("{}", self.equipped_items.len());
                 if self.equipped_items.len() == 1 {
                     self.equipped_items.clear();
-                    println!("No more equipped items.");
                 } else {
                     self.equipped_items.remove(equipped_pos);
-                    println!("Unequipped item: {}", title);
                 }
                 self.inventory.1[imageboxindex].set_preload(self.preloads[1].clone());
                 self.update_stats();
