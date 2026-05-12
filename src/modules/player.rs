@@ -16,6 +16,7 @@ use std::f32::consts::PI;
 //3. player ranged attacks
 //4. player damage
 //4.5 player attacks not moving when collision
+//4.6 health not saving between screens
 //5. World 1 screens
 //6. Song uploads
 //7. All Music Discs
@@ -178,13 +179,13 @@ impl Player {
             self.player_direction = "bl".to_string();
             Some(8)
         } else if is_key_down(KeyCode::D) {
-            self.player_direction = "b".to_string();
+            self.player_direction = "r".to_string();
             Some(5)
         } else if is_key_down(KeyCode::A) {
             self.player_direction = "l".to_string();
             Some(4)
         } else if is_key_down(KeyCode::S) {
-            self.player_direction = "d".to_string();
+            self.player_direction = "b".to_string();
             Some(0)
         } else if is_key_down(KeyCode::W) {
             self.player_direction = "t".to_string();
@@ -209,7 +210,6 @@ impl Player {
     }
 
     pub fn move_player(&mut self, map: &Map, old_pos: Vec2, collides: &Vec<StillImage>) {
-        let mut collided = false;
         for img in self.playerui.2.iter_mut() {
             img.set_x(img.get_x() + self.movement.x);
             img.set_y(img.get_y() + self.movement.y);
@@ -222,11 +222,13 @@ impl Player {
         if map.map_collision(&self.view_player()).0 {
             //collision with map
             self.set_x(old_pos.x);
+            for img in self.playerui.2.iter_mut() {
+                img.set_x(img.get_x() - self.movement.x); //move player UI elements back if collision to prevent them getting stuck in walls
+            }
         } else if collide {
             for img in collides {
                 if self.check_x_collision(img) {
                     self.set_x(old_pos.x);
-                    collided = true;
                 }
             }
         }
@@ -234,19 +236,14 @@ impl Player {
         if map.map_collision(&self.view_player()).0 {
             //collision with map
             self.set_y(old_pos.y);
+            for img in self.playerui.2.iter_mut() {
+                img.set_y(img.get_y() - self.movement.y); //move player UI elements back if collision to prevent them getting stuck in walls
+            }
         } else if collide {
-            
             for img in collides {
                 if self.check_y_collision(img) {
                     self.set_y(old_pos.y);
-                    collided = true;
                 }
-            }
-        }
-        if collided {
-            for img in self.playerui.2.iter_mut() {
-                img.set_x(img.get_x() - self.movement.x);
-                img.set_y(img.get_y() - self.movement.y);
             }
         }
 
@@ -258,7 +255,6 @@ impl Player {
         if check_collision(self.view_player(), img2, 1) {
             collided = true;
         }
-
         collided
     }
 
@@ -435,7 +431,7 @@ impl Player {
         img_disc3.set_preload(preloads[1].clone());
         let mut lbl_disc3num = Label::new("99", 562.0, 32.0, 30);
         lbl_disc3num.with_colors(WHITE, None);
-        //ATTACK LABELS
+        //ATTACK LABELSui();
         let player_x = x;
         let player_y = y;
 
@@ -453,7 +449,7 @@ impl Player {
         let mut img_slash_tr = StillImage::new(
             "",
             60.0, // width
-            50.0, // height
+            50.0, // heightui();
             player_x + 40.0,
             player_y - 30.0,
             true,
@@ -474,7 +470,7 @@ impl Player {
         .await;
         img_slash_r.set_preload(preloads[11].clone());
         img_slash_r.set_angle(PI);
-        let mut img_slash_dr = StillImage::new(
+        let mut img_slash_br = StillImage::new(
             "",
             60.0, // width
             50.0, // height
@@ -484,8 +480,8 @@ impl Player {
             1.0,
         )
         .await;
-        img_slash_dr.set_preload(preloads[11].clone());
-        let mut img_slash_d = StillImage::new(
+        img_slash_br.set_preload(preloads[11].clone());
+        let mut img_slash_b = StillImage::new(
             "",
             70.0, // width
             30.0, // height
@@ -495,8 +491,8 @@ impl Player {
             1.0,
         )
         .await;
-        img_slash_d.set_preload(preloads[11].clone());
-        let mut img_slash_dl = StillImage::new(
+        img_slash_b.set_preload(preloads[11].clone());
+        let mut img_slash_bl = StillImage::new(
             "",
             60.0, // width
             50.0, // height
@@ -506,8 +502,8 @@ impl Player {
             1.0,
         )
         .await;
-        img_slash_dl.set_preload(preloads[11].clone());
-        img_slash_dl.set_angle(PI / 2.0);
+        img_slash_bl.set_preload(preloads[11].clone());
+        img_slash_bl.set_angle(PI / 2.0);
         let mut img_slash_l = StillImage::new(
             "",
             30.0, // width
@@ -551,9 +547,9 @@ impl Player {
                 img_slash_t,
                 img_slash_tr,
                 img_slash_r,
-                img_slash_dr,
-                img_slash_d,
-                img_slash_dl,
+                img_slash_br,
+                img_slash_b,
+                img_slash_bl,
                 img_slash_l,
                 img_slash_tl,
             ]
@@ -576,22 +572,23 @@ impl Player {
         self.playerui.0[0].draw();
         self.playerui.1[2].draw();
         if self.attack {
-        let atklbl = match self.player_direction.as_str() {
-            "t" => self.playerui.2[0].clone(),
-            "tr" => self.playerui.2[1].clone(),
-            "r" => self.playerui.2[2].clone(),
-            "dr" => self.playerui.2[3].clone(),
-            "d" => self.playerui.2[4].clone(),
-            "dl" => self.playerui.2[5].clone(),
-            "l" => self.playerui.2[6].clone(),
-            "tl" => self.playerui.2[7].clone(), 
-            _ => self.playerui.2[0].clone(),
-        };
-        if timepassed > 0.3 { //attack label only appears for 0.3 seconds after attack
-            self.attack = false;
-            self.last_attack_time = get_time();
-        }
-        atklbl.draw();
+            println!("{}", self.player_direction);
+            let atklbl = match self.player_direction.as_str() {
+                "t" => self.playerui.2[0].clone(),
+                "tr" => self.playerui.2[1].clone(),
+                "r" => self.playerui.2[2].clone(),
+                "br" => self.playerui.2[3].clone(),
+                "b" => self.playerui.2[4].clone(),
+                "bl" => self.playerui.2[5].clone(),
+                "l" => self.playerui.2[6].clone(),
+                "tl" => self.playerui.2[7].clone(), 
+                _ => self.playerui.2[0].clone(),
+            };
+            if timepassed > 0.6 { //attack label only appears for 0.6 seconds after attack
+                self.attack = false;
+                self.last_attack_time = get_time();
+            }
+            atklbl.draw();
         }
     }
 
