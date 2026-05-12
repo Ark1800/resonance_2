@@ -13,8 +13,15 @@ use crate::modules::progressbar::ProgressBar;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
-
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
+use crate::modules::collision::check_collision;
+pub async fn run(
+    virtual_width: f32,
+    virtual_height: f32,
+    player: &mut Player,
+    tm: &TextureManager,
+    pause: &mut bool,
+    last_scene: &mut String,
+) -> String {
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -97,37 +104,48 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         vec![1, 1, 1, 1, 2, 3],
         vec![vec![2, 2], vec![2, 3], vec![12, 2], vec![12, 3], vec![1, 1], vec![13, 1]],
     );
+
     loop {
         player.handle_keypresses(pause).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
         map.draw_map(&tm).await;
-        if *pause == false{
-let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos, &vec![]);
+        if *pause == false {
+            let old_pos = player.get_oldpos();
+            player.move_player(&map, old_pos, &vec![]);
 
-        for archer in archer_list.iter_mut() {
-            archer.archer_action(tm, player).await;
-            archer.draw();
-            archer.draw_bullet(player);
+            for archer in archer_list.iter_mut() {
+                archer.archer_action(tm, player).await;
+                archer.draw();
+                archer.draw_bullet(player);
+            }
+
+            mage.mage_action(tm, player).await;
+            summoner.summoner_action(tm, player, &mut slime_list).await;
+            large_slime.large_slime_action(tm, player, &mut slime_list);
+
+            player.draw();
+            for slime in slime_list.iter_mut() {
+                slime.moveing(player.get_x(), player.get_y());
+                slime.draw();
+            }
+            summoner.draw();
+            mage.draw();
+            large_slime.draw();
+            mage.draw_bullet(player);
+for archer in archer_list.iter() {
+    let arrow_list = archer.get_projectiles();
+                for arrow in arrow_list.iter() {
+                     let collision = check_collision(arrow.view_player(), player.view_player(), 1); // 1 = pixel skip (for performance)
+                    if collision {
+                        player.take_damage(archer.get_dmg());
+                        archer.remove_projectile(arrow);
+                }
+            }
+            
         }
 
-        mage.mage_action(tm, player).await;
-        summoner.summoner_action(tm, player, &mut slime_list).await;
-        large_slime.large_slime_action(tm, player, &mut slime_list);
-
-        player.draw();
-        for slime in slime_list.iter_mut() {
-            slime.moveing(player.get_x(), player.get_y());
-            slime.draw();
-        }
-        summoner.draw();
-        mage.draw();
-        large_slime.draw();
-        mage.draw_bullet(player);
-        }
-        
         player.handle_player_ui();
         player.handle_inventory();
 
@@ -137,4 +155,5 @@ let old_pos = player.get_oldpos();
         }
         next_frame().await;
     }
+}
 }

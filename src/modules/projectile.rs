@@ -96,6 +96,8 @@ impl Projectile {
     pub fn get_direction(&self) -> Vec2 {
         self.direction
     }
+
+    
     #[allow(unused)]
     pub fn set_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
         let (texture, mask, filename) = preloaded;

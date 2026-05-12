@@ -45,7 +45,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
             30.0,   // width
             30.0,   // height
             450.0,  // x position
-            500.0, // y position
+            550.0, // y position
             true,   // Enable stretching
             1.0,    // Normal zoom (100%)
         )

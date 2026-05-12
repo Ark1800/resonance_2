@@ -45,7 +45,8 @@ async fn main() {
     "assets/map_files/wall.png", "assets/map_files/chest.png", 
     "assets/summoner_files/summoner_standL.png", "assets/summoner_files/summoner_standR.png", "assets/summoner_files/summoner_summonL.png", "assets/summoner_files/summoner_summonR.png","assets/summoner_files/portalL.png", "assets/summoner_files/portalR.png", 
     "assets/map_files/grass.png", "assets/map_files/dungeon.png", 
-    "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/map_files/pedestal.png", "assets/map_files/town.png"];
+    "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png"
+    ];
     let tm = TextureManager::new();
     // Using custom loading screen appearance
     let loading_options = LoadingScreenOptions {
@@ -58,7 +59,7 @@ async fn main() {
     tm.preload_with_loading_screen(&all_assets, Some(loading_options)).await;
     //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
     let preloadlist = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap()];
-    let mut current_screen = "town".to_string();
+    let mut current_screen = "wcs1".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
     let mut player = Player::new(preloadlist, 30.0, 30.0).await;

@@ -40,6 +40,8 @@ with other crates
 use crate::modules::player::Player;
 
 funcs
+
+in your loop
 player.handle_keypresses()
 player.move_player();
 player.handle_inventory();
@@ -80,8 +82,8 @@ pub struct Player {
     playerui: (Vec<StillImage>, Vec<Label>, Vec<StillImage>,),             //2d list for player UI elements (images, labels)
     inventoryopen: bool,                                 //is inventory open
     armor: i32,                                          //armor value for damage reduction
-    attack: bool,
-    attack_cooldown: f32,
+    attack: bool,                                        //is player currently attacking (for drawing attack labels)
+    last_attack_time: f64,                                   
     player_direction: String, //current direction player is facing for attack purposes (up, down, left, right, etc.)
 }
 
@@ -119,7 +121,7 @@ impl Player {
             armor: 0,
             playerui: Player::create_player_ui(x, y, &preloadlist).await,
             attack: false,
-            attack_cooldown: 3.0,
+            last_attack_time: get_time(),
             player_direction: "d".to_string(),
         }
     }
@@ -347,6 +349,16 @@ impl Player {
         self.musicoins += coins;
     }
 
+    pub fn dmgplayer(&mut self, dmg: i32) {
+        let mut dmg = dmg - self.armor;
+        if dmg < 0 {
+            dmg = 0;
+        }
+        self.health -= dmg;
+        let new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
+        self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
+    }
+
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
     pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<StillImage>) {
         let mut img_heart = StillImage::new(
@@ -547,6 +559,8 @@ impl Player {
     }
 
     pub fn handle_player_ui(&mut self) {
+        //update timer
+        let timepassed = get_time() - self.last_attack_time;
         //update health number
         self.playerui.1[2].set_text(format!("{}", self.health));
         for image in self.playerui.0.iter_mut() {
@@ -560,17 +574,22 @@ impl Player {
         self.playerui.0[0].draw();
         self.playerui.1[2].draw();
         if self.attack {
-            match self.player_direction.as_str() {
-                "t" => self.playerui.2[0].draw(),
-                "tr" => self.playerui.2[1].draw(),
-                "r" => self.playerui.2[2].draw(),
-                "dr" => self.playerui.2[3].draw(),
-                "d" => self.playerui.2[4].draw(),
-                "dl" => self.playerui.2[5].draw(),
-                "l" => self.playerui.2[6].draw(),
-                "tl" => self.playerui.2[7].draw(),
-                _ => (),
-            }
+        let atklbl = match self.player_direction.as_str() {
+            "t" => self.playerui.2[0].clone(),
+            "tr" => self.playerui.2[1].clone(),
+            "r" => self.playerui.2[2].clone(),
+            "dr" => self.playerui.2[3].clone(),
+            "d" => self.playerui.2[4].clone(),
+            "dl" => self.playerui.2[5].clone(),
+            "l" => self.playerui.2[6].clone(),
+            "tl" => self.playerui.2[7].clone(), 
+            _ => self.playerui.2[0].clone(),
+        };
+        if timepassed > 0.3 { //attack label only appears for 0.3 seconds after attack
+            self.attack = false;
+            self.last_attack_time = get_time();
+        }
+        atklbl.draw();
         }
     }
 

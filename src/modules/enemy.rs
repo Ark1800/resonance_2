@@ -346,6 +346,13 @@ impl Enemy {
 
         movement
     }
+pub fn get_dmg(&self) -> i32 {
+        self.dmg
+    }
+
+    pub fn get_projectiles(&self) -> &Vec<Projectile> {
+        &self.projectiles
+    }
     // Enemy shooting method
     pub async fn shoot(&mut self, player: &mut Player, width: f32, height: f32) {
         let mut projectile = Projectile::new(self.projectile_image.clone(), width, height, self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
