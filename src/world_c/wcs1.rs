@@ -16,7 +16,7 @@ use crate::modules::preload_image::TextureManager;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
     let mut map = Map::new(virtual_width, virtual_height).await;
-    map.create_map_array(0, 2, 0, vec![1, 3]).await;
+    map.create_map_array(0, 2, 5, vec![1, 3]).await;
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
     } else if last_scene == "Right" {
@@ -28,8 +28,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
-    let cyric = StillImage::new(
-        "assets/player_files/player_t.png",
+    let mut cyric = StillImage::new(
+        "",
         80.0, // width
         80.0, // height
         450.0, // x position
@@ -38,6 +38,19 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         1.0,  // Normal zoom (100%)
     )
     .await;
+        cyric.set_preload(tm.get_preload("assets/player_files/player_t.png").unwrap());
+let mut img_back = StillImage::new(
+        "",
+        virtual_width, // width
+        virtual_height, // height
+        0.0, // x position
+        0.0,  // y position
+        true, // Enable stretching
+        1.0,  // Normal zoom (100%)
+    )
+    .await;
+        img_back.set_preload(tm.get_preload("assets/map_files/dungeon.png").unwrap());
+
 
 
     let start_time = get_time();
@@ -49,7 +62,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     let mut speech_num = 0;
     let mut dash_duration = 0.0;
     let mut dash_cooldown = 0.0;
-    let speech_list: Vec<String> = vec!["Speech test 1".to_string(), "Speech test 2".to_string()];
+    let speech_list: Vec<String> = vec!["Come on, keep up player! Or I'".to_string(), "Speech test 2".to_string()];
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -94,8 +107,10 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
         } else if speech_num == 1 {
             speech_bubble_show(&speech_list[1], &mut lbl_speech, &mut speech_duration);
         }
+        img_back.draw();
         player.draw();
         cyric.draw();
+        lbl_speech.draw();
         next_frame().await;
     }
 }

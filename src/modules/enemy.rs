@@ -433,6 +433,9 @@ pub fn get_dmg(&self) -> i32 {
             self.mage_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
         }
     }
+    pub fn remove_projectile(&mut self, projectile: usize) {
+        self.projectiles.remove(projectile);
+    }
     // Summoner action method that handles movement, image changes, and summoning slimes based on player proximity and cooldowns
     pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player, slime_list: &mut Vec<Enemy>) -> Vec<Enemy> {
         if get_time() - self.cooldown2 > 10.1 {

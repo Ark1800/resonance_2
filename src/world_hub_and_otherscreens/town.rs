@@ -45,6 +45,102 @@ pub async fn run(
     .await;
     background.set_preload(tm.get_preload("assets/map_files/town.png").unwrap());
 
+    let mut collidable_objects: Vec<StillImage> = vec![
+        StillImage::new(
+            "",
+            120.0,  // width
+            50.0,  // height
+            0.0, // x position
+            250.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await,
+        StillImage::new(
+            "",
+            150.0,  // width
+            50.0,  // height
+            250.0, // x position
+            250.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await,
+        StillImage::new(
+            "",
+            10.0,  // width
+            250.0,  // height
+            250.0, // x position
+            0.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await,
+            StillImage::new(
+                "",
+                150.0,  // width
+                275.0,  // height
+                675.0, // x position
+                0.0, // y position
+                true,  // Enable stretching
+                1.0,   // Normal zoom (100%)
+            )
+            .await,
+            StillImage::new(
+                "",
+                225.0,  // width
+                50.0,  // height
+                800.0, // x position
+                250.0, // y position
+                true,  // Enable stretching
+                1.0,   // Normal zoom (100%)
+            )
+            .await,
+            StillImage::new(
+                "",
+                290.0,  // width
+                100.0,  // height
+                0.0, // x position
+                510.0, // y position
+                true,  // Enable stretching
+                1.0,   // Normal zoom (100%)
+            )
+            .await,
+            StillImage::new(
+                "",
+                150.0,  // width
+                100.0,  // height
+                260.0, // x position
+                560.0, // y position
+                true,  // Enable stretching
+                1.0,   // Normal zoom (100%)
+            )
+            .await,
+            StillImage::new(
+                "",
+                200.0,  // width
+                100.0,  // height
+                600.0, // x position
+                560.0, // y position
+                true,  // Enable stretching
+                1.0,   // Normal zoom (100%)
+            )
+            .await,
+            StillImage::new(
+                "",
+                230.0,  // width
+                100.0,  // height
+                790.0, // x position
+                510.0, // y position
+                true,  // Enable stretching
+                1.0,   // Normal zoom (100%)
+            )
+            .await
+    ];
+    for obj in 0..collidable_objects.len() {
+        collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
+    }
+
     let get_position = TextButton::new(0.0, 0.0, 200.0, 60.0, "Get position", BLUE, GREEN, 30);
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -52,41 +148,7 @@ pub async fn run(
         map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
-        player.move_x();
-        let mut new_x = player.get_x();
-        let mut new_y = player.get_y();
-        let mut collide = false;
-        if map.map_collision(&player.view_player()).0
-            || (new_x <= 125.0 && new_y <= 300.0)
-            || (new_x >= 210.0 && new_x <= 355.0 && new_y >= 210.0 && new_y <= 300.0)
-            || (new_x <= 255.0 && new_y <= 210.0)
-            || (new_x >= 645.0 && new_y <= 275.0)
-            || (new_x > 760.0 && new_y <= 300.0)
-            || (new_x >= 560.0 && new_x <= 800.0 && new_y >= 505.0 && new_y <= 660.0)
-            || (new_x >= 755.0 && new_y >= 455.0 && new_y <= 605.0)
-            || (new_x <= 280.0 && new_y >= 450.0 && new_y <= 600.0)
-            || (new_x >= 235.0 && new_x <= 425.0 && new_y >= 500.0 && new_y <= 660.0)
-
-        {
-            player.set_x(old_pos.x);
-            new_x = old_pos.x;
-        }
-
-        player.move_y();
-        new_y = player.get_y();
-        if map.map_collision(&player.view_player()).0
-            || (new_x <= 125.0 && new_y <= 300.0)
-            || (new_x >= 210.0 && new_x <= 355.0 && new_y >= 210.0 && new_y <= 300.0)
-            || (new_x <= 255.0 && new_y <= 210.0)
-            || (new_x >= 645.0 && new_y <= 275.0)
-            || (new_x >= 760.0 && new_y <= 300.0)
-            || (new_x >= 560.0 && new_x <= 800.0 && new_y >= 505.0 && new_y <= 660.0)
-            || (new_x >= 755.0 && new_y >= 455.0 && new_y <= 605.0)
-            || (new_x <= 280.0 && new_y >= 450.0 && new_y <= 600.0)
-            || (new_x >= 235.0 && new_x <= 425.0 && new_y >= 500.0 && new_y <= 660.0)
-        {
-            player.set_y(old_pos.y);
-        }
+        player.move_player(&map, old_pos, &collidable_objects);
         if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Down".to_string();
             return "wcs1".to_string();

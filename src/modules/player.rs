@@ -235,6 +235,7 @@ impl Player {
             //collision with map
             self.set_y(old_pos.y);
         } else if collide {
+            
             for img in collides {
                 if self.check_y_collision(img) {
                     self.set_y(old_pos.y);
@@ -257,6 +258,7 @@ impl Player {
         if check_collision(self.view_player(), img2, 1) {
             collided = true;
         }
+
         collided
     }
 

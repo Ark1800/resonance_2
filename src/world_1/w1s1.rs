@@ -134,13 +134,15 @@ pub async fn run(
             mage.draw();
             large_slime.draw();
             mage.draw_bullet(player);
-for archer in archer_list.iter() {
-    let arrow_list = archer.get_projectiles();
-                for arrow in arrow_list.iter() {
-                     let collision = check_collision(arrow.view_player(), player.view_player(), 1); // 1 = pixel skip (for performance)
+for archer in 0..archer_list.len() {
+    let arrow_list = archer_list[archer].get_projectiles();
+                for arrow in 0..arrow_list.len() {
+                     let collision = check_collision(arrow_list[arrow].view_player(), player.view_player(), 1); // 1 = pixel skip (for performance)
                     if collision {
-                        player.take_damage(archer.get_dmg());
-                        archer.remove_projectile(arrow);
+                        player.dmgplayer(archer_list[archer].get_dmg());
+                        archer_list[archer].remove_projectile(arrow);
+                
+                        break;
                 }
             }
             
