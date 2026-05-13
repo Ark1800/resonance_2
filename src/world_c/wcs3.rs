@@ -15,7 +15,7 @@ use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
-    let mut map = Map::new(virtual_width, virtual_height).await;
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
     map.create_map_array(0, 1, 0, vec![3]).await;
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
@@ -81,7 +81,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     let mut speech_num = 0;
     let mut dash_duration = 0.0;
     let mut dash_cooldown = 0.0;
-    let speech_list: Vec<String> = vec!["Speech test 1".to_string(), "Speech test 2".to_string()];
+    let speech_list: Vec<String> = vec!["We're at the end!".to_string(), ".".to_string(), "..".to_string(), "...".to_string(), "....".to_string(), "What are those?".to_string()];
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);

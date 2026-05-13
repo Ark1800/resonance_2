@@ -91,12 +91,85 @@ summoner.summoner_action(tm, player, &mut slime_list).await;
 
 
 MULTIPLE ENEMY ACTIONS
-for archer in archer_list.iter_mut() {
-    archer.archer_action(tm, player).await;
-    archer.draw();
-    archer.draw_bullet(player);
-}
+for archer in 0..archer_list.len() {
+                archer_list[archer].archer_action(tm, player).await;
+                archer_list[archer].draw();
+                archer_list[archer].draw_bullet(player);
+                if archer_list[archer].get_health() <= 0 {
+                    archer_list.remove(archer);
+                    break;
+                }
+            }
 
+for mage in 0..mage_list.len() {
+                mage_list[mage].mage_action(tm, player).await;
+                mage_list[mage].draw();
+                mage_list[mage].draw_bullet(player);
+                if mage_list[mage].get_health() <= 0 {
+                    mage_list.remove(mage);
+                    break;
+                }
+            }
+
+for summoner in 0..summoner_list.len() {
+                summoner_list[summoner].summoner_action(tm, player).await;
+                summoner_list[summoner].draw();
+                summoner_list[summoner].draw_bullet(player);
+                if summoner_list[summoner].get_health() <= 0 {
+                    summoner_list.remove(summoner);
+                    break;
+                }
+            }
+
+for slime in 0..slime_list.len() {
+                slime_list[slime].slime_action(tm, player).await;
+                slime_list[slime].draw();
+                slime_list[slime].draw_bullet(player);
+                if slime_list[slime].get_health() <= 0 {
+                    slime_list.remove(slime);
+                    break;
+                }
+            }
+
+for large_slime in 0..large_slime_list.len() {
+                large_slime_list[large_slime].large_slime_action(tm, player).await;
+                large_slime_list[large_slime].draw();
+                large_slime_list[large_slime].draw_bullet(player);
+                if large_slime_list[large_slime].get_health() <= 0 {
+                    large_slime_list.remove(large_slime);
+                    break;
+                }
+            }
+
+ENEMY PROJECTILE REMOVAL
+for archer in 0..archer_list.len() {
+    let arrow_list = archer_list[archer].get_projectiles();
+                for arrow in 0..arrow_list.len() {
+                     let collision = check_collision(arrow_list[arrow].view_player(), player.view_player(), 1); // 1 = pixel skip (for performance)
+                    if collision {
+                        player.dmgplayer(archer_list[archer].get_dmg());
+                        archer_list[archer].remove_projectile(arrow);
+                
+                        break;
+                }
+            }
+            
+        }
+
+
+for mage in 0..mage_list.len() {
+    let fireball_list = mage_list[mage].get_projectiles();
+                for fireball in 0..fireball_list.len() {
+                     let collision = check_collision(fireball_list[fireball].view_player(), player.view_player(), 1); // 1 = pixel skip (for performance)
+                    if collision {
+                        player.dmgplayer(mage_list[mage].get_dmg());
+                        mage_list[mage].remove_projectile(fireball);
+                
+                        break;
+                }
+            }
+            
+        }
 */
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;

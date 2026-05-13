@@ -7,20 +7,15 @@ Program Details:
 use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
-use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
-    let mut map = Map::new(virtual_width, virtual_height).await;
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
     map.create_map_array(0, 2, 0, vec![1, 3]).await;
-    if last_scene == "Left" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Right" {
-        player.set_position(80.0, virtual_height / 2.0);
-    } else if last_scene == "Top" {
+    if last_scene == "Top" {
         player.set_position(virtual_width / 2.0, virtual_height - 80.0);
     } else if last_scene == "down" {
         player.set_position(virtual_width / 2.0, 80.0);
@@ -47,7 +42,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     let mut speech_num = 0;
     let mut dash_duration = 0.0;
     let mut dash_cooldown = 0.0;
-    let speech_list: Vec<String> = vec!["Speech test 1".to_string(), "Speech test 2".to_string()];
+    let speech_list: Vec<String> = vec!["Oh crap, there's a monster in this dungeon?! You're the dared one, you fight it!".to_string(), "That was close.. Good job though! I think we're nearing the end!".to_string()];
+    let tutorial_list = "Press UP ARROW to use your melee attack\nPress DOWN ARROW to use your ranged attack".to_string();
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -90,6 +86,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         } else if player.get_y() >= virtual_height - 10.0 {
             return "wcs1".to_string();
         }
+
 
 
         if speech_num == 0 {

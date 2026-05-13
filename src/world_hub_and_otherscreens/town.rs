@@ -22,7 +22,7 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
 ) -> String {
-    let mut map = Map::new(virtual_width, virtual_height).await;
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
     } else if last_scene == "Right" {
@@ -157,7 +157,7 @@ pub async fn run(
             return "wcs1".to_string();
         } else if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();
-            return "w1s1".to_string();
+            return "w1sp".to_string();
         } else if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();
             return "w2s1".to_string();

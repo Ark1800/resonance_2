@@ -9,6 +9,7 @@ In the mod modules section located in the modules folder add the following to th
     
 Then add the following with the use commands:
 use crate::modules::animated_image::AnimatedImage;
+use crate::modules::preload_image::GifLoadingScreenInfo;
 
 GIF ANIMATION SUPPORT:
 This module now supports animated GIFs on both desktop and web platforms.

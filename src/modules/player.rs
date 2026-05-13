@@ -1,4 +1,4 @@
-use crate::modules::{self};
+use crate::modules::{self, still_image};
 use crate::modules::collision::check_collision;
 use crate::modules::item::Item;
 use crate::modules::label::Label;
@@ -12,10 +12,12 @@ use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
 
 //TO DOOOOOO
-//5. World 1 screens
-//6. Song uploads
-//7. All Music Discs
-//9. player dying
+//0.5 why arrow cooldown doesnt always proc
+//0.7 gif preload not working  
+//1. World 1 screens
+//2. Song uploads
+//3. All Music Discs
+//4. player dying
 
 /*
 //Keypresses:
@@ -186,6 +188,16 @@ impl Player {
         }
     }
 
+    pub fn interact(&mut self, interactable: &StillImage) -> bool {
+        let mut interact = false;
+        //handle interaction with interactable objects
+        if is_key_pressed(KeyCode::F) {
+            if check_collision(self.view_player(), interactable, 1) {
+                interact = true;
+            }   
+        }
+        interact
+    }
     pub fn handle_image(&mut self) {
         // change image based on direction of movement (8 directions)
         // Determine the desired preload index, then only set it if different from current
@@ -232,6 +244,14 @@ impl Player {
         self.view.set_y(self.view.get_y() + self.movement.y);
     }
 
+    pub fn move_x_rev(&mut self) {
+        self.view.set_x(self.view.get_x() - self.movement.x);
+    }
+
+    pub fn move_y_rev(&mut self) {
+        self.view.set_y(self.view.get_y() - self.movement.y);
+    }
+
     pub fn move_player(&mut self, map: &Map, old_pos: Vec2, collides: &Vec<StillImage>) {
         for img in self.playerui.2.iter_mut() {
             img.set_x(img.get_x() + self.movement.x);
@@ -255,6 +275,7 @@ impl Player {
             for img in collides {
                 if self.check_x_collision(img) {
                     self.set_x(old_pos.x);
+                    break
                 }
             }
         }
@@ -270,6 +291,7 @@ impl Player {
             for img in collides {
                 if self.check_y_collision(img) {
                     self.set_y(old_pos.y);
+                    break
                 }
             }
         }
@@ -281,6 +303,8 @@ impl Player {
         let mut collided = false; // Placeholder for collision check
         if check_collision(self.view_player(), img2, 1) {
             collided = true;
+        } else {
+            self.move_x_rev();
         }
         collided
     }
@@ -290,6 +314,8 @@ impl Player {
         let mut collided = false; // Placeholder for collision check
         if check_collision(self.view_player(), img2, 1) {
             collided = true;
+        } else {
+            self.move_y_rev();
         }
         collided
     }
@@ -625,7 +651,7 @@ impl Player {
         self.playerui.1[2].draw();
         if self.attack {
             self.create_melee_attack(enemies);
-            if mletimepassed > 0.05 && mletimepassed < 0.4 {
+            if mletimepassed > 0.1 && mletimepassed < 0.4 {
                 self.attackimg.draw();
             }
             if mletimepassed > 0.4 { //attack label only appears for 0.6 seconds after attack
@@ -636,7 +662,7 @@ impl Player {
         }
         if self.rangedattack {
             self.create_range_attack().await;
-            if rngtimepassed > 0.05 && rngtimepassed < 3.0 {
+            if rngtimepassed > 0.5 && rngtimepassed < 3.0 {
                 let cooldown = 3.0 - rngtimepassed + 1.0; //+1 to not show 0 when cooldown is ready
                 self.playerui.1[3].set_text(format!("{:.0}", cooldown));
             }

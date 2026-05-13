@@ -24,16 +24,18 @@ pub struct Map {
     chest_list: Vec<StillImage>,
     change_chest: bool,
     map_dimensions: Vec2,
+    image_list: Vec<String>,
 }
 impl Map {
-    pub async fn new(width: f32, height: f32) -> Self {
+    pub async fn new(width: f32, height: f32, image_list: Vec<String>) -> Self {
         Map {
             map_array: [[0; 10]; 15],
             wall_list: Vec::new(),
             change_wall: true,
             chest_list: Vec::new(),
             change_chest: true,
-            map_dimensions: vec2(width, height)
+            map_dimensions: vec2(width, height),
+            image_list: image_list,
         }
     }
 #[allow(unused)]
@@ -105,7 +107,7 @@ impl Map {
                     if self.map_array[x][y] == 1 {
                         self.wall_list.push(StillImage::new("", self.map_dimensions.x / 15.0, self.map_dimensions.y / 10.0, x as f32 * self.map_dimensions.x / 15.0, y as f32 * self.map_dimensions.y / 10.0, true, 1.0).await);
                         let wall_list_len = self.wall_list.len() - 1;
-                        self.wall_list[wall_list_len].set_preload(tm.get_preload(format!("assets/map_files/wall.png").as_str()).unwrap());
+                        self.wall_list[wall_list_len].set_preload(tm.get_preload(format!("{}", self.image_list[0]).as_str()).unwrap());
                     }
                     changed_wall = true;
                 }
@@ -113,7 +115,7 @@ impl Map {
                     if self.map_array[x][y] == 2 {
                         self.chest_list.push(StillImage::new("", self.map_dimensions.x / 15.0, self.map_dimensions.y / 10.0, x as f32 * self.map_dimensions.x / 15.0, y as f32 * self.map_dimensions.y / 10.0, true, 1.0).await);
                         let chest_list_len = self.chest_list.len() - 1;
-                        self.chest_list[chest_list_len].set_preload(tm.get_preload(format!("assets/map_files/chest.png").as_str()).unwrap());
+                        self.chest_list[chest_list_len].set_preload(tm.get_preload(format!("{}", self.image_list[1]).as_str()).unwrap());
                     }
                     changed_chest = true;
                 }
