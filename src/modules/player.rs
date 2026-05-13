@@ -12,9 +12,6 @@ use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
 
 //TO DOOOOOO
-//4.7 player gold label
-
-
 //5. World 1 screens
 //6. Song uploads
 //7. All Music Discs
