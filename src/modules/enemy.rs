@@ -116,6 +116,7 @@ pub struct Enemy {
     projectiles: Vec<Projectile>,
     cooldown: f64,
     cooldown2: f64,
+    enemies: Vec<Enemy>,
 }
 
 impl Enemy {
@@ -133,7 +134,7 @@ impl Enemy {
     ) -> Enemy {
         Enemy {
             view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
-
+            enemies: Vec::new(),
             move_speed: 200.0, // Default speed
             movement: Vec2::ZERO,
             health,
@@ -280,6 +281,10 @@ impl Enemy {
         self
     }
 
+    pub fn get_health(&self) -> i32 {
+        self.health
+    }
+
     #[allow(unused)]
     pub fn draw(&self) {
         // Only draw if the label is visible
@@ -302,7 +307,7 @@ impl Enemy {
     // Getter for visibility
     #[allow(unused)]
 
-    pub fn view_player(&self) -> &StillImage {
+    pub fn view_enemy(&self) -> &StillImage {
         &self.view
     }
     // Setter for position
@@ -346,8 +351,12 @@ impl Enemy {
 
         movement
     }
-pub fn get_dmg(&self) -> i32 {
+    pub fn get_dmg(&self) -> i32 {
         self.dmg
+    }
+
+    pub fn dmg_enemy(&mut self, dmg: i32) {
+        self.health -= dmg;
     }
 
     pub fn get_projectiles(&self) -> &Vec<Projectile> {

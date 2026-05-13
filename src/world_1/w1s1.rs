@@ -9,7 +9,6 @@ use crate::modules::item::Item;
 use crate::modules::map::Map;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
-use crate::modules::progressbar::ProgressBar;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
@@ -104,9 +103,9 @@ pub async fn run(
         vec![1, 1, 1, 1, 2, 3],
         vec![vec![2, 2], vec![2, 3], vec![12, 2], vec![12, 3], vec![1, 1], vec![13, 1]],
     );
-
     loop {
-        player.handle_keypresses(pause).await;
+        let mut enemies = vec![summoner.clone(), mage.clone(), large_slime.clone()]; //views have to be cloned to be sent
+        player.handle_keypresses(pause).await;                                               //for clones to stay consistent they must be set every loop
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
@@ -131,8 +130,8 @@ pub async fn run(
                 slime.draw();
             }
             summoner.draw();
-            mage.draw();
             large_slime.draw();
+            mage.draw();
             mage.draw_bullet(player);
 for archer in 0..archer_list.len() {
     let arrow_list = archer_list[archer].get_projectiles();
@@ -148,7 +147,7 @@ for archer in 0..archer_list.len() {
             
         }
 
-        player.handle_player_ui();
+        player.handle_player_ui(&mut enemies).await;
         player.handle_inventory();
 
         if player.get_x() > virtual_width - 10.0 {

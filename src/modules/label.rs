@@ -116,6 +116,7 @@ pub enum TextAlign {
 }
 
 impl Label {
+
     // Constructor using x and y separately
     pub fn new<T: Into<String>>(text: T, x: f32, y: f32, font_size: u16) -> Self {
         let mut label = Self {
@@ -146,7 +147,7 @@ impl Label {
         
         label
     }
-    
+
     // Calculate and cache text dimensions
     fn calculate_text_dimensions(&mut self) {
         let line_height = self.font_size as f32 * self.line_spacing;

@@ -11,6 +11,7 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use crate::modules::text_button::TextButton;
+use crate::modules::enemy::Enemy;
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -142,13 +143,15 @@ pub async fn run(
     }
 
     let get_position = TextButton::new(0.0, 0.0, 200.0, 60.0, "Get position", BLUE, GREEN, 30);
+    let mut enemies: Vec<Enemy> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos, &collidable_objects);
+        player.move_player(&map, old_pos, &vec![]); 
+        //player.move_player(&map, old_pos, &collidable_objects); //collidable objects breaks player speed
         if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Down".to_string();
             return "wcs1".to_string();
@@ -171,6 +174,8 @@ pub async fn run(
 
         background.draw();
         draw_grid(50.0, BLACK);
+        player.handle_player_ui(&mut enemies).await;
+        player.handle_inventory();
         player.draw();
         next_frame().await;
     }
