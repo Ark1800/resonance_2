@@ -33,10 +33,10 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    map.create_map_array(0, 2, 0, vec![4, 2]).await;
+    map.create_map_array(0, 2, 0, vec![3, 2]).await;
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;

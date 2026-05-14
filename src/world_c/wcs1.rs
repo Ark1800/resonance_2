@@ -6,7 +6,6 @@ Program Details:
 
 use crate::modules::label::Label;
 use crate::modules::player::Player;
-use crate::modules::progressbar::ProgressBar;
 //use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
@@ -74,6 +73,7 @@ let mut img_back = StillImage::new(
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
+        clear_background(BLACK);
         let timer = get_time() - start_time;
         if timer > 0.1 {
         current_time = get_time();
@@ -114,7 +114,6 @@ let mut img_back = StillImage::new(
                 dash_cooldown -= 0.01;
             }
         }
-        clear_background(WHITE);
         player.handle_keypresses(pause).await;
         if (is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift)) && dash_cooldown <= 0.0 {
             player.dash_start();

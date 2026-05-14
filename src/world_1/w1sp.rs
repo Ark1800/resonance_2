@@ -117,7 +117,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     loop {
         // set virtual resolution and clear frame
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(BLACK);
         let mut enemies: Vec<Enemy> = vec![];
         //backgrounds
         background1.draw();
@@ -129,7 +129,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
             return "town".to_string();
         }
         if check_collision(player.view_player(), &portal_hitbox, 1) {
-            println!("Portal collision detected!");
             *last_scene = "Right".to_string(); 
             return "w1s1".to_string();
         }

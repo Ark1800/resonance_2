@@ -59,7 +59,7 @@ pub async fn run(
         .await,
         StillImage::new(
             "",
-            150.0,  // width
+            125.0,  // width
             50.0,  // height
             250.0, // x position
             250.0, // y position
@@ -146,11 +146,11 @@ pub async fn run(
     let mut enemies: Vec<Enemy> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(BLACK);
         map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos, &vec![]); 
+        player.move_player(&map, old_pos, &collidable_objects); 
         //player.move_player(&map, old_pos, &collidable_objects); //collidable objects breaks player speed
         if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Down".to_string();

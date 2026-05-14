@@ -37,7 +37,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     map.create_map_array(0, 2, 0, vec![1, 3]).await;
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;

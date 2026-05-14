@@ -165,7 +165,7 @@ pub async fn run(
                 ));
             }
             lbl_price.set_text(&item_price[selected_item].to_string());
-            item_img.set_image(&shop_stock[selected_item].get_itemassetpath()).await;
+            item_img.set_preload(shop_stock[selected_item].get_itemimgpath());
         }
 
         if shop_view.selected_item().is_some() {

@@ -7,7 +7,7 @@ Program Details:
 use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
-use crate::modules::projectile::Projectile;
+//use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
@@ -47,7 +47,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(BLACK);
         let timer = get_time() - start_time;
         if timer > 0.1 {
             current_time = get_time();
@@ -109,4 +109,22 @@ pub fn speech_bubble_show(speech: &String, lbl_speech: &mut Label, speech_durati
 pub fn speech_bubble_hide(lbl_speech: &mut Label, speech_num: &mut i32) {
     lbl_speech.set_visible(false);
     *speech_num += 1;
+}
+
+pub fn scrolling_text_create(sentence: &String) -> Vec<String> {
+let mut scrolling_list: Vec<String> = vec![];
+for i in 0..sentence.len() {
+    let letter = sentence[i..i+1].trim();
+    scrolling_list.push(letter.to_string());
+}
+scrolling_list
+}
+
+pub fn scrolling_text_show(scrolling_list: &Vec<String>, lbl_speech: &mut Label, speech_num: &mut usize) {
+            let mut scrolled_text = "".to_string();
+            for i in 0..scrolling_list.len() {
+                scrolled_text = scrolled_text + &scrolling_list[i].clone();
+            }
+
+            lbl_speech.set_text(scrolled_text);
 }

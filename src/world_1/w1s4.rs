@@ -33,10 +33,25 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    map.create_map_array(0, 2, 0, vec![4, 2]).await; //how can I make more walls
+    map.create_map_array(0, 2, 0, vec![4, 2]).await;
+    let map_row_len = map.get_map_array().len();
+    let map_column_len = map.get_map_columns().len();
+    let mut wall_places: Vec<Vec<i32>> = vec![];
+    let mut walls: Vec<i32> = vec![];
+
+    for x in 0..map_row_len {
+        for y in 0..map_column_len {
+            if y != 4 && x != 0 && x != map_row_len - 1 && y != 0 && y != map_column_len - 1 {
+                wall_places.push(vec![x as i32, y as i32]);
+                walls.push(1);
+            }
+        }
+    }
+
+    map.change_map(walls, wall_places);
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;

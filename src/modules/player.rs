@@ -20,6 +20,7 @@ use std::f32::consts::PI;
 //1.2 W1S3
 //1.3 W1S4
 //1.4 W1Sb
+//1.2 fix enemies sending back from player
 //2. Song uploads
 //3. All Music Discs
 //4. player dying
@@ -52,6 +53,7 @@ player.handle_keypresses().await;
 player.move_player();
 player.handle_player_ui(&mut enemies).await;
 player.handle_inventory();
+player.handle_playerdamaging(&enemies);
 player.draw();
 
 ASIDES...
@@ -86,21 +88,20 @@ pub struct Player {
     equipped_items: Vec<usize>,                          //vector of indices of equipped items in the items vector
     itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), //2d list for stats
     inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for inventory UI elements (listviews, images, labels, buttons)
-    playerui: (Vec<StillImage>, Vec<Label>, Vec<StillImage>,),             //2d list for player UI elements (images, labels)
+    playerui: (Vec<StillImage>, Vec<Label>, Vec<StillImage>, Vec<StillImage>),             //2d list for player UI elements (images, labels)
     inventoryopen: bool,                                 //is inventory open
     armor: i32,                                          //armor value for damage reduction
     attack: bool,                                        //is player currently attacking (for drawing attack labels)
     last_attack_time: f64,                               //time of last attack for timing attack labels
     attackimgfound: bool, //has the correct attack label been found for the current direction of attack (to prevent repeatedly searching for it every frame)
     attackimg: StillImage, //current attack label to be drawn when attacking 
+    mlevalid: bool, //is player currently performing a melee attack (for preventing multiple melee hits from one attack input)
     rangedattack: bool, //is player currently performing a ranged attack (for drawing ranged attack labels)
     last_rng_attack_time: f64, //time of last ranged attack for timing ranged attack labels and cooldowns
     rangedattackimgcreated: bool, //has the correct ranged attack label been found/created for the current direction of attack (to prevent repeatedly searching/creating for it every frame)
     ranged_movespeeds: Vec<Vec2>, //movement speed of the projectile for ranged attacks
     arrows: Vec<StillImage>, //list of self.arrow projectiles for ranged attacks
     player_direction: String, //current direction player is facing for attack purposes (up, down, left, right, etc.)
-
-
 }
 
 impl Player {
@@ -127,7 +128,7 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100,
             maxhealth: 100,
-            mledmg: 10,
+            mledmg: 50,
             rngdmg: 2,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
@@ -146,6 +147,7 @@ impl Player {
             player_direction: "b".to_string(),
             attackimgfound: false,
             attackimg,
+            mlevalid: true,
             rangedattack: false,
             last_rng_attack_time: get_time(),
             rangedattackimgcreated: false,
@@ -262,7 +264,11 @@ impl Player {
             img.set_x(img.get_x() + self.movement.x);
             img.set_y(img.get_y() + self.movement.y);
         }
-        self.attackimg.set_x(self.attackimg.get_x() + self.movement.x);
+        for img in self.playerui.3.iter_mut() {
+            img.set_x(img.get_x() + self.movement.x);
+            img.set_y(img.get_y() + self.movement.y);
+        }
+ {}        self.attackimg.set_x(self.attackimg.get_x() + self.movement.x);
         self.attackimg.set_y(self.attackimg.get_y() + self.movement.y);
         self.move_x();
         let mut collide = false;
@@ -273,6 +279,9 @@ impl Player {
             //collision with map
             self.set_x(old_pos.x);
             for img in self.playerui.2.iter_mut() {
+                img.set_x(img.get_x() - self.movement.x); //move player UI elements back if collision to prevent them getting stuck in walls
+            }
+            for img in self.playerui.3.iter_mut() {
                 img.set_x(img.get_x() - self.movement.x); //move player UI elements back if collision to prevent them getting stuck in walls
             }
             self.attackimg.set_x(self.attackimg.get_x() - self.movement.x);
@@ -289,6 +298,9 @@ impl Player {
             //collision with map
             self.set_y(old_pos.y);
             for img in self.playerui.2.iter_mut() {
+                img.set_y(img.get_y() - self.movement.y); //move player UI elements back if collision to prevent them getting stuck in walls
+            }
+            for img in self.playerui.3.iter_mut() {
                 img.set_y(img.get_y() - self.movement.y); //move player UI elements back if collision to prevent them getting stuck in walls
             }
             self.attackimg.set_y(self.attackimg.get_y() - self.movement.y);
@@ -365,6 +377,8 @@ impl Player {
         self.playerui.2[6].set_y(y - 10.0);
         self.playerui.2[7].set_x(x - 60.0);
         self.playerui.2[7].set_y(y - 50.0);
+        self.playerui.3[0].set_x(x);
+        self.playerui.3[0].set_y(y);
     }
 
     pub fn draw(&self) {
@@ -439,8 +453,16 @@ impl Player {
         self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
     }
 
+    pub fn handle_playerdamaging(&mut self, enemies: &Vec<Enemy>) {
+        for enemy in enemies.iter() {
+            if check_collision(self.view_player(), enemy.view_enemy(), 1) {
+                self.dmgplayer(enemy.get_dmg());
+            }
+        }
+    }
+
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-    pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<StillImage>) {
+    pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<StillImage>, Vec<StillImage>) {
         let mut img_heart = StillImage::new(
             "",
             100.0, // width
@@ -608,6 +630,17 @@ impl Player {
         )
         .await;
         img_slash_tl.set_preload(preloads[11].clone());
+        let mut player_hitbox = StillImage::new(
+            "",
+            40.0, // width
+            60.0, // height
+            player_x,
+            player_y,
+            true,
+            1.0,
+        )
+        .await;
+        player_hitbox.set_preload(preloads[11].clone());
         (
             vec![
                 img_heart,
@@ -634,14 +667,20 @@ impl Player {
                 img_slash_bl,
                 img_slash_l,
                 img_slash_tl,
+            ],
+            vec![
+                player_hitbox,
             ]
         )
     }
 
-    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) {
+    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) -> (bool, bool, usize, Vec<Enemy>) {
         //update vars
         let mletimepassed = get_time() - self.last_attack_time;
         let rngtimepassed = get_time() - self.last_rng_attack_time;
+        let mut mlehit = false;
+        let mut rnghit = false;
+        let mut index = 0;
         //update health number
         self.playerui.1[2].set_text(format!("{}", self.health));
         for image in self.playerui.0.iter_mut() {
@@ -655,12 +694,16 @@ impl Player {
         self.playerui.0[0].draw();
         self.playerui.1[2].draw();
         if self.attack {
-            self.create_melee_attack(enemies);
+            if self.mlevalid == true {
+                let (index, mlehit) = self.create_melee_attack(enemies, index, mlehit);
+                self.mlevalid = false; //prevents multiple melee hits from one attack input
+            }
             if mletimepassed > 0.1 && mletimepassed < 0.4 {
                 self.attackimg.draw();
             }
             if mletimepassed > 0.4 { //attack label only appears for 0.6 seconds after attack
                 self.attack = false;
+                self.mlevalid = true;
                 self.attackimgfound = false;
                 self.last_attack_time = get_time();
             }
@@ -682,35 +725,38 @@ impl Player {
         }
         let mut rac = 0; //ranged attack counter so that only one enemy is damaged per arrow
         for i in 0..self.arrows.len() {
-                let y = self.arrows[i-rac].get_y();
-                let x = self.arrows[i-rac].get_x();
-                let movement = vec2(self.ranged_movespeeds[i-rac].x * get_frame_time(), self.ranged_movespeeds[i-rac].y * get_frame_time());
+                let idx = i - rac;
+                let y = self.arrows[idx].get_y();
+                let x = self.arrows[idx].get_x();
+                let movement = vec2(self.ranged_movespeeds[idx].x * get_frame_time(), self.ranged_movespeeds[idx].y * get_frame_time());
                 if movement.x > 0.0 && movement.y > 0.0 { //if diagonal movement, normalize to prevent faster diagonal movement
                     self.movement.normalize(); //normalize diagonal movement to prevent faster movement when moving diagonally
                 }
-                self.arrows[i-rac].set_x(x + movement.x);
-                self.arrows[i-rac].set_y(y + movement.y);
-                self.arrows[i-rac].draw();
-                if self.arrows[i-rac].get_y() < 0.0 || self.arrows[i-rac].get_y() > 800.0 || self.arrows[i-rac].get_x() < 0.0 || self.arrows[i-rac].get_x() > 1200.0 {
-                    self.arrows.remove(i-rac);
-                    self.ranged_movespeeds.remove(i-rac);
+                self.arrows[idx].set_x(x + movement.x);
+                self.arrows[idx].set_y(y + movement.y);
+                self.arrows[idx].draw();
+                if self.arrows[idx].get_y() < 0.0 || self.arrows[idx].get_y() > 800.0 || self.arrows[idx].get_x() < 0.0 || self.arrows[idx].get_x() > 1200.0 {
+                    self.arrows.remove(idx);
+                    self.ranged_movespeeds.remove(idx);
                     rac += 1;
                     continue; //skip collision check if arrow is removed for being out of bounds
                 }
                 let mut rec = 0; //remove enemy counter so that only one enemy is removed per arrow
                 for j in 0..enemies.len() {
-                    if check_collision(&self.arrows[i], enemies[j-rec].view_enemy(), 1) {
-                        //ENEMY DAMAGE
-                        self.arrows.remove(i);
-                        self.ranged_movespeeds.remove(i);
+                    if check_collision(&self.arrows[idx], enemies[j].view_enemy(), 1) {
+                        //ENEMY DAMAGE: mark hit and remove arrow
+                        rnghit = true;
+                        self.arrows.remove(idx);
+                        self.ranged_movespeeds.remove(idx);
                         rec += 1;
                         break; //break to prevent multiple enemies being damaged by one arrow
                     }
                 }
         }
+        (mlehit, rnghit, index, enemies)
     }
 
-    pub fn create_melee_attack(&mut self, enemies: &mut Vec<Enemy>) {
+    pub fn create_melee_attack(&mut self, enemies: &mut Vec<Enemy>, mut index: usize, mut mlehit: bool) -> (usize, bool) {
         if self.attackimgfound == false {  //attackimgbool and match must be kept in player to be used outside of if statements
                 self.attackimg = match self.player_direction.as_str() {
                 "t" => self.playerui.2[0].clone(),
@@ -722,15 +768,17 @@ impl Player {
                 "l" => self.playerui.2[6].clone(),
                 "tl" => self.playerui.2[7].clone(), 
                 _ => self.playerui.2[0].clone(),
-                };   
+                };
                 self.attackimgfound = true;
-                for enemy in enemies {
-                    if check_collision(&self.attackimg, enemy.view_enemy(), 1) {
-                        //ENEMY DAMAGE
+                for i in 0..enemies.len() {
+                    if check_collision(&self.attackimg, enemies[i].view_enemy(), 1) {
+                        mlehit = true;
+                        index = i;
                     }
                 }
             }
-        }
+        (index, mlehit)
+    }
 
     pub async fn create_range_attack(&mut self) {
         if self.rangedattackimgcreated == false {

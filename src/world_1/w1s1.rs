@@ -69,10 +69,10 @@ pub async fn run(
     }
 
     loop {
-        let mut enemies = vec![summoner.clone(), large_slime.clone(), mage.clone()]; //views have to be cloned to be sent
+        let mut enemies: Vec<&Enemy> = vec![&summoner, &large_slime, &mage];
         player.handle_keypresses(pause).await;                                               //for clones to stay consistent they must be set every loop
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(RED);
+        clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
         if *pause == false {
@@ -116,7 +116,11 @@ for archer in 0..archer_list.len() {
         }
         player.draw();
 
-        player.handle_player_ui(&mut enemies).await;
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await;
+        if mlehit {
+            for slime in slime_list.iter_mut() {
+                slim
+        }
         player.handle_inventory();
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Left".to_string();

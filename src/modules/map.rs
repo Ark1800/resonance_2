@@ -175,6 +175,11 @@ impl Map {
     pub fn get_map_array(&self) -> &[[i32; 10]; 15] {
         &self.map_array
     }
+
+    pub fn get_map_columns(&self) -> &[i32; 10] {
+        &self.map_array[0]
+    }
+
 #[allow(unused)]
     pub fn get_wall_list(&self) -> &Vec<StillImage> {
         &self.wall_list
