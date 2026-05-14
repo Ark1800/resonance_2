@@ -31,25 +31,21 @@ pub async fn run(
         1.0,            // Normal zoom (100%)
     )
     .await;
-    background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
-    if last_scene == "Left" {
+    background.set_preload(tm.get_preload("assets/map_files/world1/beachtile.png").unwrap());
+    if last_scene == "Right" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Right" {
+    } else if last_scene == "Left" {
         player.set_position(80.0, virtual_height / 2.0);
+    } else if last_scene == "Down" {
+        player.set_position((virtual_width / 2.0)-20.0, virtual_height - 80.0);
     } else if last_scene == "Top" {
-        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
-    } else if last_scene == "down" {
-        player.set_position(virtual_width / 2.0, 80.0);
+        player.set_position((virtual_width / 2.0)-20.0, 80.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
     println!("Last scene: {}", last_scene);
-    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/beach.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    map.create_map_array(0, 4, 0, vec![1, 2, 3, 4]).await;
-    map.change_map(
-        vec![1, 1, 1, 1, 2, 3],
-        vec![vec![2, 2], vec![2, 3], vec![12, 2], vec![12, 3], vec![1, 1], vec![13, 1]],
-    );
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
+    map.create_map_array(0, 2, 0, vec![1, 4]).await;
     let mut summoner = Enemy::new("", 50.0, 50.0, 70.0, 80.0, true, 1.0, 20, 10, "").await;
     let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20, 10, "").await;
     large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
@@ -122,10 +118,13 @@ for archer in 0..archer_list.len() {
 
         player.handle_player_ui(&mut enemies).await;
         player.handle_inventory();
-
         if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Right".to_string();
-            return "town".to_string();
+            *last_scene = "Left".to_string();
+            return "w1sp".to_string();
+        }
+        if player.get_y() < 10.0 {
+            *last_scene = "Down".to_string();
+            return "w1s2".to_string();
         }
         next_frame().await;
     }

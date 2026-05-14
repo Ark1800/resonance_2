@@ -417,6 +417,11 @@ impl AnimatedImage {
         height: f32,
         loop_animation: bool,
     ) -> Self {
+        // If no path provided, return empty animation (allows preload to be set later)
+        if gif_path.is_empty() {
+            return Self::create_empty(x, y, width, height);
+        }
+
         // Load the GIF file data
         match load_file(gif_path).await {
             Ok(file_data) => {

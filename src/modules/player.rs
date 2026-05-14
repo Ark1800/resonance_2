@@ -13,8 +13,13 @@ use std::f32::consts::PI;
 
 //TO DOOOOOO
 //0.5 why arrow cooldown doesnt always proc
-//0.7 gif preload not working  
-//1. World 1 screens
+
+//1. W1Sp
+//1.0 W1S1
+//1.1 W1S2
+//1.2 W1S3
+//1.3 W1S4
+//1.4 W1Sb
 //2. Song uploads
 //3. All Music Discs
 //4. player dying
@@ -43,9 +48,9 @@ funcs
 in your loop..
 let mut enemies = vec![summoner.clone(), mage.clone(), large_slime.clone()]; //list of enemies for scene
 
-player.handle_keypresses()
+player.handle_keypresses().await;
 player.move_player();
-player.handle_player_ui(&mut enemies);
+player.handle_player_ui(&mut enemies).await;
 player.handle_inventory();
 player.draw();
 

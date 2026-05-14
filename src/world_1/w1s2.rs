@@ -20,31 +20,37 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         true,   // Enable stretching
         1.0,    // Normal zoom (100%)
     ).await;
-        background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
+        background.set_preload(tm.get_preload("assets/map_files/world1/beachtile.png").unwrap());
     
-    if last_scene == "Left" {
+    if last_scene == "Right" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Right" {
+    } else if last_scene == "Left" {
         player.set_position(80.0, virtual_height / 2.0);
+    } else if last_scene == "Down" {
+        player.set_position((virtual_width / 2.0)-20.0, virtual_height - 80.0);
     } else if last_scene == "Top" {
-        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
-    } else if last_scene == "down" {
-        player.set_position(virtual_width / 2.0, 80.0);
+        player.set_position((virtual_width / 2.0)-20.0, 80.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
-    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    map.create_map_array(0, 4, 0, vec![1, 2, 3, 4]).await;
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
+    map.create_map_array(0, 2, 0, vec![1, 3]).await;
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
+        map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
         player.draw();
-        if is_key_down(KeyCode::P) {
-            return "title_screen".to_string();
+        if player.get_y() < 10.0 {
+            *last_scene = "Down".to_string();
+            return "w1s3".to_string();
+        }
+        if player.get_y() > virtual_height - 10.0 {
+            *last_scene = "Top".to_string();
+            return "w1s2".to_string();
         }
         next_frame().await;
     }
