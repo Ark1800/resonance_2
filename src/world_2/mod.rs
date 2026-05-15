@@ -7,5 +7,5 @@ Program Details:
 pub mod w2s1;
 pub mod w2s2;
 pub mod w2s3;
-pub mod w2s4;
-pub mod w2s5;
+pub mod w2sb;
+pub mod w2sp;

@@ -9,6 +9,8 @@ use macroquad::prelude::*;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::map::Map;
 use crate::modules::still_image::StillImage;
+use crate::modules::animated_image::AnimatedImage;
+
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
@@ -21,8 +23,27 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
-    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/tree.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    map.create_map_array(0, 2, 10, vec![4, 2, 3, 1]).await;
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/grass.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
+    map.create_map_array(0, 1, 0, vec![2, 1, 3, 4]).await;
+
+      let mut green_portal = AnimatedImage::from_gif(
+        "", 
+        100.0, 100.0,          
+        100.0, 300.0,          
+        true                   
+    ).await;
+    let portal_hitbox = StillImage::new(
+        "assets/map_files/wall.png",
+        100.0,  // width
+        300.0,  // height
+        300.0, // x position
+        200.0, // y position
+        true,  // Enable stretching
+        1.0,   // Normal zoom (100%)
+    ).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/green_portal.gif") {
+        green_portal.set_preloaded_gif(preloaded, true);
+    }
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -33,16 +54,17 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         1.0,            // Normal zoom (100%)
     )
     .await;
-    background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
-    loop {
+    background.set_preload(tm.get_preload("assets/map_files/world2_start.png").unwrap());
+    loop {         
         use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(BLACK);
-        background.draw();
+        clear_background(RED);
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
-        map.draw_map(tm).await;
+        background.draw();
+        green_portal.draw();
         player.draw();
+        map.draw_map(&tm).await;
         next_frame().await;
     }
 }

@@ -9,7 +9,7 @@ Randomized map generation based on set objects
 2 - Chest
 
 map.create_map_array(chest_num, entrance_num, wall_num, entrance_sides)
-
+// 1 = up, 2 = left, 3 = down, 4 = right
 */
 
 use crate::modules::collision::check_collision;

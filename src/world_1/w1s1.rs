@@ -67,9 +67,10 @@ pub async fn run(
         archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
         archer_list.push(archer);
     }
+    
 
     loop {
-        let mut enemies: Vec<&Enemy> = vec![&summoner, &large_slime, &mage];
+     
         player.handle_keypresses(pause).await;                                               //for clones to stay consistent they must be set every loop
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -116,11 +117,7 @@ for archer in 0..archer_list.len() {
         }
         player.draw();
 
-        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await;
-        if mlehit {
-            for slime in slime_list.iter_mut() {
-                slim
-        }
+    
         player.handle_inventory();
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Left".to_string();

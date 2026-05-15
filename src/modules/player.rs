@@ -674,7 +674,7 @@ impl Player {
         )
     }
 
-    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) -> (bool, bool, usize, Vec<Enemy>) {
+    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) -> () {
         //update vars
         let mletimepassed = get_time() - self.last_attack_time;
         let rngtimepassed = get_time() - self.last_rng_attack_time;
@@ -753,7 +753,7 @@ impl Player {
                     }
                 }
         }
-        (mlehit, rnghit, index, enemies)
+       
     }
 
     pub fn create_melee_attack(&mut self, enemies: &mut Vec<Enemy>, mut index: usize, mut mlehit: bool) -> (usize, bool) {
