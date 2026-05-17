@@ -476,23 +476,19 @@ impl Enemy {
         }
     }
     // Summoning method for the summoner enemy
-    pub async fn summon(&mut self, tm: &TextureManager, slime_list: &mut Vec<Enemy>) -> Vec<Enemy> {
-        let mut summonx = self.get_x();
-        let mut summony = self.get_y() + 50.0;
-        // Summon 3 slimes around the summoner
-        for i in 0..3 {
-            if i == 1 {
-                summonx = self.get_x() + 50.0;
-                summony = self.get_y() - 50.0;
-            } else if i == 2 {
-                summonx = self.get_x() - 50.0;
-                summony = self.get_y() - 50.0;
-            }
-            let mut summoned_enemy = Enemy::new("", 25.0, 25.0, summonx, summony, true, 1.0, 100, 10, "").await;
-            summoned_enemy.set_preload(tm.get_preload("assets/slime.png").unwrap());
-            slime_list.push(summoned_enemy.clone());
-        }
-        slime_list.to_vec()
+    pub async fn summon(&mut self, tm: &TextureManager) -> (Enemy, Enemy, Enemy) {
+        let mut summoned_enemy1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y() + 50.0, true, 1.0, 100, 10, "").await;
+        let mut summoned_enemy2 = Enemy::new("", 25.0, 25.0, self.get_x() + 50.0, self.get_y() - 50.0, true, 1.0, 100, 10, "").await;
+        let mut summoned_enemy3 = Enemy::new("", 25.0, 25.0, self.get_x() - 50.0, self.get_y() - 50.0, true, 1.0, 100, 10, "").await;
+
+        summoned_enemy1.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        summoned_enemy2.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        summoned_enemy3.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        
+        summoned_enemy1.set_enemy_type("slime");
+        summoned_enemy2.set_enemy_type("slime");
+        summoned_enemy3.set_enemy_type("slime");
+        (summoned_enemy1, summoned_enemy2, summoned_enemy3)
 
         // Add the summoned enemy to your game world (e.g., a list of enemies)
     }
@@ -543,7 +539,11 @@ impl Enemy {
         self.projectiles.remove(projectile);
     }
     // Summoner action method that handles movement, image changes, and summoning slimes based on player proximity and cooldowns
-    pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player, slime_list: &mut Vec<Enemy>) -> Vec<Enemy> {
+    pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, Enemy, bool) {
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y(), true, 1.0, 100, 10, "").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y(), true, 1.0, 100, 10, "").await;
+        let mut slime3 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y(), true, 1.0, 100, 10, "").await;
+        let mut summoned = false;
         if get_time() - self.cooldown2 > 10.1 {
             self.summoner_img_change(player.get_x(), self.get_x(), "move", &tm).await;
             if get_time() - self.cooldown2 > 10.6 {
@@ -556,15 +556,21 @@ impl Enemy {
 
         if get_time() - self.cooldown > 5.0 {
             self.cooldown = get_time();
-            self.summon(&tm, slime_list).await;
+            (slime1, slime2, slime3) = self.summon(tm).await;
+            summoned = true;
             self.summoner_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
         }
-
-        slime_list.to_vec()
+        (slime1, slime2, slime3, summoned)
     }
     // Slime splitting method that creates two smaller slimes upon the death of a large slime
     #[allow(unused)]
-    pub async fn split(&mut self, tm: &TextureManager, slime_list: &mut Vec<Enemy>) -> Vec<Enemy> {
+    pub async fn split(&mut self, tm: &TextureManager) -> (Enemy, Enemy) {
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, 10, 2, "").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, 10, 2, "").await;
+        slime1.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        slime2.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        (slime1, slime2)
+        /* 
         let mut summonx = self.get_x() - 10.0;
 
         for i in 0..2 {
@@ -573,18 +579,23 @@ impl Enemy {
             }
             let mut summoned_enemy = Enemy::new("", 25.0, 25.0, summonx, self.get_y(), true, 1.0, 100, 10, "").await;
             summoned_enemy.set_preload(tm.get_preload("assets/slime.png").unwrap());
-            slime_list.push(summoned_enemy.clone());
         }
-        slime_list.to_vec()
+    */
     }
     // Slime action method that handles movement and splitting into smaller slimes upon death
     #[allow(unused)]
-    pub fn large_slime_action(&mut self, tm: &TextureManager, player: &mut Player, slime_list: &mut Vec<Enemy>) -> Vec<Enemy> {
+    pub async fn large_slime_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, bool) {
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, 10, 2, "").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, 10, 2, "").await;
+        slime1.set_enemy_type("slime");
+        slime2.set_enemy_type("slime");
+        let mut split = false;
         self.moveing(player.get_x(), player.get_y());
         if self.health <= 0 {
-            self.split(tm, slime_list);
+            split = true;
+            (slime1, slime2) = self.split(tm).await;
         }
-        slime_list.to_vec()
+        (slime1, slime2, split)
     }
 }
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {

@@ -136,8 +136,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         player.handle_keypresses(pause).await;
         player.handle_player_ui(&mut enemies).await;
         let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos, &vec![]);
-        //player.move_player(&map, old_pos, &collidable_objects); 
+        player.move_player(&map, old_pos, &collidable_objects); 
         player.draw();
         draw_grid(50.0, BLACK);
         next_frame().await;

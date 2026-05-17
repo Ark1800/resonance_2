@@ -45,9 +45,9 @@ async fn main() {
     "assets/archer_files/archer_deadL.png", "assets/archer_files/archer_deadR.png", "assets/archer_files/archer_knockbackL.png", "assets/archer_files/archer_knockbackR.png", "assets/archer_files/archer_readyL.png", "assets/archer_files/archer_readyR.png", "assets/archer_files/archer_runL.png", "assets/archer_files/archer_runR.png", "assets/archer_files/archer_shootL.png", "assets/archer_files/archer_shootR.png", "assets/archer_files/archer_standL.png", "assets/archer_files/archer_standR.png", 
     "assets/map_files/wall.png", "assets/map_files/chest.png", "assets/map_files/world1/beach.png",
     "assets/summoner_files/summoner_standL.png", "assets/summoner_files/summoner_standR.png", "assets/summoner_files/summoner_summonL.png", "assets/summoner_files/summoner_summonR.png","assets/summoner_files/portalL.png", "assets/summoner_files/portalR.png", 
-    "assets/map_files/grass.png", "assets/map_files/dungeon.png", "assets/map_files/world1/watertile.png", "assets/map_files/world1/beachtile.png", "assets/map_files/tree.png", "assets/map_files/world2_start.png",
+    "assets/map_files/grass.png", "assets/map_files/dungeon.png", "assets/map_files/world1/watertile.png", "assets/map_files/world1/beachtile.png", "assets/map_files/tree.png", "assets/map_files/world2_start.png", "assets/map_files/world1/beach2.png",
     "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png",
-    "assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif"
+    "assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif", "assets/map_files/world1/whirlpool.gif",
     ];
     let tm = TextureManager::new();
     // Using custom loading screen appearance
@@ -69,7 +69,7 @@ async fn main() {
     tm.preload_with_loading_screen(&all_assets, Some(loading_options)).await;
     //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
     let preloadlist = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap(), tm.get_preload("assets/player_files/arrow.png").unwrap(), tm.get_preload("assets/player_files/bow_arrow_image.png").unwrap()];
-    let mut current_screen = "w1s4".to_string();
+    let mut current_screen = "town".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
     let mut player = Player::new(preloadlist, 30.0, 30.0).await;

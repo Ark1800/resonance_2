@@ -9,6 +9,7 @@ use crate::modules::map::Map;
 use macroquad::prelude::*;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
+use crate::modules::enemy::Enemy;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
     let mut background = StillImage::new(
@@ -20,7 +21,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         true,   // Enable stretching
         1.0,    // Normal zoom (100%)
     ).await;
-        background.set_preload(tm.get_preload("assets/map_files/world1/beachtile.png").unwrap());
+        background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
     
     if last_scene == "Right" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
@@ -35,6 +36,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     }
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
     map.create_map_array(0, 2, 0, vec![1, 3]).await;
+    let mut enemies: Vec<Enemy> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -43,6 +45,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
+        player.handle_player_ui(&mut enemies).await;
         player.draw();
         if player.get_y() < 10.0 {
             *last_scene = "Down".to_string();
@@ -50,7 +53,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         }
         if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Top".to_string();
-            return "w1s2".to_string();
+            return "w1s1".to_string();
         }
         next_frame().await;
     }

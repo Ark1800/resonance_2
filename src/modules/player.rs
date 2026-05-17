@@ -122,8 +122,8 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100,
             maxhealth: 100,
-            mledmg: 3,
-            rngdmg: 5,
+            mledmg: 200,
+            rngdmg: 200,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
             musicoins: 0,
@@ -269,7 +269,7 @@ impl Player {
         if !collides.is_empty() {
             collide = true;
         }
-        if map.map_collision(&self.view_player()).0 {
+        if map.map_collision(&self.get_playerhitbox()).0 {
             //collision with map
             self.set_x(old_pos.x);
             for img in self.playerui.2.iter_mut() {
@@ -288,7 +288,7 @@ impl Player {
             }
         }
         self.move_y();
-        if map.map_collision(&self.view_player()).0 {
+        if map.map_collision(&self.get_playerhitbox()).0 {
             //collision with map
             self.set_y(old_pos.y);
             for img in self.playerui.2.iter_mut() {
@@ -307,6 +307,10 @@ impl Player {
             }
         }
 
+    }
+
+    pub fn get_playerhitbox(&self) -> StillImage {
+        self.playerui.3[0].clone() //the invisible hitbox image in playerui.3 is used for collision detection for attacks to prevent the player from having to be pixel perfect with their attacks
     }
 
     pub fn check_x_collision(&mut self, img2: &StillImage) -> bool {
@@ -676,7 +680,7 @@ impl Player {
         )
     }
 
-    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) -> (bool, bool, usize, Vec<Enemy>) {
+    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) -> (bool, bool, usize) {
         //update vars
         let mletimepassed = get_time() - self.last_attack_time;
         let rngtimepassed = get_time() - self.last_rng_attack_time;
@@ -754,8 +758,7 @@ impl Player {
                     }
                 }
         }
-        (mlehit, rnghit, index, enemies.to_vec())
-
+        (mlehit, rnghit, index)
     }
 
     pub fn create_melee_attack(&mut self, enemies: &mut Vec<Enemy>, mut index: usize, mut mlehit: bool) -> (usize, bool) {
