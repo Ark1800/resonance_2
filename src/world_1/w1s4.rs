@@ -41,7 +41,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
 
     for x in 0..map_row_len {
         for y in 0..map_column_len {
-            if y != 4 && x != 0 && x != map_row_len - 1 && y != 0 && y != map_column_len - 1 {
+            if y != 4 && x != 0 && x != map_row_len - 1 && y != 0 && y != map_column_len - 1 && y != 5 {
                 wall_places.push(vec![x as i32, y as i32]);
                 walls.push(1);
             }

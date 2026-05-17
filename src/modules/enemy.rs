@@ -189,7 +189,8 @@ pub struct Enemy {
     projectiles: Vec<Projectile>,
     cooldown: f64,
     cooldown2: f64,
-    enemies: Vec<Enemy>,
+    enemy_type: String,
+    enemy_count: i32,
 }
 
 impl Enemy {
@@ -207,17 +208,35 @@ impl Enemy {
     ) -> Enemy {
         Enemy {
             view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
-            enemies: Vec::new(),
             move_speed: 200.0, // Default speed
             movement: Vec2::ZERO,
             health,
             dmg,
+            enemy_type: String::new(),
+            enemy_count: 0,
             projectile_image: StillImage::new(projectile_path, width, height, 0.0, 0.0, false, 1.0).await,
             projectiles: Vec::new(),
             cooldown: 0.0,
             cooldown2: 0.0,
         }
     }
+
+    pub fn set_enemy_type(&mut self, enemy_type: &str) {
+        self.enemy_type = enemy_type.to_string();
+     }
+
+    pub fn get_enemy_type(&self) -> &str {
+        &self.enemy_type
+    }
+
+    pub fn set_enemy_count(&mut self, count: i32) {
+        self.enemy_count = count;
+    }
+
+    pub fn get_enemy_count(&self) -> i32 {
+        self.enemy_count
+    }
+
     #[allow(unused)]
     pub async fn archer_img_change(&mut self, playerx: f32, archerx: f32, action: &str, tm: &TextureManager) -> &Enemy {
         let mut way = ""; // Determine direction based on player and archer positions
@@ -428,8 +447,13 @@ impl Enemy {
         self.dmg
     }
 
-    pub fn dmg_enemy(&mut self, dmg: i32) {
+    pub fn dmg_enemy(&mut self, dmg: i32) -> bool {
+        let mut dead = false;
         self.health -= dmg;
+        if self.health <= 0 {
+            dead = true;
+        }
+        dead
     }
 
     pub fn get_projectiles(&self) -> &Vec<Projectile> {

@@ -1,4 +1,4 @@
-use crate::modules::{self, still_image};
+use crate::modules::{self};
 use crate::modules::collision::check_collision;
 use crate::modules::item::Item;
 use crate::modules::label::Label;
@@ -12,18 +12,12 @@ use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
 
 //TO DOOOOOO
-//0.5 why arrow cooldown doesnt always proc
 
-//1. W1Sp
-//1.0 W1S1
-//1.1 W1S2
-//1.2 W1S3
-//1.3 W1S4
 //1.4 W1Sb
-//1.2 fix enemies sending back from player
+
 //2. Song uploads
 //3. All Music Discs
-//4. player dying
+//4. player Dying
 
 /*
 //Keypresses:
@@ -128,8 +122,8 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100,
             maxhealth: 100,
-            mledmg: 50,
-            rngdmg: 2,
+            mledmg: 3,
+            rngdmg: 5,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
             musicoins: 0,
@@ -149,7 +143,7 @@ impl Player {
             attackimg,
             mlevalid: true,
             rangedattack: false,
-            last_rng_attack_time: get_time(),
+            last_rng_attack_time: 0.0,
             rangedattackimgcreated: false,
             ranged_movespeeds: Vec::new(),
             arrows: Vec::new(),
@@ -392,6 +386,14 @@ impl Player {
 
     pub fn get_movespeed(&self) -> f32 {
         self.move_speed * self.movespeedmult
+    }
+
+    pub fn get_meleedmg(&self) -> i32 {
+        self.mledmg
+    }
+
+    pub fn get_rngdmg(&self) -> i32 {
+        self.rngdmg
     }
 
     //PLAYER STATS AND MOVEMENTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
@@ -674,7 +676,7 @@ impl Player {
         )
     }
 
-    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) -> () {
+    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) -> (bool, bool, usize, Vec<Enemy>) {
         //update vars
         let mletimepassed = get_time() - self.last_attack_time;
         let rngtimepassed = get_time() - self.last_rng_attack_time;
@@ -695,7 +697,7 @@ impl Player {
         self.playerui.1[2].draw();
         if self.attack {
             if self.mlevalid == true {
-                let (index, mlehit) = self.create_melee_attack(enemies, index, mlehit);
+                (index, mlehit) = self.create_melee_attack(enemies, index, mlehit);
                 self.mlevalid = false; //prevents multiple melee hits from one attack input
             }
             if mletimepassed > 0.1 && mletimepassed < 0.4 {
@@ -720,7 +722,6 @@ impl Player {
             if rngtimepassed > 3.0 { 
                 self.rangedattack = false;
                 self.rangedattackimgcreated = false;
-                self.last_rng_attack_time = get_time();
             }
         }
         let mut rac = 0; //ranged attack counter so that only one enemy is damaged per arrow
@@ -753,7 +754,8 @@ impl Player {
                     }
                 }
         }
-       
+        (mlehit, rnghit, index, enemies.to_vec())
+
     }
 
     pub fn create_melee_attack(&mut self, enemies: &mut Vec<Enemy>, mut index: usize, mut mlehit: bool) -> (usize, bool) {
@@ -781,7 +783,16 @@ impl Player {
     }
 
     pub async fn create_range_attack(&mut self) {
+        // enforce cooldown (3.0s) to prevent firing multiple arrows
+        let cooldown = 3.0;
+        let now = get_time();
+        if now - self.last_rng_attack_time < cooldown {
+            return;
+        }
         if self.rangedattackimgcreated == false {
+            // mark as created and record time before awaiting to avoid re-entrancy
+            self.rangedattackimgcreated = true;
+            self.last_rng_attack_time = now;
             let player_x = self.view.get_x();
             let player_y = self.view.get_y();
             let (coords, angle, movespeed) = match self.player_direction.as_str() {
@@ -810,6 +821,7 @@ impl Player {
             rng_attack_img.set_angle(angle);
             self.arrows.push(rng_attack_img);
             self.rangedattackimgcreated = true;
+            self.last_rng_attack_time = get_time();
         }
     }
 
@@ -991,7 +1003,6 @@ impl Player {
     pub fn unequip_item(&mut self, title: &str) {
         for (equipped_pos, index) in self.equipped_items.iter().enumerate() {
             if *title == self.items[*index].get_itemtitle() {
-                println!("SUCCESS");
                 let imageboxindex = match self.items[*index].get_itemtype().as_str() {
                     "helmet" => 2,
                     "bodyarmor" => 3,
