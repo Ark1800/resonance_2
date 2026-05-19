@@ -13,9 +13,6 @@ use std::f32::consts::PI;
 
 //TO DOOOOOO
 
-//1.4 W1Sb
-
-//2. Song uploads
 //3. All Music Discs
 //4. player Dying
 
