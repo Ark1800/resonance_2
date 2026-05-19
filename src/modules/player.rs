@@ -12,7 +12,8 @@ use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
 
 //TO DOOOOOO
-
+//1. player atk lbls moving in town without player
+//2. player atks sometimes not appearing
 //3. All Music Discs
 //4. player Dying
 
@@ -119,8 +120,8 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100,
             maxhealth: 100,
-            mledmg: 200,
-            rngdmg: 200,
+            mledmg: 5,
+            rngdmg: 3,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
             musicoins: 0,

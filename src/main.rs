@@ -74,6 +74,7 @@ async fn main() {
     let mut last_switch = get_time() - 0.02;
     let mut player = Player::new(preloadlist, 30.0, 30.0).await;
     let mut last_scene = "None".to_string();
+    let mut dungeon_completed = false;
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {
@@ -91,9 +92,9 @@ async fn main() {
                 "w3s1" => world_3::w3s1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene).await,
                 "w3s2" => world_3::w3s2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene).await,
                 "w3s3" => world_3::w3s3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene).await,
-                "wcs1" => world_c::wcs1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene).await,
-                "wcs2" => world_c::wcs2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene).await,
-                "wcs3" => world_c::wcs3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene).await,
+                "wcs1" => world_c::wcs1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &dungeon_completed).await,
+                "wcs2" => world_c::wcs2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &dungeon_completed).await,
+                "wcs3" => world_c::wcs3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut dungeon_completed).await,
                 "town" => world_hub_and_otherscreens::town::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene).await,
                 "shop" => world_hub_and_otherscreens::shop::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause).await,
                 "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &tm).await,

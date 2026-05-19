@@ -1,5 +1,8 @@
 /*pub mod enemy;
 
+//enemy knockback on hit
+//enemy immortality
+
 use crate::modules::enemy::Enemy;
 
 ENEMY SETUPS
@@ -149,11 +152,11 @@ for archer in 0..archer_list.len() {
                     if collision {
                         player.dmgplayer(archer_list[archer].get_dmg());
                         archer_list[archer].remove_projectile(arrow);
-                
+
                         break;
                 }
             }
-            
+
         }
 
 
@@ -164,13 +167,14 @@ for mage in 0..mage_list.len() {
                     if collision {
                         player.dmgplayer(mage_list[mage].get_dmg());
                         mage_list[mage].remove_projectile(fireball);
-                
+
                         break;
                 }
             }
-            
+
         }
 */
+use crate::modules::collision::check_collision;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::projectile::Projectile;
@@ -190,7 +194,6 @@ pub struct Enemy {
     cooldown: f64,
     cooldown2: f64,
     enemy_type: String,
-    enemy_count: i32,
 }
 
 impl Enemy {
@@ -205,6 +208,7 @@ impl Enemy {
         health: i32,
         dmg: i32,
         projectile_path: &str,
+        enemy_type: &str,
     ) -> Enemy {
         Enemy {
             view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
@@ -212,8 +216,7 @@ impl Enemy {
             movement: Vec2::ZERO,
             health,
             dmg,
-            enemy_type: String::new(),
-            enemy_count: 0,
+            enemy_type: enemy_type.to_string(),
             projectile_image: StillImage::new(projectile_path, width, height, 0.0, 0.0, false, 1.0).await,
             projectiles: Vec::new(),
             cooldown: 0.0,
@@ -223,18 +226,10 @@ impl Enemy {
 
     pub fn set_enemy_type(&mut self, enemy_type: &str) {
         self.enemy_type = enemy_type.to_string();
-     }
+    }
 
     pub fn get_enemy_type(&self) -> &str {
         &self.enemy_type
-    }
-
-    pub fn set_enemy_count(&mut self, count: i32) {
-        self.enemy_count = count;
-    }
-
-    pub fn get_enemy_count(&self) -> i32 {
-        self.enemy_count
     }
 
     #[allow(unused)]
@@ -470,28 +465,19 @@ impl Enemy {
     }
     // Draw all owned enemy bullets
     pub fn draw_bullet(&mut self, player: &mut Player) {
-        for projectile in &mut self.projectiles {
-            projectile.move_projectiles(player.get_oldpos());
-            projectile.draw();
+        let dmg = self.get_dmg();
+        for projectile in 0..self.projectiles.len() {
+            let collision = check_collision(self.projectiles[projectile].view_player(), player.view_player(), 1);
+            if collision {
+                player.dmgplayer(dmg);
+                self.projectiles.remove(projectile);
+                break;
+            }
+            self.projectiles[projectile].move_projectiles(player.get_oldpos());
+            self.projectiles[projectile].draw();
         }
     }
-    // Summoning method for the summoner enemy
-    pub async fn summon(&mut self, tm: &TextureManager) -> (Enemy, Enemy, Enemy) {
-        let mut summoned_enemy1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y() + 50.0, true, 1.0, 100, 10, "").await;
-        let mut summoned_enemy2 = Enemy::new("", 25.0, 25.0, self.get_x() + 50.0, self.get_y() - 50.0, true, 1.0, 100, 10, "").await;
-        let mut summoned_enemy3 = Enemy::new("", 25.0, 25.0, self.get_x() - 50.0, self.get_y() - 50.0, true, 1.0, 100, 10, "").await;
 
-        summoned_enemy1.set_preload(tm.get_preload("assets/slime.png").unwrap());
-        summoned_enemy2.set_preload(tm.get_preload("assets/slime.png").unwrap());
-        summoned_enemy3.set_preload(tm.get_preload("assets/slime.png").unwrap());
-        
-        summoned_enemy1.set_enemy_type("slime");
-        summoned_enemy2.set_enemy_type("slime");
-        summoned_enemy3.set_enemy_type("slime");
-        (summoned_enemy1, summoned_enemy2, summoned_enemy3)
-
-        // Add the summoned enemy to your game world (e.g., a list of enemies)
-    }
     // Teleport method for the summoner
     pub fn teleport(&mut self) {
         rand::srand(date::now() as u64);
@@ -540,9 +526,10 @@ impl Enemy {
     }
     // Summoner action method that handles movement, image changes, and summoning slimes based on player proximity and cooldowns
     pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, Enemy, bool) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y(), true, 1.0, 100, 10, "").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y(), true, 1.0, 100, 10, "").await;
-        let mut slime3 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y(), true, 1.0, 100, 10, "").await;
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y() + 50.0, true, 1.0, 100, 10, "", "slime").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() + 50.0, self.get_y() - 50.0, true, 1.0, 100, 10, "", "slime").await;
+        let mut slime3 = Enemy::new("", 25.0, 25.0, self.get_x() - 50.0, self.get_y() - 50.0, true, 1.0, 100, 10, "", "slime").await;
+
         let mut summoned = false;
         if get_time() - self.cooldown2 > 10.1 {
             self.summoner_img_change(player.get_x(), self.get_x(), "move", &tm).await;
@@ -556,7 +543,10 @@ impl Enemy {
 
         if get_time() - self.cooldown > 5.0 {
             self.cooldown = get_time();
-            (slime1, slime2, slime3) = self.summon(tm).await;
+
+            slime1.set_preload(tm.get_preload("assets/slime.png").unwrap());
+            slime2.set_preload(tm.get_preload("assets/slime.png").unwrap());
+            slime3.set_preload(tm.get_preload("assets/slime.png").unwrap());
             summoned = true;
             self.summoner_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
         }
@@ -565,33 +555,33 @@ impl Enemy {
     // Slime splitting method that creates two smaller slimes upon the death of a large slime
     #[allow(unused)]
     pub async fn split(&mut self, tm: &TextureManager) -> (Enemy, Enemy) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, 10, 2, "").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, 10, 2, "").await;
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, 10, 2, "", "slime").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, 10, 2, "", "slime").await;
         slime1.set_preload(tm.get_preload("assets/slime.png").unwrap());
         slime2.set_preload(tm.get_preload("assets/slime.png").unwrap());
         (slime1, slime2)
-        /* 
-        let mut summonx = self.get_x() - 10.0;
+        /*
+            let mut summonx = self.get_x() - 10.0;
 
-        for i in 0..2 {
-            if i == 1 {
-                summonx = self.get_x() + 10.0;
+            for i in 0..2 {
+                if i == 1 {
+                    summonx = self.get_x() + 10.0;
+                }
+                let mut summoned_enemy = Enemy::new("", 25.0, 25.0, summonx, self.get_y(), true, 1.0, 100, 10, "").await;
+                summoned_enemy.set_preload(tm.get_preload("assets/slime.png").unwrap());
             }
-            let mut summoned_enemy = Enemy::new("", 25.0, 25.0, summonx, self.get_y(), true, 1.0, 100, 10, "").await;
-            summoned_enemy.set_preload(tm.get_preload("assets/slime.png").unwrap());
-        }
-    */
+        */
     }
     // Slime action method that handles movement and splitting into smaller slimes upon death
     #[allow(unused)]
     pub async fn large_slime_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, bool) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, 10, 2, "").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, 10, 2, "").await;
-        slime1.set_enemy_type("slime");
-        slime2.set_enemy_type("slime");
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, 10, 2, "", "slime").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, 10, 2, "", "slime").await;
+
         let mut split = false;
         self.moveing(player.get_x(), player.get_y());
         if self.health <= 0 {
+            println!("Large slime split");
             split = true;
             (slime1, slime2) = self.split(tm).await;
         }

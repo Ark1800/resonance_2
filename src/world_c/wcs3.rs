@@ -20,6 +20,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
+    dungeon_completed: &mut bool,
 ) -> String {
     let mut background = StillImage::new(
         "",
@@ -99,18 +100,22 @@ pub async fn run(
     let mut current_time: f64;
     let mut time_dif = start_time;
     let mut lbl_speech = Label::new("", 50.0, 600.0, 75);
-    lbl_speech.with_colors(WHITE, None);
-    let mut speech_duration = 0.0;
+    lbl_speech.with_scroll(true);
+    let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut speech_letter = 0;
     let speech_list: Vec<String> = vec![
-        "We're at the end!".to_string(),
+        "I think we're at the end!".to_string(),
         "....What are those?".to_string(),
         "They look like music disks..".to_string(),
         "You should touch one.".to_string(),
         "It'd be funny.".to_string(),
     ];
-    let mut scrolling_list: Vec<String> = vec![];
+    let speech_list2: Vec<String> = vec!["Woah, what's happening??".to_string(), "".to_string(), "".to_string()];
+    lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
+
+    let mut lbl_interact = Label::new("", 0.0, 0.0, 75);
+    lbl_interact.with_scroll_speed(0.18);
+
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -119,60 +124,53 @@ pub async fn run(
         let timer = get_time() - start_time;
         if timer > 0.1 {
             current_time = get_time();
-            if (current_time - time_dif) > 0.03 {
+            if (current_time - time_dif) > 0.1 {
                 time_dif = current_time;
-                if speech_duration > 0.0 {
-                    speech_duration -= 0.05;
-                    if speech_num <= (speech_list.len() as i32 -1) && speech_letter <= (scrolling_list.len() as i32) {
-                    scrolling_text_show(&scrolling_list, &mut lbl_speech, &speech_letter);
-                    speech_letter += 1;
-
-                    }
-                    if speech_duration < 0.0 {
-                        speech_duration = 0.0;
-                        speech_num += 1;
+                if speech_cooldown <= 0.0 {
+                    speech_cooldown = 0.0;
+                    if speech_num == speech_list.len() {
+                        lbl_speech.set_text("");
+                    } else {
+                        lbl_speech.set_scrolling_text(speech_list[speech_num].to_string());
                     }
                 }
             }
+            if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() {
+                speech_cooldown = 1.0;
+                speech_num += 1;
+            }
             player.handle_keypresses(pause).await;
-
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &podium_list);
 
-            if speech_duration == 0.0 && speech_num <= (speech_list.len() as i32 - 1) {
-                scrolling_list = scrolling_text_create(&speech_list[speech_num as usize]);
-                speech_letter = 1;
-                if speech_num < 2 {
-                    speech_duration = 3.0;
-                } else{
-                    speech_duration = 5.0;
+            for podium in 0..podium_list.len() {
+                if (player.get_oldpos().x - podium_list[0].get_x()).abs() < 50.0
+                    && (player.get_oldpos().y - podium_list[0].get_y()).abs() < 50.0
+                    && !lbl_interact.scroll()
+                {
+                    lbl_interact.with_scroll(true);
+                    lbl_interact.set_position(player.get_x(), player.get_y() - 50.0);
+                    lbl_interact.set_scrolling_text("Touch the podiums to see what happens. Press E to interact.".to_string());
+                    break;
+                } else if (player.get_oldpos().x - podium_list[0].get_x()).abs() >= 50.0
+                    && (player.get_oldpos().y - podium_list[0].get_y()).abs() >= 50.0
+                    && lbl_interact.scroll()
+                {
+                    lbl_interact.with_scroll(false);
                 }
             }
-            
+
             for podium in 0..podium_list.len() {
                 podium_list[podium].draw();
             }
             player.draw();
             cyric.draw();
-            lbl_speech.draw();
+            if lbl_interact.scroll() {
+                lbl_interact.scrolling_text_draw();
+            }
+            lbl_speech.scrolling_text_draw();
+
             next_frame().await;
         }
     }
-}
-
-pub fn scrolling_text_create(sentence: &String) -> Vec<String> {
-    let mut scrolling_list: Vec<String> = vec![];
-    for i in 0..sentence.len() {
-        let letter = sentence[i..i + 1].to_string();
-        scrolling_list.push(letter.to_string());
-    }
-    scrolling_list
-}
-
-pub fn scrolling_text_show(scrolling_list: &Vec<String>, lbl_speech: &mut Label, speech_letter: &i32) {
-    let mut scrolled_text = "".to_string();
-    for i in 0..*speech_letter {
-        scrolled_text = scrolled_text + &scrolling_list[i as usize].clone();
-    }
-    lbl_speech.set_text(scrolled_text);
 }

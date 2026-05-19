@@ -30,3 +30,4 @@ pub mod projectile;
 pub mod map;
 pub mod item;
 pub mod animated_image;
+pub mod musicdisc;

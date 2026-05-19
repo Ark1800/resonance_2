@@ -13,7 +13,7 @@ use macroquad::prelude::*;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, dungeon_completed: &bool) -> String {
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -26,7 +26,11 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     .await;
     background.set_preload(tm.get_preload("assets/map_files/dungeon.png").unwrap());
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    map.create_map_array(0, 2, 5, vec![1, 3]).await;
+    if *dungeon_completed {
+    map.create_map_array(0, 2, 0, vec![1, 3]).await;
+    } else {
+    map.create_map_array(0, 1, 0, vec![3]).await;
+    }
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
     } else if last_scene == "Right" {
@@ -67,19 +71,24 @@ let mut img_back = StillImage::new(
     let mut current_time: f64;
     let mut time_dif = start_time;
     let mut lbl_speech = Label::new("", 50.0, 600.0, 75);
-    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 75);
-    lbl_speech.set_visible(false);
-    let mut speech_duration = 0.0;
+    lbl_speech.with_scroll(true);
+    let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut speech_letter = 0;
+    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 75);
+    lbl_tutorial.with_scroll(true);
+    let mut tutorial_cooldown = 0.0;
+    let mut tutorial_num = 0;
     let speech_list: Vec<String> = vec![
-        "Hurry up, or".to_string(),
-        "....What are those?".to_string(),
-        "They look like music disks..".to_string(),
-        "You should touch one.".to_string(),
-        "It'd be funny.".to_string(),
+        "Hurry up man, or I'll lose you!".to_string(),
+        "Finally found this place! That took forever..".to_string(),
+        "Come on, lets go further in. Try to keep up!".to_string(),
     ];
-    let mut scrolling_list: Vec<String> = vec![];
+    let tutorial_list: Vec<String> = vec![
+        "WASD to move".to_string(),
+        "SHIFT to dash".to_string()
+    ];
+    let scroll_speech = lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
+    lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -91,58 +100,56 @@ let mut img_back = StillImage::new(
         if (current_time - time_dif) > 0.1 {
             time_dif = current_time;
 
-                if speech_duration > 0.0 {
-                    speech_duration -= 0.05;
-                    if speech_num <= (speech_list.len() as i32 -1) && speech_letter <= (scrolling_list.len() as i32) {
-                    scrolling_text_show(&scrolling_list, &mut lbl_speech, &speech_letter);
-                    speech_letter += 1;
-
+                if speech_cooldown > 0.0 {
+                    speech_cooldown -= 0.1;
+                    if speech_cooldown <= 0.0 {
+                        speech_cooldown = 0.0;
+                        if speech_num == speech_list.len() {
+                            lbl_speech.set_text("");
+                        } else {
+                        lbl_speech.set_scrolling_text(speech_list[speech_num].to_string());
+                        }
                     }
-                    if speech_duration < 0.0 {
-                        speech_duration = 0.0;
-                        speech_num += 1;
+                } if tutorial_cooldown > 0.0 {
+                    tutorial_cooldown -= 0.1;
+                    if tutorial_cooldown <= 0.0 {
+                        tutorial_cooldown = 0.0;
+                        lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].to_string());
                     }
                 }
+                
+        }
+        if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() {
+            speech_cooldown = 0.5;
+            speech_num += 1;
+        } if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < tutorial_list.len() - 1 {
+            tutorial_cooldown = 1.5;
+            tutorial_num += 1;
         }
         player.handle_keypresses(pause).await;
 
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
-        
-        if speech_duration == 0.0 && speech_num <= (speech_list.len() as i32 - 1) {
-                scrolling_list = scrolling_text_create(&speech_list[speech_num as usize]);
-                speech_letter = 1;
-                if speech_num < 2 {
-                    speech_duration = 3.0;
-                } else{
-                    speech_duration = 5.0;
-                }
-            }
-        if player.get_y() <= 10.0 {
+
+
+        if player.get_y() > virtual_height - 10.0 {
             return "wcs2".to_string();
         }
         img_back.draw();
         player.draw();
         cyric.draw();
-        lbl_speech.draw();
+        if speech_num != speech_list.len() {
+        lbl_speech.scrolling_text_draw();
+        } else {
+            lbl_speech.draw();
+        }
+        if tutorial_num != tutorial_list.len() {
+        lbl_tutorial.scrolling_text_draw();
+        } else {
+            lbl_tutorial.draw();
+        }
+        
         next_frame().await;
     }
 }
-}
-
-pub fn scrolling_text_create(sentence: &String) -> Vec<String> {
-    let mut scrolling_list: Vec<String> = vec![];
-    for i in 0..sentence.len() {
-        let letter = sentence[i..i + 1].to_string();
-        scrolling_list.push(letter.to_string());
-    }
-    scrolling_list
-}
-
-pub fn scrolling_text_show(scrolling_list: &Vec<String>, lbl_speech: &mut Label, speech_letter: &i32) {
-    let mut scrolled_text = "".to_string();
-    for i in 0..*speech_letter {
-        scrolled_text = scrolled_text + &scrolling_list[i as usize].clone();
-    }
-    lbl_speech.set_text(scrolled_text);
 }

@@ -7,12 +7,13 @@ Program Details:
 use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::enemy::Enemy;
 //use crate::modules::projectile::Projectile;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, dungeon_completed: &bool) -> String {
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -48,80 +49,129 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     let mut current_time: f64;
     let mut time_dif = start_time;
     let mut lbl_speech = Label::new("", 50.0, 600.0, 75);
-    lbl_speech.set_visible(false);
-    let mut speech_duration = 0.0;
+    lbl_speech.with_scroll(true);
+    let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut speech_letter = 0;
+    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 75);
+    lbl_tutorial.with_scroll(true);
+    let mut tutorial_cooldown = 0.0;
     let speech_list: Vec<String> = vec![
-        "We're at the end!".to_string(),
-        "....What are those?".to_string(),
-        "They look like music disks..".to_string(),
-        "You should touch one.".to_string(),
-        "It'd be funny.".to_string(),
+        "Woah, bogie alert!".to_string(),
+        "You take them, you have the sword!".to_string(),
     ];
-    let mut scrolling_list: Vec<String> = vec![];
-    let tutorial_list = "Press UP ARROW to use your melee attack\nPress DOWN ARROW to use your ranged attack".to_string();
-    //let mut projectile_list: Vec<Projectile> = vec![];
+    let tutorial_line = "Press UP ARROW to use your melee attack\nPress DOWN ARROW to use your ranged attack".to_string();
+
+    lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
+    lbl_tutorial.set_scrolling_text(tutorial_line.clone());
+
+    let mut enemies: Vec<Enemy> = vec![];
+     let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20, 10, "", "large_slime").await;
+    large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
+      enemies.push(large_slime);
+
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
+        if *pause == false {
         let timer = get_time() - start_time;
         if timer > 0.1 {
             current_time = get_time();
             if (current_time - time_dif) > 0.1 {
                 time_dif = current_time;
-                if speech_duration > 0.0 {
-                    speech_duration -= 0.05;
-                    if speech_num <= (speech_list.len() as i32 -1) && speech_letter <= (scrolling_list.len() as i32) {
-                    scrolling_text_show(&scrolling_list, &mut lbl_speech, &speech_letter);
-                    speech_letter += 1;
-
+                if speech_cooldown > 0.0 {
+                    speech_cooldown -= 0.1;
+                    if speech_cooldown <= 0.0 {
+                        speech_cooldown = 0.0;
+                        if speech_num == speech_list.len() {
+                            lbl_speech.set_text("");
+                        } else {
+                        lbl_speech.set_scrolling_text(speech_list[speech_num].to_string());
+                        }
                     }
-                    if speech_duration < 0.0 {
-                        speech_duration = 0.0;
-                        speech_num += 1;
+                } if tutorial_cooldown > 0.0 {
+                    tutorial_cooldown -= 0.1;
+                    if tutorial_cooldown <= 0.0 {
+                        tutorial_cooldown = 0.0;
+                        lbl_tutorial.set_text("");
                     }
                 }
             }
+        }
+        if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() {
+            speech_cooldown = 0.5;
+            speech_num += 1;
+        } if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() {
+            tutorial_cooldown = 1.5;
         }
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
-
-        if speech_duration == 0.0 && speech_num <= (speech_list.len() as i32 - 1) {
-                scrolling_list = scrolling_text_create(&speech_list[speech_num as usize]);
-                speech_letter = 1;
-                if speech_num < 2 {
-                    speech_duration = 3.0;
-                } else{
-                    speech_duration = 5.0;
+            //enemy loop
+            for i in 0..enemies.len() { //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                match enemies[i].get_enemy_type() {
+                    "archer" => {
+                        enemies[i].archer_action(tm, player).await;
+                        enemies[i].draw_bullet(player);
+                    }
+                    "slime" => {
+                        enemies[i].moveing(player.get_x(), player.get_y());
+                    }
+                    "summoner" => {
+                        let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                        if summoned {
+                            enemies.push(slime1);
+                            enemies.push(slime2);
+                            enemies.push(slime3);
+                        }
+                    }
+                    "mage" => {
+                        enemies[i].mage_action(tm, player).await;
+                        enemies[i].draw_bullet(player);
+                       
+                    }
+                    "large_slime" => {
+                        enemies[i].large_slime_action(tm, player).await;
+                        
+                    }
+                    _ => {}
                 }
+                enemies[i].draw();
             }
-        if player.get_y() <= 10.0 {
+        }
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await; //dont need to send enemies back because it doesnt get used again until next frame
+        if mlehit {
+           enemies[index].dmg_enemy(player.get_meleedmg());
+           if enemies[index].get_health() <= 0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                        let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                        if split {
+                            enemies.push(slime1);
+                            enemies.push(slime2);
+                        }
+                }
+                enemies.remove(index);
+            }
+
+        }
+        if rnghit {
+           enemies[index].dmg_enemy(player.get_rngdmg());
+           if enemies[index].get_health() <= 0 {
+              enemies.remove(index);
+           }
+        }
+        player.handle_inventory();
+        if player.get_y() > virtual_height - 10.0 {
+            *last_scene = "Up".to_string();
             return "wcs3".to_string();
-        } else if player.get_y() >= virtual_height - 10.0 {
+        }
+        if player.get_y() < 10.0 {
+            *last_scene = "Down".to_string();
             return "wcs1".to_string();
         }
-        lbl_speech.draw();
         player.draw();
+        lbl_speech.scrolling_text_draw();
+        lbl_tutorial.scrolling_text_draw();
         next_frame().await;
     }
-}
-
-pub fn scrolling_text_create(sentence: &String) -> Vec<String> {
-    let mut scrolling_list: Vec<String> = vec![];
-    for i in 0..sentence.len() {
-        let letter = sentence[i..i + 1].to_string();
-        scrolling_list.push(letter.to_string());
-    }
-    scrolling_list
-}
-
-pub fn scrolling_text_show(scrolling_list: &Vec<String>, lbl_speech: &mut Label, speech_letter: &i32) {
-    let mut scrolled_text = "".to_string();
-    for i in 0..*speech_letter {
-        scrolled_text = scrolled_text + &scrolling_list[i as usize].clone();
-    }
-    lbl_speech.set_text(scrolled_text);
 }

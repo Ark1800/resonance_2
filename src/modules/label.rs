@@ -94,6 +94,11 @@ pub struct Label {
     border_color: Color, // Color of the border
     border_thickness: f32, // Thickness of the border
     visible: bool,      // Whether the label should be drawn
+    scroll: bool,          // Whether to scroll the text
+    scroll_speed: f64,     // Scroll speed
+    scroll_timer: f64,     // Timer for scrolling
+    scroll_text: Vec<String>,
+    scroll_letter: i32,
     
     // Fixed size properties
     fixed_width: Option<f32>,
@@ -116,7 +121,6 @@ pub enum TextAlign {
 }
 
 impl Label {
-
     // Constructor using x and y separately
     pub fn new<T: Into<String>>(text: T, x: f32, y: f32, font_size: u16) -> Self {
         let mut label = Self {
@@ -127,27 +131,94 @@ impl Label {
             foreground: BLACK, // Default to black
             background: None,  // No background by default
             line_spacing: 1.2,
-            font: None,        // Default to None (use system font)
-            corner_radius: 0.0, // Default to no rounded corners
-            border: false,      // Default to no border
-            border_color: BLACK, // Default border color
-            border_thickness: 1.0, // Default border thickness
-            visible: true,      // Default to visible
-            fixed_width: None, // No fixed width by default
-            fixed_height: None, // No fixed height by default
+            font: None,                  // Default to None (use system font)
+            corner_radius: 0.0,          // Default to no rounded corners
+            border: false,               // Default to no border
+            border_color: BLACK,         // Default border color
+            border_thickness: 1.0,       // Default border thickness
+            visible: true,               // Default to visible
+            fixed_width: None,           // No fixed width by default
+            fixed_height: None,          // No fixed height by default
             text_align: TextAlign::Left, // Default to left alignment
             cached_lines: Vec::new(),
             cached_line_dimensions: Vec::new(),
             cached_max_width: 0.0,
             cached_total_height: 0.0,
+            scroll: false,
+            scroll_speed: 0.05,
+            scroll_timer: 0.0,
+            scroll_text: vec![],
+            scroll_letter: 0,
         };
-        
+
         // Calculate and cache text dimensions
         label.calculate_text_dimensions();
-        
+
         label
     }
 
+    #[allow(unused)]
+    pub fn with_scroll(&mut self, scroll: bool) {
+        self.scroll = scroll;
+    }
+
+    #[allow(unused)]
+    pub fn with_scroll_speed(&mut self, scroll_speed: f64) {
+        self.scroll_speed = scroll_speed;
+    }
+
+    #[allow(unused)]
+    pub fn get_scroll_speed(&self) -> f64 {
+        self.scroll_speed
+    }
+
+    #[allow(unused)]
+    pub fn get_scroll_text(&self) -> Vec<String> {
+        self.scroll_text.clone()
+    }
+
+    #[allow(unused)]
+    pub fn get_scroll(&self) -> i32 {
+        self.scroll_letter
+    }
+
+    #[allow(unused)]
+    pub fn scroll(&self) -> bool {
+        self.scroll
+    }
+
+    pub fn get_scroll_len(&self) -> i32 {
+        self.scroll_text.len() as i32
+    }
+
+    #[allow(unused)]
+    pub fn set_scrolling_text(&mut self, sentence: String) {
+        if self.scroll {
+            self.scroll_text.clear();
+        for i in 0..sentence.len() {
+            self.scroll_text.push(sentence[i..i + 1].to_string());
+        }
+        self.scroll_letter = 1;
+        }
+    }
+
+    #[allow(unused)]
+    pub fn scrolling_text_draw(&mut self) -> bool {
+        let mut pass = true;
+        if self.scroll_letter == 0 || (get_time() - self.scroll_timer < self.scroll_speed) || !self.scroll || self.scroll_text.is_empty() || self.scroll_letter > self.scroll_text.len() as i32 {
+            pass = false;
+        } else {
+        self.scroll_timer = get_time();
+        let mut scrolled_text = "".to_string();
+        for i in 0..self.scroll_letter {
+            scrolled_text = scrolled_text + &self.scroll_text[i as usize].clone();
+        }
+        self.scroll_letter += 1;
+        self.set_text(scrolled_text);
+        }
+        self.draw();
+        pass
+    }
     // Calculate and cache text dimensions
     fn calculate_text_dimensions(&mut self) {
         let line_height = self.font_size as f32 * self.line_spacing;
