@@ -28,9 +28,9 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
     map.create_map_array(0, 2, 0, vec![1, 3]).await;
     if last_scene == "Top" {
-        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
-    } else if last_scene == "down" {
-        player.set_position(virtual_width / 2.0, 80.0);
+        player.set_position((virtual_width / 2.0 - 50.0), virtual_height - 80.0);
+    } else if last_scene == "Down" {
+        player.set_position((virtual_width / 2.0 - 50.0), 80.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
@@ -48,11 +48,13 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     let start_time = get_time();
     let mut current_time: f64;
     let mut time_dif = start_time;
-    let mut lbl_speech = Label::new("", 50.0, 600.0, 75);
+    let mut lbl_speech = Label::new("", 150.0, 610.0, 30);
+    lbl_speech.with_colors(WHITE, None);
     lbl_speech.with_scroll(true);
     let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 75);
+    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 40);
+    lbl_tutorial.with_colors(WHITE, None);
     lbl_tutorial.with_scroll(true);
     let mut tutorial_cooldown = 0.0;
     let speech_list: Vec<String> = vec![
@@ -69,10 +71,24 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
       enemies.push(large_slime);
 
+    let mut speech_box = StillImage::new(
+            "",
+            virtual_width - 50.0,  // width
+            250.0,  // height
+            25.0, // x position
+            500.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
+        speech_box.set_preload(tm.get_preload("assets/map_files/textbox.png").unwrap());
+        let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
+        name_box.with_colors(WHITE, None);
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
+        map.draw_map(&tm).await;
         if *pause == false {
         let timer = get_time() - start_time;
         if timer > 0.1 {
@@ -170,6 +186,10 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
             return "wcs1".to_string();
         }
         player.draw();
+        if lbl_speech.get_text() != "" {
+            speech_box.draw();
+            name_box.draw();
+        }
         lbl_speech.scrolling_text_draw();
         lbl_tutorial.scrolling_text_draw();
         next_frame().await;

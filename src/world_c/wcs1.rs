@@ -53,47 +53,54 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut Player, t
     )
     .await;
         cyric.set_preload(tm.get_preload("assets/player_files/player_t.png").unwrap());
-let mut img_back = StillImage::new(
-        "",
-        virtual_width, // width
-        virtual_height, // height
-        0.0, // x position
-        0.0,  // y position
-        true, // Enable stretching
-        1.0,  // Normal zoom (100%)
-    )
-    .await;
-        img_back.set_preload(tm.get_preload("assets/map_files/dungeon.png").unwrap());
 
 
 
     let start_time = get_time();
     let mut current_time: f64;
     let mut time_dif = start_time;
-    let mut lbl_speech = Label::new("", 50.0, 600.0, 75);
+    let mut lbl_speech = Label::new("", 150.0, 610.0, 30);
+    lbl_speech.with_colors(WHITE, None);
     lbl_speech.with_scroll(true);
     let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 75);
+    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 40);
+    lbl_tutorial.with_colors(WHITE, None);
     lbl_tutorial.with_scroll(true);
     let mut tutorial_cooldown = 0.0;
     let mut tutorial_num = 0;
     let speech_list: Vec<String> = vec![
-        "Hurry up man, or I'll lose you!".to_string(),
-        "Finally found this place! That took forever..".to_string(),
-        "Come on, lets go further in. Try to keep up!".to_string(),
+        "Hurry up man, or I'll lose you! ".to_string(),
+        "Finally found this place! That took forever.. ".to_string(),
+        "Come on, lets go further in. Try to keep up! ".to_string(),
     ];
     let tutorial_list: Vec<String> = vec![
         "WASD to move".to_string(),
         "SHIFT to dash".to_string()
     ];
-    let scroll_speech = lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
+    lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
     lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
+
+    let mut speech_box = StillImage::new(
+            "",
+            virtual_width - 50.0,  // width
+            250.0,  // height
+            25.0, // x position
+            500.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
+    
+        speech_box.set_preload(tm.get_preload("assets/map_files/textbox.png").unwrap());
+        let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
+        name_box.with_colors(WHITE, None);
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
+        map.draw_map(&tm).await;
         let timer = get_time() - start_time;
         if timer > 0.1 {
         current_time = get_time();
@@ -119,10 +126,10 @@ let mut img_back = StillImage::new(
                 }
                 
         }
-        if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() {
-            speech_cooldown = 0.5;
+        if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() && speech_cooldown <= 0.0 {
+            speech_cooldown = 1.0;
             speech_num += 1;
-        } if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < tutorial_list.len() - 1 {
+        } if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < tutorial_list.len() - 1 && tutorial_cooldown <= 0.0 {
             tutorial_cooldown = 1.5;
             tutorial_num += 1;
         }
@@ -133,11 +140,15 @@ let mut img_back = StillImage::new(
 
 
         if player.get_y() > virtual_height - 10.0 {
+            *last_scene = "Down".to_string();
             return "wcs2".to_string();
         }
-        img_back.draw();
         player.draw();
         cyric.draw();
+        if lbl_speech.get_text() != "" {
+            speech_box.draw();
+            name_box.draw();
+        }
         if speech_num != speech_list.len() {
         lbl_speech.scrolling_text_draw();
         } else {
