@@ -10,6 +10,8 @@ use crate::modules::text_button::TextButton;
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
+use crate::modules::animated_image::AnimatedImage;
+use crate::modules::preload_image::TextureManager;
 
 //TO DOOOOOO
 //1. player atk lbls moving in town without player
@@ -80,13 +82,13 @@ pub struct Player {
     equipped_items: Vec<usize>,                          //vector of indices of equipped items in the items vector
     itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), //2d list for stats
     inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for inventory UI elements (listviews, images, labels, buttons)
-    playerui: (Vec<StillImage>, Vec<Label>, Vec<StillImage>, Vec<StillImage>),             //2d list for player UI elements (images, labels)
+    playerui: (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>),             //2d list for player UI elements (images, labels)
     inventoryopen: bool,                                 //is inventory open
     armor: i32,                                          //armor value for damage reduction
     attack: bool,                                        //is player currently attacking (for drawing attack labels)
     last_attack_time: f64,                               //time of last attack for timing attack labels
     attackimgfound: bool, //has the correct attack label been found for the current direction of attack (to prevent repeatedly searching for it every frame)
-    attackimg: StillImage, //current attack label to be drawn when attacking 
+    attackimg: AnimatedImage, //current attack label to be drawn when attacking 
     mlevalid: bool, //is player currently performing a melee attack (for preventing multiple melee hits from one attack input)
     rangedattack: bool, //is player currently performing a ranged attack (for drawing ranged attack labels)
     last_rng_attack_time: f64, //time of last ranged attack for timing ranged attack labels and cooldowns
@@ -97,7 +99,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub async fn new(preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)>, x: f32, y: f32) -> Self {
+    pub async fn new(preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)>, x: f32, y: f32, tm: &TextureManager) -> Self {
         let mut view = StillImage::new(
             "", 40.0, // width
             60.0, // height
@@ -110,7 +112,7 @@ impl Player {
         // Apply first preload to the player view if available
         view.set_preload(preloadlist[0].clone());
 
-        let playerui = Player::create_player_ui(x, y, &preloadlist).await;
+        let playerui = Player::create_player_ui(x, y, &preloadlist, tm).await;
         let inventory = Player::create_inventory(&preloadlist).await;
         let attackimg = playerui.2[0].clone();
 
@@ -263,6 +265,8 @@ impl Player {
  {}        self.attackimg.set_x(self.attackimg.get_x() + self.movement.x);
         self.attackimg.set_y(self.attackimg.get_y() + self.movement.y);
         self.move_x();
+        let new_x = self.get_x();
+        self.playerui.3[0].set_x(new_x); //move hitbox with player for accurate collision detection
         let mut collide = false;
         if !collides.is_empty() {
             collide = true;
@@ -270,6 +274,7 @@ impl Player {
         if map.map_collision(&self.get_playerhitbox()).0 {
             //collision with map
             self.set_x(old_pos.x);
+            self.playerui.3[0].set_x(old_pos.x);
             for img in self.playerui.2.iter_mut() {
                 img.set_x(img.get_x() - self.movement.x); //move player UI elements back if collision to prevent them getting stuck in walls
             }
@@ -286,9 +291,12 @@ impl Player {
             }
         }
         self.move_y();
+        let new_y = self.get_y();
+        self.playerui.3[0].set_y(new_y); //move hitbox with player for accurate collision detection
         if map.map_collision(&self.get_playerhitbox()).0 {
             //collision with map
             self.set_y(old_pos.y);
+            self.playerui.3[0].set_y(old_pos.y);
             for img in self.playerui.2.iter_mut() {
                 img.set_y(img.get_y() - self.movement.y); //move player UI elements back if collision to prevent them getting stuck in walls
             }
@@ -466,7 +474,7 @@ impl Player {
     }
 
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-    pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<StillImage>, Vec<StillImage>) {
+    pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>, tm: &TextureManager) -> (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>) {
         let mut img_heart = StillImage::new(
             "",
             100.0, // width
@@ -543,97 +551,180 @@ impl Player {
         let player_x = x;
         let player_y = y;
 
-        let mut img_slash_t = StillImage::new(
-            "",
-            70.0, // width
-            30.0, // height
-            player_x - 15.0,
-            player_y - 30.0,
-            true,
-            1.0,
-        )
-        .await;
-        img_slash_t.set_preload(preloads[11].clone());
-        let mut img_slash_tr = StillImage::new(
-            "",
-            60.0, // width
-            50.0, // heightui();
-            player_x + 40.0,
-            player_y - 30.0,
-            true,
-            1.0,
-        )
-        .await;
-        img_slash_tr.set_preload(preloads[11].clone());
+        // let mut img_slash_t = StillImage::new(
+        //     "",
+        //     70.0, // width
+        //     30.0, // height
+        //     player_x - 15.0,
+        //     player_y - 30.0,
+        //     true,
+        //     1.0,
+        // )
+        // .await;
+    let mut img_slash_t = AnimatedImage::from_gif(
+        "", 
+        player_x -15.0, player_y - 30.0,           
+        70.0, 30.0,          
+        true                   
+    ).await;
+       // img_slash_t.set_preload(preloads[11].clone());
+
+          if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+        img_slash_t.set_preloaded_gif(preloaded, true);
+    }
+        // let mut img_slash_tr = StillImage::new(
+        //     "",
+        //     60.0, // width
+        //     50.0, // heightui();
+        //     player_x + 40.0,
+        //     player_y - 30.0,
+        //     true,
+        //     1.0,
+        // )
+        // .await;
+        // img_slash_tr.set_preload(preloads[11].clone());
+
+let mut img_slash_tr = AnimatedImage::from_gif(
+        "", 
+        player_x +40.0, player_y - 30.0,           
+        70.0, 30.0,          
+        true                   
+    ).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+        img_slash_tr.set_preloaded_gif(preloaded, true);
+    }
         img_slash_tr.set_angle(PI / 2.0);
-        let mut img_slash_r = StillImage::new(
-            "",
-            40.0, // width
-            80.0, // height
-            player_x + 45.0,
-            player_y - 10.0,
-            true,
-            1.0,
-        )
-        .await;
-        img_slash_r.set_preload(preloads[11].clone());
+
+
+        // let mut img_slash_r = StillImage::new(
+        //     "",
+        //     40.0, // width
+        //     80.0, // height
+        //     player_x + 45.0,
+        //     player_y - 10.0,
+        //     true,
+        //     1.0,
+        // )
+        // .await;
+        // img_slash_r.set_preload(preloads[11].clone());
+
+        let mut img_slash_r = AnimatedImage::from_gif(
+        "", 
+        player_x +45.0, player_y - 10.0,           
+        70.0, 30.0,          
+        true                   
+    ).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+        img_slash_r.set_preloaded_gif(preloaded, true);
+    }
         img_slash_r.set_angle(PI);
-        let mut img_slash_br = StillImage::new(
-            "",
-            60.0, // width
-            50.0, // height
-            player_x + 40.0,
-            player_y + 60.0,
-            true,
-            1.0,
-        )
-        .await;
-        img_slash_br.set_preload(preloads[11].clone());
-        let mut img_slash_b = StillImage::new(
-            "",
-            70.0, // width
-            30.0, // height
-            player_x - 10.0,
-            player_y + 65.0,
-            true,
-            1.0,
-        )
-        .await;
-        img_slash_b.set_preload(preloads[11].clone());
-        let mut img_slash_bl = StillImage::new(
-            "",
-            60.0, // width
-            50.0, // height
-            player_x - 60.0,
-            player_y + 50.0,
-            true,
-            1.0,
-        )
-        .await;
-        img_slash_bl.set_preload(preloads[11].clone());
+
+
+        // let mut img_slash_br = StillImage::new(
+        //     "",
+        //     60.0, // width
+        //     50.0, // height
+        //     player_x + 40.0,
+        //     player_y + 60.0,
+        //     true,
+        //     1.0,
+        // )
+        // .await;
+        // img_slash_br.set_preload(preloads[11].clone());
+
+         let mut img_slash_br = AnimatedImage::from_gif(
+        "", 
+        player_x +40.0, player_y + 60.0,           
+        70.0, 30.0,          
+        true                   
+    ).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+        img_slash_br.set_preloaded_gif(preloaded, true);
+    }
+        // let mut img_slash_b = StillImage::new(
+        //     "",
+        //     70.0, // width
+        //     30.0, // height
+        //     player_x - 10.0,
+        //     player_y + 65.0,
+        //     true,
+        //     1.0,
+        // )
+        // .await;
+        // img_slash_b.set_preload(preloads[11].clone());
+
+         let mut img_slash_b = AnimatedImage::from_gif(
+        "", 
+        player_x -10.0, player_y + 65.0,           
+        70.0, 30.0,          
+        true                   
+    ).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+        img_slash_b.set_preloaded_gif(preloaded, true);
+    }
+        // let mut img_slash_bl = StillImage::new(
+        //     "",
+        //     60.0, // width
+        //     50.0, // height
+        //     player_x - 60.0,
+        //     player_y + 50.0,
+        //     true,
+        //     1.0,
+        // )
+        // .await;
+        // img_slash_bl.set_preload(preloads[11].clone());
+
+         let mut img_slash_bl = AnimatedImage::from_gif(
+        "", 
+        player_x -60.0, player_y + 50.0,           
+        70.0, 30.0,          
+        true                   
+    ).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+        img_slash_bl.set_preloaded_gif(preloaded, true);
+    }
         img_slash_bl.set_angle(PI / 2.0);
-        let mut img_slash_l = StillImage::new(
-            "",
-            30.0, // width
-            70.0, // height
-            player_x - 35.0,
-            player_y - 10.0,
-            true,
-            1.0,
-        )
-        .await;
-        img_slash_l.set_preload(preloads[11].clone());
-        let mut img_slash_tl = StillImage::new(
-            "",
-            60.0, // width
-            50.0, // height
-            player_x - 60.0,
-            player_y - 50.0,
-            true,
-            1.0,
-        )
-        .await;
-        img_slash_tl.set_preload(preloads[11].clone());
+        // let mut img_slash_l = StillImage::new(
+        //     "",
+        //     30.0, // width
+        //     70.0, // height
+        //     player_x - 35.0,
+        //     player_y - 10.0,
+        //     true,
+        //     1.0,
+        // )
+        // .await;
+        // img_slash_l.set_preload(preloads[11].clone());
+         let mut img_slash_l = AnimatedImage::from_gif(
+        "", 
+        player_x -35.0, player_y - 10.0,           
+        70.0, 30.0,          
+        true                   
+    ).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+        img_slash_l.set_preloaded_gif(preloaded, true);
+    }
+        // let mut img_slash_tl = StillImage::new(
+        //     "",
+        //     60.0, // width
+        //     50.0, // height
+        //     player_x - 60.0,
+        //     player_y - 50.0,
+        //     true,
+        //     1.0,
+        // )
+        // .await;
+        // img_slash_tl.set_preload(preloads[11].clone());
+
+         let mut img_slash_tl = AnimatedImage::from_gif(
+        "", 
+        player_x -60.0, player_y - 50.0,           
+        70.0, 30.0,          
+        true                   
+    ).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+        img_slash_tl.set_preloaded_gif(preloaded, true);
+    }
         let mut player_hitbox = StillImage::new(
             "",
             40.0, // width
@@ -702,10 +793,10 @@ impl Player {
                 (index, mlehit) = self.create_melee_attack(enemies, index, mlehit);
                 self.mlevalid = false; //prevents multiple melee hits from one attack input
             }
-            if mletimepassed > 0.1 && mletimepassed < 0.4 {
+            if mletimepassed > 0.1 && mletimepassed < 1.0 {
                 self.attackimg.draw();
             }
-            if mletimepassed > 0.4 { //attack label only appears for 0.6 seconds after attack
+            if mletimepassed > 1.0 { //attack label only appears for 0.6 seconds after attack
                 self.attack = false;
                 self.mlevalid = true;
                 self.attackimgfound = false;
@@ -762,7 +853,7 @@ impl Player {
     pub fn create_melee_attack(&mut self, enemies: &mut Vec<Enemy>, mut index: usize, mut mlehit: bool) -> (usize, bool) {
         if self.attackimgfound == false {  //attackimgbool and match must be kept in player to be used outside of if statements
                 self.attackimg = match self.player_direction.as_str() {
-                "t" => self.playerui.2[0].clone(),
+                "t" => self.playerui.2[0].clone() ,
                 "tr" => self.playerui.2[1].clone(),
                 "r" => self.playerui.2[2].clone(),
                 "br" => self.playerui.2[3].clone(),

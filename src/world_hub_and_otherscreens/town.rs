@@ -20,6 +20,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
+    first_time: &mut bool
 ) -> String {
     let mut map = Map::new(
         virtual_width,
@@ -64,6 +65,8 @@ pub async fn run(
     for obj in 0..collidable_objects.len() {
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
     }
+
+    let first_line = "I think I hear something to the left of town!".to_string();
 
     let get_position = TextButton::new(0.0, 0.0, 200.0, 60.0, "Get position", BLUE, GREEN, 30);
     let mut enemies: Vec<Enemy> = vec![];

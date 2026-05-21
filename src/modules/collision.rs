@@ -64,7 +64,6 @@ impl Collidable for StillImage {
         self.get_angle()
     }
 }
-/* 
 use crate::modules::animated_image::AnimatedImage;
 // Implement for AnimatedImage
 impl Collidable for AnimatedImage {
@@ -88,7 +87,6 @@ impl Collidable for AnimatedImage {
         self.get_angle()
     }
 }
-*/
 
 // Utility function to calculate texture coordinates safely
 #[inline]

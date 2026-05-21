@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: RPG program
 */
 
 mod modules;
@@ -39,7 +39,7 @@ const VIRTUAL_HEIGHT: f32 = 768.0;
 async fn main() {
     //PRELOADEEDDDDDDDDD           
     let all_assets = vec![
-    "assets/player_files/heart.png", "assets/player_files/sword_slash.png", "assets/player_files/player_shadow.png", "assets/player_files/invslot.png", "assets/player_files/player_b.png", "assets/player_files/player_t.png", "assets/player_files/player_l.png", "assets/player_files/player_r.png", "assets/player_files/player_tl.png", "assets/player_files/player_tr.png", "assets/player_files/player_bl.png", "assets/player_files/player_br.png", "assets/player_files/arrow.png", "assets/player_files/bow_arrow_image.png",
+    "assets/player_files/heart.png", "assets/player_files/sword_slash.png", "assets/player_files/sword_slash.gif", "assets/player_files/player_shadow.png", "assets/player_files/invslot.png", "assets/player_files/player_b.png", "assets/player_files/player_t.png", "assets/player_files/player_l.png", "assets/player_files/player_r.png", "assets/player_files/player_tl.png", "assets/player_files/player_tr.png", "assets/player_files/player_bl.png", "assets/player_files/player_br.png", "assets/player_files/arrow.png", "assets/player_files/bow_arrow_image.png",
     "assets/mage_files/mage_shootL.png", "assets/mage_files/mage_shootR.png", "assets/mage_files/mage_standL.png", "assets/mage_files/mage_standR.png", 
     "assets/slime.png", "assets/fireball.png", "assets/arrow.png", 
     "assets/archer_files/archer_deadL.png", "assets/archer_files/archer_deadR.png", "assets/archer_files/archer_knockbackL.png", "assets/archer_files/archer_knockbackR.png", "assets/archer_files/archer_readyL.png", "assets/archer_files/archer_readyR.png", "assets/archer_files/archer_runL.png", "assets/archer_files/archer_runR.png", "assets/archer_files/archer_shootL.png", "assets/archer_files/archer_shootR.png", "assets/archer_files/archer_standL.png", "assets/archer_files/archer_standR.png", 
@@ -47,7 +47,7 @@ async fn main() {
     "assets/summoner_files/summoner_standL.png", "assets/summoner_files/summoner_standR.png", "assets/summoner_files/summoner_summonL.png", "assets/summoner_files/summoner_summonR.png","assets/summoner_files/portalL.png", "assets/summoner_files/portalR.png", 
     "assets/map_files/grass.png", "assets/map_files/dungeon.png", "assets/map_files/world1/watertile.png", "assets/map_files/world1/beachtile.png", "assets/map_files/tree.png", "assets/map_files/world2_start.png", "assets/map_files/world1/beach2.png",
     "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png",
-    "assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif", "assets/map_files/world1/whirlpool.gif", "assets/map_files/textbox.png",
+    "assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif", "assets/map_files/world1/whirlpool.gif", "assets/map_files/textbox.png", "assets/cyric_files/cyric_f.png", "assets/cyric_files/cyric_b.png", "assets/cyric_files/cyric_dead.png",
     ];
     let tm = TextureManager::new();
     // Using custom loading screen appearance
@@ -58,7 +58,7 @@ async fn main() {
         text_color: BLACK,
         // Show blueportal spinning while loading other assets
         loading_screen_gifs: vec![GifLoadingScreenInfo::new(
-            "assets/map_files/world1/blueportal.gif".to_string(),
+            "assets/player_files/sword_slash.gif".to_string(),
             screen_width() / 2.0 - 64.0, // Centered
             screen_height() / 3.0,       // Upper third
             128.0,                       // width
@@ -72,9 +72,10 @@ async fn main() {
     let mut current_screen = "wcs3".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
-    let mut player = Player::new(preloadlist, 30.0, 30.0).await;
+    let mut player = Player::new(preloadlist, 30.0, 30.0, &tm).await;
     let mut last_scene = "None".to_string();
     let mut dungeon_completed = false;
+    let mut first_time_town = true;
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {
@@ -95,7 +96,7 @@ async fn main() {
                 "wcs1" => world_c::wcs1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &dungeon_completed).await,
                 "wcs2" => world_c::wcs2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &dungeon_completed).await,
                 "wcs3" => world_c::wcs3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut dungeon_completed).await,
-                "town" => world_hub_and_otherscreens::town::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene).await,
+                "town" => world_hub_and_otherscreens::town::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut first_time_town).await,
                 "shop" => world_hub_and_otherscreens::shop::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause).await,
                 "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &tm).await,
                 _ => break,

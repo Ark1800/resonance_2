@@ -99,7 +99,7 @@ use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 use crate::modules::preload_image::{PreloadedAnimatedGif, PreloadedAnimatedSpritesheet};
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 #[allow(unused)]
 pub enum AnimationState {
     Playing,
@@ -107,6 +107,7 @@ pub enum AnimationState {
     Stopped,
 }
 
+#[derive(Clone)]
 pub struct AnimatedImage {
     texture: Texture2D,
     x: f32,
