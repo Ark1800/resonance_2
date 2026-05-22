@@ -205,7 +205,7 @@ impl Label {
     #[allow(unused)]
     pub fn scrolling_text_draw(&mut self) -> bool {
         let mut pass = true;
-        if self.scroll_letter == 0 || (get_time() - self.scroll_timer < self.scroll_speed) || !self.scroll || self.scroll_text.is_empty() || self.scroll_letter > self.scroll_text.len() as i32 {
+        if self.scroll_letter == 0 || (get_time() - self.scroll_timer < self.scroll_speed) || !self.scroll || self.scroll_text.is_empty() || self.scroll_letter >= self.scroll_text.len() as i32 {
             pass = false;
         } else {
         self.scroll_timer = get_time();

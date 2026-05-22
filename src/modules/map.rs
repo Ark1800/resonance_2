@@ -42,6 +42,13 @@ impl Map {
     pub async fn create_map_array(&mut self, chest_num: i32, entrance_num: i32, wall_num: i32, entrance_sides: Vec<i32>) {
         for x in 0..self.map_array.len() {
             for y in 0..self.map_array[0].len() {
+                if self.map_array[x][y] != 0 {
+                self.map_array[x][y] = 0;
+                }
+            }
+        }
+        for x in 0..self.map_array.len() {
+            for y in 0..self.map_array[0].len() {
                 if x == 0 || x == self.map_array.len() - 1 {
                     self.map_array[x][y] = 1;
                 } else {

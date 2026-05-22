@@ -92,7 +92,7 @@ pub async fn run(
                         enemies[i].draw_bullet(player);
                     }
                     "slime" => {
-                        enemies[i].moveing(player.get_x(), player.get_y());
+                        enemies[i].slime_action( player);
                     }
                     "summoner" => {
                         let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;

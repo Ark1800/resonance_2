@@ -6,11 +6,11 @@ Program Details:
 
 use crate::modules::enemy::Enemy;
 use crate::modules::grid::draw_grid;
+use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::modules::text_button::TextButton;
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -20,7 +20,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
-    first_time: &mut bool
+    town_completed: &mut bool,
 ) -> String {
     let mut map = Map::new(
         virtual_width,
@@ -66,9 +66,33 @@ pub async fn run(
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
     }
 
-    let first_line = "I think I hear something to the left of town!".to_string();
+    let start_time = get_time();
+    let mut current_time: f64;
+    let mut time_dif = start_time;
 
-    let get_position = TextButton::new(0.0, 0.0, 200.0, 60.0, "Get position", BLUE, GREEN, 30);
+    let mut lbl_speech = Label::new("", 150.0, 610.0, 30);
+    lbl_speech.with_colors(WHITE, None);
+    if !*town_completed {
+        lbl_speech.with_scroll(true);
+    }
+    let mut speech_cooldown = 0.0;
+    let first_line = "I think I hear something to the left of town!".to_string();
+    lbl_speech.set_scrolling_text(first_line);
+
+    let mut speech_box = StillImage::new(
+        "",
+        virtual_width - 50.0, // width
+        250.0,                // height
+        25.0,                 // x position
+        500.0,                // y position
+        true,                 // Enable stretching
+        1.0,                  // Normal zoom (100%)
+    )
+    .await;
+
+    speech_box.set_preload(tm.get_preload("assets/map_files/textbox.png").unwrap());
+    let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
+    name_box.with_colors(WHITE, None);
     let mut enemies: Vec<Enemy> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -94,10 +118,26 @@ pub async fn run(
             return "shop".to_string();
         }
 
-        if get_position.click() {
-            println!("Player position: ({}, {})", player.get_x(), player.get_y());
+        if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_cooldown <= 0.0 {
+            speech_cooldown = 1.5;
         }
 
+        current_time = get_time();
+        if (current_time - time_dif) > 0.1 {
+            time_dif = current_time;
+            if speech_cooldown > 0.0 {
+                speech_cooldown -= 0.1;
+                if speech_cooldown <= 0.0 {
+                    lbl_speech.with_scroll(false);
+                    lbl_speech.set_text("");
+                }
+            }
+        }
+        if lbl_speech.scroll() {
+            lbl_speech.scrolling_text_draw();
+            speech_box.draw();
+            name_box.draw();
+        }
         background.draw();
         draw_grid(50.0, BLACK);
         player.handle_player_ui(&mut enemies).await;

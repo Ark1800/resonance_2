@@ -39,7 +39,11 @@ pub async fn run(
         vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
-    map.create_map_array(0, 2, 0, vec![1, 3]).await;
+    if !dungeon_completed {
+        map.create_map_array(0, 1, 0, vec![1]).await;
+    } else {
+        map.create_map_array(0, 2, 0, vec![1, 3]).await;
+    }
     if last_scene == "Top" {
         player.set_position(virtual_width / 2.0 - 50.0, virtual_height - 80.0);
     } else if last_scene == "Down" {
@@ -99,6 +103,11 @@ pub async fn run(
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
+
+        if !*dungeon_completed && enemies.len() == 0 {
+            map.create_map_array(0, 2, 0, vec![1, 3]).await;
+        }
+
         if *pause == false {
             let timer = get_time() - start_time;
             if timer > 0.1 {

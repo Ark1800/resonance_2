@@ -8,4 +8,5 @@ pub mod w3s1;
 pub mod w3s2;
 pub mod w3s3;
 pub mod w3s4;
-pub mod w3s5;
+pub mod w3sb;
+pub mod w3sp;

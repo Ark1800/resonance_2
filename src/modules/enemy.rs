@@ -177,6 +177,7 @@ for mage in 0..mage_list.len() {
 use crate::modules::collision::check_collision;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
@@ -189,6 +190,7 @@ pub struct Enemy {
     move_speed: f32,
     movement: Vec2,
     health: i32,
+    max_health: i32,
     dmg: i32,
     projectiles: Vec<Projectile>,
     cooldown: f64,
@@ -215,6 +217,7 @@ impl Enemy {
             move_speed: 200.0, // Default speed
             movement: Vec2::ZERO,
             health,
+            max_health: health,
             dmg,
             enemy_type: enemy_type.to_string(),
             projectile_image: StillImage::new(projectile_path, width, height, 0.0, 0.0, false, 1.0).await,
@@ -222,10 +225,6 @@ impl Enemy {
             cooldown: 0.0,
             cooldown2: 0.0,
         }
-    }
-
-    pub fn set_enemy_type(&mut self, enemy_type: &str) {
-        self.enemy_type = enemy_type.to_string();
     }
 
     pub fn get_enemy_type(&self) -> &str {
@@ -502,6 +501,8 @@ impl Enemy {
             self.moveing(player.get_x(), player.get_y());
             self.archer_img_change(player.get_x(), self.get_x(), "move", &tm).await;
         }
+        let mut healthbar = self.set_healthbar();
+        healthbar.draw();
     }
     // Mage action method that handles movement, image changes, and shooting based on player proximity and cooldowns
     pub async fn mage_action(&mut self, tm: &TextureManager, player: &mut Player) {
@@ -520,10 +521,10 @@ impl Enemy {
 
             self.mage_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
         }
+        let mut healthbar = self.set_healthbar();
+        healthbar.draw();
     }
-    pub fn remove_projectile(&mut self, projectile: usize) {
-        self.projectiles.remove(projectile);
-    }
+
     // Summoner action method that handles movement, image changes, and summoning slimes based on player proximity and cooldowns
     pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, Enemy, bool) {
         let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y() + 50.0, true, 1.0, 100, 10, "", "slime").await;
@@ -550,6 +551,8 @@ impl Enemy {
             summoned = true;
             self.summoner_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
         }
+        let mut healthbar = self.set_healthbar();
+        healthbar.draw();
         (slime1, slime2, slime3, summoned)
     }
     // Slime splitting method that creates two smaller slimes upon the death of a large slime
@@ -585,7 +588,32 @@ impl Enemy {
             split = true;
             (slime1, slime2) = self.split(tm).await;
         }
+        let mut healthbar = self.set_healthbar();
+        healthbar.draw();
         (slime1, slime2, split)
+    }
+    pub fn slime_action(&mut self, player: &mut Player) {
+        self.moveing(player.get_x(), player.get_y());
+        let mut healthbar = self.set_healthbar();
+        healthbar.draw();
+    }
+
+    pub fn get_maxhealth(&self) -> i32 {
+        self.max_health
+    }
+    pub fn set_healthbar(&self) -> ProgressBar {
+        let maxhealth = self.get_maxhealth();
+
+        let healthbar = ProgressBar::new(
+            self.get_x(),
+            self.get_y() - 20.0, // Position (x, y)
+            30.0,
+            5.0, // Size (width, height)
+            0.0,
+            maxhealth as f32,   // Range (min, max)
+            self.health as f32, // Initial value
+        );
+        healthbar
     }
 }
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {
