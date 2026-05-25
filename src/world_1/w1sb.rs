@@ -12,9 +12,9 @@ use crate::modules::still_image::StillImage;
 use crate::modules::animated_image::AnimatedImage;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
-    if last_scene == "Right" {
+    if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Left" {
+    } else if last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
     } else if last_scene == "Down" {
         player.set_position(virtual_width / 2.0, virtual_height - 80.0);
@@ -71,7 +71,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         player.move_player(&map, old_pos, &collidable_objects);
         player.draw();
         if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Left".to_string();
+            *last_scene = "Right".to_string();
             return "w1s4".to_string();
         }
         next_frame().await;

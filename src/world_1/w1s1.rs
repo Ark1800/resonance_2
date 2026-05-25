@@ -31,19 +31,6 @@ pub async fn run(
     )
     .await;
     background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
-    if last_scene == "Right" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Left" {
-        player.set_position(80.0, virtual_height / 2.0);
-    } else if last_scene == "Down" {
-        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
-    } else if last_scene == "Top" {
-        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
-    } else {
-        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-    }
-    println!("Last scene: {}", last_scene);
-    let mut enemies: Vec<Enemy> = vec![];
     let mut map = Map::new(
         virtual_width,
         virtual_height,
@@ -53,7 +40,25 @@ pub async fn run(
         ],
     )
     .await;
-    map.create_map_array(0, 2, 0, vec![1, 4]).await;
+    if last_scene == "Left" {
+        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
+    map.create_map_array(0, 1, 0, vec![4]).await;
+    } else if last_scene == "Right" {
+        player.set_position(80.0, virtual_height / 2.0);
+    map.create_map_array(0, 1, 0, vec![2]).await;
+    } else if last_scene == "Down" {
+        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
+    map.create_map_array(0, 1, 0, vec![3]).await;
+    } else if last_scene == "Top" {
+        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
+    map.create_map_array(0, 1, 0, vec![1]).await;
+    } else {
+        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
+    map.create_map_array(0, 0, 0, vec![]).await;
+    }
+    println!("Last scene: {}", last_scene);
+    let mut enemies: Vec<Enemy> = vec![];
+    
     let mut summoner = Enemy::new("", 50.0, 50.0, 70.0, 80.0, true, 1.0, 20, 10, "", "summoner").await;
     let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20, 10, "", "large_slime").await;
     large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
@@ -135,13 +140,17 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
+
+        if enemies.is_empty() {
+            map.change_map(vec![0, 0], vec![vec![], vec![]]);
+        }
         player.handle_inventory();
         if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Left".to_string();
+            *last_scene = "LeftRight".to_string();
             return "w1sp".to_string();
         }
         if player.get_y() < 10.0 {
-            *last_scene = "Down".to_string();
+            *last_scene = "UpUp".to_string();
             return "w1s2".to_string();
         }
         next_frame().await;

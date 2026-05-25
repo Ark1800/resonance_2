@@ -782,6 +782,7 @@ impl AnimatedImage {
     #[allow(unused)]
     pub fn play(&mut self) {
         self.state = AnimationState::Playing;
+        self.last_update = get_time() as f32;
     }
     
     // Pause animation (maintains current frame)
@@ -796,6 +797,7 @@ impl AnimatedImage {
         self.state = AnimationState::Stopped;
         self.current_frame = 0;
         self.time_accumulated = 0.0;
+        self.last_update = get_time() as f32;
     }
     
     // Reset to first frame without changing state
@@ -803,6 +805,7 @@ impl AnimatedImage {
     pub fn reset(&mut self) {
         self.current_frame = 0;
         self.time_accumulated = 0.0;
+        self.last_update = get_time() as f32;
     }
     
     // Set specific frame

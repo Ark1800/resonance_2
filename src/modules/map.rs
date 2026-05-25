@@ -9,12 +9,19 @@ Randomized map generation based on set objects
 2 - Chest
 
 map.create_map_array(chest_num, entrance_num, wall_num, entrance_sides)
+
+// Up entrance: map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+// Left entrance: map.change_map(vec![0, 0], vec![vec![0, 4], vec![0, 5]]);
+// Down entrance: map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
+// Right entrance: map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]);
+
+
 // 1 = up, 2 = left, 3 = down, 4 = right
 */
 
 use crate::modules::collision::check_collision;
-use crate::modules::still_image::StillImage;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 #[derive(Clone)]
 pub struct Map {
@@ -38,12 +45,12 @@ impl Map {
             image_list: image_list,
         }
     }
-#[allow(unused)]
+    #[allow(unused)]
     pub async fn create_map_array(&mut self, chest_num: i32, entrance_num: i32, wall_num: i32, entrance_sides: Vec<i32>) {
         for x in 0..self.map_array.len() {
             for y in 0..self.map_array[0].len() {
                 if self.map_array[x][y] != 0 {
-                self.map_array[x][y] = 0;
+                    self.map_array[x][y] = 0;
                 }
             }
         }
@@ -96,7 +103,7 @@ impl Map {
             }
         }
     }
-#[allow(unused)]
+    #[allow(unused)]
     pub async fn draw_map(&mut self, tm: &TextureManager) {
         let mut changed_wall = false;
         let mut changed_chest = false;
@@ -112,7 +119,18 @@ impl Map {
             for y in 0..self.map_array[x].len() {
                 if self.change_wall {
                     if self.map_array[x][y] == 1 {
-                        self.wall_list.push(StillImage::new("", self.map_dimensions.x / 15.0, self.map_dimensions.y / 10.0, x as f32 * self.map_dimensions.x / 15.0, y as f32 * self.map_dimensions.y / 10.0, true, 1.0).await);
+                        self.wall_list.push(
+                            StillImage::new(
+                                "",
+                                self.map_dimensions.x / 15.0,
+                                self.map_dimensions.y / 10.0,
+                                x as f32 * self.map_dimensions.x / 15.0,
+                                y as f32 * self.map_dimensions.y / 10.0,
+                                true,
+                                1.0,
+                            )
+                            .await,
+                        );
                         let wall_list_len = self.wall_list.len() - 1;
                         self.wall_list[wall_list_len].set_preload(tm.get_preload(format!("{}", self.image_list[0]).as_str()).unwrap());
                     }
@@ -120,7 +138,18 @@ impl Map {
                 }
                 if self.change_chest {
                     if self.map_array[x][y] == 2 {
-                        self.chest_list.push(StillImage::new("", self.map_dimensions.x / 15.0, self.map_dimensions.y / 10.0, x as f32 * self.map_dimensions.x / 15.0, y as f32 * self.map_dimensions.y / 10.0, true, 1.0).await);
+                        self.chest_list.push(
+                            StillImage::new(
+                                "",
+                                self.map_dimensions.x / 15.0,
+                                self.map_dimensions.y / 10.0,
+                                x as f32 * self.map_dimensions.x / 15.0,
+                                y as f32 * self.map_dimensions.y / 10.0,
+                                true,
+                                1.0,
+                            )
+                            .await,
+                        );
                         let chest_list_len = self.chest_list.len() - 1;
                         self.chest_list[chest_list_len].set_preload(tm.get_preload(format!("{}", self.image_list[1]).as_str()).unwrap());
                     }
@@ -143,9 +172,7 @@ impl Map {
         }
     }
 
-    
-
-#[allow(unused)]
+    #[allow(unused)]
     pub fn map_collision(&self, player: &StillImage) -> (bool, bool) {
         // If the player enters a wall space, it returns true
         let mut wall = false;
@@ -165,7 +192,7 @@ impl Map {
 
         (wall, chest)
     }
-#[allow(unused)]
+    #[allow(unused)]
     // Change list is a list of what the changes are, change coords is a list of what coords to change based on the change list
     pub fn change_map(&mut self, change_list: Vec<i32>, change_coords: Vec<Vec<i32>>) {
         for i in 0..change_list.len() {
@@ -178,7 +205,7 @@ impl Map {
             }
         }
     }
-#[allow(unused)]
+    #[allow(unused)]
     pub fn get_map_array(&self) -> &[[i32; 10]; 15] {
         &self.map_array
     }
@@ -187,11 +214,11 @@ impl Map {
         &self.map_array[0]
     }
 
-#[allow(unused)]
+    #[allow(unused)]
     pub fn get_wall_list(&self) -> &Vec<StillImage> {
         &self.wall_list
     }
-#[allow(unused)]
+    #[allow(unused)]
     pub fn get_chest_list(&self) -> &Vec<StillImage> {
         &self.chest_list
     }

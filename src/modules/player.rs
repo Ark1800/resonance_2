@@ -12,14 +12,27 @@ use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::musicdisc::Musicdisc;
 
 //TO DOOOOOO
+/*
 //1. player atk lbls moving in town without player
 //2. player atks sometimes not appearing
+//3. w1s1 screen moving
 //3. All Music Discs
-//4. player Dying
-
-/*
+//4. W1S1 Enemies
+//5. W1S2 Enemies
+//6. W1S3 Enemies
+//7. W1S4 Enemies
+//8. W1SB Boss
+//9. cleared variable
+//10. Item after each scene
+//11. All items
+//12. Player Dying
+//13. Inventory Db
+//14. Player Db
+//15. Start Screen
+ 
 //Keypresses:
 Move Up - W
 Move Down - S
@@ -41,14 +54,16 @@ use crate::modules::enemy::Enemy;
 
 funcs
 in your loop..
-let mut enemies = vec![summoner.clone(), mage.clone(), large_slime.clone()]; //list of enemies for scene
+let mut enemies = vec![summoner, mage, large_slime]; //list of enemies for scene
 
 player.handle_keypresses().await;
 player.move_player();
 player.handle_player_ui(&mut enemies).await;
 player.handle_inventory();
 player.handle_playerdamaging(&enemies);
+player.handle_musicdiscs
 player.draw();
+musicdisc::handle_musicdisccooldowns;
 
 ASIDES...
 Angles:
@@ -570,7 +585,7 @@ impl Player {
        // img_slash_t.set_preload(preloads[11].clone());
 
           if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_t.set_preloaded_gif(preloaded, true);
+        img_slash_t.set_preloaded_gif(preloaded, false);
     }
         // let mut img_slash_tr = StillImage::new(
         //     "",
@@ -591,7 +606,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         true                   
     ).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_tr.set_preloaded_gif(preloaded, true);
+        img_slash_tr.set_preloaded_gif(preloaded, false);
     }
         img_slash_tr.set_angle(PI / 2.0);
 
@@ -615,7 +630,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         true                   
     ).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_r.set_preloaded_gif(preloaded, true);
+        img_slash_r.set_preloaded_gif(preloaded, false);
     }
         img_slash_r.set_angle(PI);
 
@@ -639,7 +654,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         true                   
     ).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_br.set_preloaded_gif(preloaded, true);
+        img_slash_br.set_preloaded_gif(preloaded, false);
     }
         // let mut img_slash_b = StillImage::new(
         //     "",
@@ -660,7 +675,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         true                   
     ).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_b.set_preloaded_gif(preloaded, true);
+        img_slash_b.set_preloaded_gif(preloaded, false);
     }
         // let mut img_slash_bl = StillImage::new(
         //     "",
@@ -681,7 +696,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         true                   
     ).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_bl.set_preloaded_gif(preloaded, true);
+        img_slash_bl.set_preloaded_gif(preloaded, false);
     }
         img_slash_bl.set_angle(PI / 2.0);
         // let mut img_slash_l = StillImage::new(
@@ -702,7 +717,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         true                   
     ).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_l.set_preloaded_gif(preloaded, true);
+        img_slash_l.set_preloaded_gif(preloaded, false);
     }
         // let mut img_slash_tl = StillImage::new(
         //     "",
@@ -723,7 +738,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         true                   
     ).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_tl.set_preloaded_gif(preloaded, true);
+        img_slash_tl.set_preloaded_gif(preloaded, false);
     }
         let mut player_hitbox = StillImage::new(
             "",
@@ -853,7 +868,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
     pub fn create_melee_attack(&mut self, enemies: &mut Vec<Enemy>, mut index: usize, mut mlehit: bool) -> (usize, bool) {
         if self.attackimgfound == false {  //attackimgbool and match must be kept in player to be used outside of if statements
                 self.attackimg = match self.player_direction.as_str() {
-                "t" => self.playerui.2[0].clone() ,
+                "t" => self.playerui.2[0].clone(),
                 "tr" => self.playerui.2[1].clone(),
                 "r" => self.playerui.2[2].clone(),
                 "br" => self.playerui.2[3].clone(),
@@ -863,6 +878,8 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                 "tl" => self.playerui.2[7].clone(), 
                 _ => self.playerui.2[0].clone(),
                 };
+
+                self.attackimg.reset();                
                 self.attackimgfound = true;
                 for i in 0..enemies.len() {
                     if check_collision(&self.attackimg, enemies[i].view_enemy(), 1) {
@@ -1161,4 +1178,23 @@ let mut img_slash_tr = AnimatedImage::from_gif(
             self.armor += self.items[*itemindex].get_itemarmor();
         }
     }
+
+    pub async fn handle_musicdiscs(&mut self) {
+        if self.equipped_items.len() > 0 {
+            for i in 0..self.equipped_items.len() {
+                let item = &self.items[self.equipped_items[i]];
+                if item.get_itemtype() == "disc".to_string() {
+                    match item.get_itemtitle().as_str() {
+                        "backinblack" => {
+                            Musicdisc::backinblack().await;
+                        }
+                        _ => {
+
+                        }
+                    }
+                }
+            }           
+        }
+    }
+
 }

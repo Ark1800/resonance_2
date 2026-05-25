@@ -43,11 +43,11 @@ async fn main() {
     "assets/mage_files/mage_shootL.png", "assets/mage_files/mage_shootR.png", "assets/mage_files/mage_standL.png", "assets/mage_files/mage_standR.png", 
     "assets/slime.png", "assets/fireball.png", "assets/arrow.png", "assets/map_files/magma.png", "assets/map_files/magma_floor.png",
     "assets/archer_files/archer_deadL.png", "assets/archer_files/archer_deadR.png", "assets/archer_files/archer_knockbackL.png", "assets/archer_files/archer_knockbackR.png", "assets/archer_files/archer_readyL.png", "assets/archer_files/archer_readyR.png", "assets/archer_files/archer_runL.png", "assets/archer_files/archer_runR.png", "assets/archer_files/archer_shootL.png", "assets/archer_files/archer_shootR.png", "assets/archer_files/archer_standL.png", "assets/archer_files/archer_standR.png", 
-    "assets/map_files/wall.png", "assets/map_files/chest.png", "assets/map_files/world1/beach.png",
+    "assets/map_files/wall.png", "assets/map_files/chest.png", "assets/map_files/world1/beach.png", "assets/map_files/red_portal.gif",
     "assets/summoner_files/summoner_standL.png", "assets/summoner_files/summoner_standR.png", "assets/summoner_files/summoner_summonL.png", "assets/summoner_files/summoner_summonR.png","assets/summoner_files/portalL.png", "assets/summoner_files/portalR.png", 
     "assets/map_files/grass.png", "assets/map_files/dungeon.png", "assets/map_files/world1/watertile.png", "assets/map_files/world1/beachtile.png", "assets/map_files/tree.png", "assets/map_files/world2_start.png", "assets/map_files/world1/beach2.png",
-    "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png",
-    "assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif", "assets/map_files/world1/whirlpool.gif", "assets/map_files/textbox.png", "assets/cyric_files/cyric_f.png", "assets/cyric_files/cyric_b.png", "assets/cyric_files/cyric_dead.png",
+    "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/item_files/musicoin.png",
+    "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png","assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif","assets/map_files/red_portal.gif" ,"assets/map_files/world1/whirlpool.gif", "assets/map_files/textbox.png", "assets/cyric_files/cyric_f.png", "assets/cyric_files/cyric_b.png", "assets/cyric_files/cyric_dead.png",
     ];
     let tm = TextureManager::new();
     // Using custom loading screen appearance

@@ -31,41 +31,66 @@ pub async fn run(
     )
     .await;
     background.set_preload(tm.get_preload("assets/map_files/magma_floor.png").unwrap());
-    if last_scene == "Right" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Left" {
-        player.set_position(80.0, virtual_height / 2.0);
-    } else if last_scene == "Down" {
-        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
-    } else if last_scene == "Top" {
-        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
-    } else {
-        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-    }
-    let mut enemies: Vec<Enemy> = vec![];
     let mut map = Map::new(
         virtual_width,
         virtual_height,
         vec!["assets/map_files/magma.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
-    map.create_map_array(0, 2, 0, vec![1, 4]).await;
+    if last_scene == "Left" {
+        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
+        map.create_map_array(0, 1, 0, vec![4]).await;
+    } else if last_scene == "Right" {
+        player.set_position(80.0, virtual_height / 2.0);
+        map.create_map_array(0, 1, 0, vec![2]).await;
+    } else if last_scene == "Down" {
+        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
+        map.create_map_array(0, 1, 0, vec![3]).await;
+    } else if last_scene == "Top" {
+        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
+        map.create_map_array(0, 1, 0, vec![1]).await;
+    } else {
+        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
+        map.create_map_array(0, 0, 0, vec![]).await;
+    }
+    let mut enemies: Vec<Enemy> = vec![];
 
-    for _i in 0..3 {
+    for _i in 0..2 {
         let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 100, 15, "", "mage").await;
         mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
         mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
         enemies.push(mage);
     }
 
-    let mut archerx = 200.0;
-    for _i in 0..3 {
+    /*let mut archerx = 200.0;
+    for _i in 0..1 {
         let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10, 5, "", "archer").await;
         archerx += 100.0;
         archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
         archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
         enemies.push(archer);
+    }*/
+
+    let mut slimey = 200.0;
+    for i in 0..3 {
+        let mut large_slime = Enemy::new(
+            "",
+            75.0, //hieght
+            75.0, //width
+            300.0, //x
+            slimey * (i as f32 * 100.0), //y
+            true, //stretching
+            1.0,  //zoom level
+            20,   //health
+            8,    //damage
+            "",
+            "large_slime",
+        )
+        .await;
+        large_slime.set_preload(tm.get_preload("assets/slime_files/large_slime.png").unwrap());
+        enemies.push(large_slime);
     }
+
     loop {
         player.handle_keypresses(pause).await;
         use_virtual_resolution(virtual_width, virtual_height);
@@ -127,9 +152,13 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
+
+        if enemies.is_empty() {
+            map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]);
+        }
         player.handle_inventory();
         if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Left".to_string();
+            *last_scene = "Right".to_string();
             return "w3s2".to_string();
         }
         if player.get_y() < 10.0 {

@@ -28,9 +28,9 @@ pub async fn run(
         vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
-    if last_scene == "Right" {
+    if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Left" {
+    } else if last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
     } else if last_scene == "Top" {
         player.set_position(virtual_width / 2.0, virtual_height - 80.0);
@@ -106,11 +106,11 @@ pub async fn run(
             *last_scene = "Down".to_string();
             return "wcs1".to_string();
         } else if player.get_x() < 10.0 {
-            *last_scene = "Right".to_string();
+            *last_scene = "Left".to_string();
             return "w1sp".to_string();
         } else if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Left".to_string();
-            return "w2s1".to_string();
+            *last_scene = "Right".to_string();
+            return "w2sp".to_string();
         } else if player.get_y() < 10.0 {
             *last_scene = "Top".to_string();
             return "w3s1".to_string();

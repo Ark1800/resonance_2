@@ -10,25 +10,30 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::map::Map;
 use crate::modules::still_image::StillImage;
 use crate::modules::animated_image::AnimatedImage;
+use crate::modules::collision::check_collision;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/tree.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
+    map.create_map_array(0, 1, 0, vec![2]).await;
     if last_scene == "Left" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
+        player.set_position((virtual_width / 2.0)+120.0, (virtual_height / 2.0)-100.0);
     } else if last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
+   
+    } else if last_scene == "Down" {
+        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
+ 
     } else if last_scene == "Top" {
-        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
-    } else if last_scene == "down" {
-        player.set_position(virtual_width / 2.0, 80.0);
+        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
+  
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
+   
     }
-    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/grass.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    map.create_map_array(0, 1, 0, vec![2, 1, 3, 4]).await;
 
       let mut green_portal = AnimatedImage::from_gif(
         "", 
-        100.0, 100.0,          
+        700.0, 100.0,          
         100.0, 300.0,          
         true                   
     ).await;
@@ -54,8 +59,28 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         1.0,            // Normal zoom (100%)
     )
     .await;
+ let portal_hitbox = StillImage::new(
+        "assets/map_files/wall.png",
+        100.0,  // width
+        300.0,  // height
+        700.0, // x position
+        100.0, // y position
+        true,  // Enable stretching
+        1.0,   // Normal zoom (100%)
+    ).await;
     background.set_preload(tm.get_preload("assets/map_files/world2_start.png").unwrap());
     loop {         
+
+
+        if player.get_x()<10.0{
+            *last_scene="Left".to_string();
+            return "town".to_string();
+        }
+
+         if check_collision(player.view_player(), &portal_hitbox, 1) {
+            *last_scene = "Right".to_string(); 
+            return "w2s1".to_string();
+        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         player.handle_keypresses(pause).await;

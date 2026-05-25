@@ -25,19 +25,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         1.0,            // Normal zoom (100%)
         )
         .await;
-    background1.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
-    let mut background2 = StillImage::new(
-        "",
-        virtual_width/2.0,  // width
-        virtual_height, // height
-        0.0,            // x position
-        0.0,            // y position
-        true,           // Enable stretching
-        1.0,            // Normal zoom (100%)
-    )
-    .await;
-    background2.set_preload(tm.get_preload("assets/map_files/world1/beach.png").unwrap());
-    let mut blue_portal = AnimatedImage::from_gif(
+    background1.set_preload(tm.get_preload("assets/map_files/magma_floor.png").unwrap());
+    let mut red_portal = AnimatedImage::from_gif(
         "", 
         100.0, 100.0,          
         498.0, 498.0,          
@@ -52,8 +41,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         true,  // Enable stretching
         1.0,   // Normal zoom (100%)
     ).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/world1/blueportal.gif") {
-        blue_portal.set_preloaded_gif(preloaded, true);
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/world1/red_portal.gif") {
+        red_portal.set_preloaded_gif(preloaded, true);
     }
     if last_scene == "Right" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
@@ -121,16 +110,15 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         let mut enemies: Vec<Enemy> = vec![];
         //backgrounds
         background1.draw();
-        background2.draw();
-        blue_portal.draw();
+        red_portal.draw();
         //game 
-        if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Left".to_string();
+        if player.get_y() > virtual_width - 10.0 {
+            *last_scene = "Down".to_string();
             return "town".to_string();
         }
         if check_collision(player.view_player(), &portal_hitbox, 1) {
-            *last_scene = "Right".to_string(); 
-            return "w1s1".to_string();
+            *last_scene = "Top".to_string(); 
+            return "w3s1".to_string();
         }
         //player
         player.handle_keypresses(pause).await;

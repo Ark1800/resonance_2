@@ -1,7 +1,6 @@
 /*pub mod enemy;
 
 //enemy knockback on hit
-//enemy immortality
 
 use crate::modules::enemy::Enemy;
 
@@ -16,7 +15,9 @@ true, //stretching
 1.0, //zoom level
 20, //health
 10, //damage
-"").await;
+"",
+"summoner"//enemy type
+).await;
 
 let mut archer = Enemy::new(
 "archer.png",
@@ -29,6 +30,7 @@ true, //stretching
 15, //health
 5, //damage
 "arrow.png"//projectile
+"archer"//enemy type
 ).await;
 
 let mut mage = Enemy::new(
@@ -42,6 +44,7 @@ true, //stretching
 20, //health
 10, //damage
 "fireball.png" //projectile
+"mage"//enemy type
 ).await;
 
 let mut slime = Enemy::new(
@@ -54,7 +57,9 @@ true, //stretching
 1.0, //zoom level
 10, //health
 2, //damage
-"").await;
+"",
+"slime"//enemy type
+).await;
 
 let mut large_slime = Enemy::new(
 "large_slime.png",
@@ -66,7 +71,9 @@ true, //stretching
 1.0, //zoom level
 20, //health
 8, //damage
-"").await;
+"",
+"large_slime"//enemy type
+).await;
 
 MULTIPLE ENEMIES
  let mut archer_list: Vec<Enemy> = vec![];
