@@ -54,8 +54,12 @@ impl Projectile {
     pub fn set_angle(&mut self, angle: f32) {
         self.view.set_angle(angle);
     }
-    #[allow(unused)]
-    // Sets X and Y
+
+    pub fn get_angle(&self) -> f32 {
+        self.view.get_angle()
+    }
+
+    
     pub fn set_pos(&mut self, x: f32, y: f32) {
         self.view.set_x(x);
         self.view.set_y(y);
