@@ -91,6 +91,8 @@ MULTIPLE ENEMIES
             "arrow.png",
         )
         .await;
+    archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());//must preload enemy img
+        archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap()); //onl;y required for anyone with projectiles
          archerx += 100.0; // Adjust the x position for the next archer
         archer_list.push(archer);
     }
@@ -196,9 +198,9 @@ pub struct Enemy {
     projectile_image: StillImage,
     move_speed: f32,
     movement: Vec2,
-    health: i32,
-    max_health: i32,
-    dmg: i32,
+    health: f32,
+    max_health: f32,
+    dmg: f32,
     projectiles: Vec<Projectile>,
     cooldown: f64,
     cooldown2: f64,
@@ -214,8 +216,8 @@ impl Enemy {
         y: f32,
         stretch_enabled: bool,
         zoom_level: f32,
-        health: i32,
-        dmg: i32,
+        health: f32,
+        dmg: f32,
         projectile_path: &str,
         enemy_type: &str,
     ) -> Enemy {
@@ -358,7 +360,7 @@ impl Enemy {
     }
     //change dmg
     #[allow(unused)]
-    pub fn set_dmg(&mut self, dmg: i32) -> &mut Self {
+    pub fn set_dmg(&mut self, dmg: f32) -> &mut Self {
         self.dmg = dmg;
         self
     }
@@ -369,12 +371,12 @@ impl Enemy {
     }
     //changes health
     #[allow(unused)]
-    pub fn set_health(&mut self, health: i32) -> &mut Self {
+    pub fn set_health(&mut self, health: f32) -> &mut Self {
         self.health = health;
         self
     }
 
-    pub fn get_health(&self) -> i32 {
+    pub fn get_health(&self) -> f32 {
         self.health
     }
 
@@ -444,14 +446,14 @@ impl Enemy {
 
         movement
     }
-    pub fn get_dmg(&self) -> i32 {
+    pub fn get_dmg(&self) -> f32 {
         self.dmg
     }
 
-    pub fn dmg_enemy(&mut self, dmg: i32) -> bool {
+    pub fn dmg_enemy(&mut self, dmg: f32) -> bool {
         let mut dead = false;
         self.health -= dmg;
-        if self.health <= 0 {
+        if self.health <= 0.0 {
             dead = true;
         }
         dead
@@ -534,9 +536,9 @@ impl Enemy {
 
     // Summoner action method that handles movement, image changes, and summoning slimes based on player proximity and cooldowns
     pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, Enemy, bool) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y() + 50.0, true, 1.0, 100, 10, "", "slime").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() + 50.0, self.get_y() - 50.0, true, 1.0, 100, 10, "", "slime").await;
-        let mut slime3 = Enemy::new("", 25.0, 25.0, self.get_x() - 50.0, self.get_y() - 50.0, true, 1.0, 100, 10, "", "slime").await;
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y() + 50.0, true, 1.0, self.max_health*1.3, self.dmg, "", "slime").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() + 50.0, self.get_y() - 50.0, true, 1.0, self.max_health*1.3, self.dmg, "", "slime").await;
+        let mut slime3 = Enemy::new("", 25.0, 25.0, self.get_x() - 50.0, self.get_y() - 50.0, true, 1.0, self.max_health*1.3, self.dmg, "", "slime").await;
 
         let mut summoned = false;
         if get_time() - self.cooldown2 > 10.1 {
@@ -565,15 +567,15 @@ impl Enemy {
     // Slime splitting method that creates two smaller slimes upon the death of a large slime
     #[allow(unused)]
     pub async fn split(&mut self, tm: &TextureManager) -> (Enemy, Enemy) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, 10, 2, "", "slime").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, 10, 2, "", "slime").await;
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0,self.max_health/2.0, self.dmg/2.0, "", "slime").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, self.max_health/2.0, self.dmg/2.0, "", "slime").await;
         slime1.set_preload(tm.get_preload("assets/slime.png").unwrap());
         slime2.set_preload(tm.get_preload("assets/slime.png").unwrap());
         (slime1, slime2)
         /*
             let mut summonx = self.get_x() - 10.0;
 
-            for i in 0..2 {
+            for i in 0..2.0 {
                 if i == 1 {
                     summonx = self.get_x() + 10.0;
                 }
@@ -585,12 +587,12 @@ impl Enemy {
     // Slime action method that handles movement and splitting into smaller slimes upon death
     #[allow(unused)]
     pub async fn large_slime_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, bool) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, 10, 2, "", "slime").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, 10, 2, "", "slime").await;
+        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, self.max_health/2.0, self.dmg/2.0, "", "slime").await;
+        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, self.max_health/2.0, self.dmg/2.0, "", "slime").await;
 
         let mut split = false;
         self.moveing(player.get_x(), player.get_y());
-        if self.health <= 0 {
+        if self.health <= 0.0 {
             println!("Large slime split");
             split = true;
             (slime1, slime2) = self.split(tm).await;
@@ -605,7 +607,20 @@ impl Enemy {
         healthbar.draw();
     }
 
-    pub fn get_maxhealth(&self) -> i32 {
+    pub fn cyric_action(&mut self, player: &mut Player) {
+        self.moveing(player.get_x(), player.get_y());
+        let mut healthbar = self.set_healthbar();
+        healthbar.draw();
+    }
+
+    pub async fn meteors(&mut self, tm: &TextureManager, player: &mut Player) {
+        for meteor in 0..20 {
+            
+        }
+    }    
+
+    pub fn get_maxhealth(&self) -> f32{
+  
         self.max_health
     }
     pub fn set_healthbar(&self) -> ProgressBar {
@@ -621,8 +636,8 @@ impl Enemy {
             self.health as f32, // Initial value
         );
         healthbar
-    }
-}
+ }  }
+
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {
 //         let mut answer = false;
 //         if self.movement.y != 0.0 {

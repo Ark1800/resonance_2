@@ -59,12 +59,12 @@ pub async fn run(
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
     
-    let mut summoner = Enemy::new("", 50.0, 50.0, 70.0, 80.0, true, 1.0, 20, 10, "", "summoner").await;
-    let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20, 10, "", "large_slime").await;
+    let mut summoner = Enemy::new("", 50.0, 50.0, 70.0, 80.0, true, 1.0, 20.0, 10.0, "", "summoner").await;
+    let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20.0, 10.0, "", "large_slime").await;
     large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
     summoner.set_preload(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap());
 
-    let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20, 10, "", "mage").await;
+    let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20.0, 10.0, "", "mage").await;
 
     mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
     mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
@@ -73,7 +73,7 @@ pub async fn run(
     enemies.push(large_slime);
     let mut archerx = 200.0;
     for _i in 0..3 {
-        let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10, 5, "", "archer").await;
+        let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10.0, 5.0, "", "archer").await;
         archerx += 100.0;
         archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
         archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
@@ -123,7 +123,7 @@ pub async fn run(
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await; //dont need to send enemies back because it doesnt get used again until next frame
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
-            if enemies[index].get_health() <= 0 {
+            if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
                     let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
                     if split {
@@ -136,7 +136,7 @@ pub async fn run(
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
-            if enemies[index].get_health() <= 0 {
+            if enemies[index].get_health() <= 0.0 {
                 enemies.remove(index);
             }
         }
@@ -146,11 +146,11 @@ pub async fn run(
         }
         player.handle_inventory();
         if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "LeftRight".to_string();
+            *last_scene = "Right".to_string();
             return "w1sp".to_string();
         }
         if player.get_y() < 10.0 {
-            *last_scene = "UpUp".to_string();
+            *last_scene = "Up".to_string();
             return "w1s2".to_string();
         }
         next_frame().await;

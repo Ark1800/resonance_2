@@ -56,7 +56,7 @@ pub async fn run(
     let mut enemies: Vec<Enemy> = vec![];
 
     for _i in 0..2 {
-        let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 100, 15, "", "mage").await;
+        let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 100.0, 15.0, "", "mage").await;
         mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
         mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
         enemies.push(mage);
@@ -81,8 +81,8 @@ pub async fn run(
             slimey * (i as f32 * 100.0), //y
             true, //stretching
             1.0,  //zoom level
-            20,   //health
-            8,    //damage
+            20.0,   //health
+            8.0,    //damage
             "",
             "large_slime",
         )
@@ -135,7 +135,7 @@ pub async fn run(
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await; //dont need to send enemies back because it doesnt get used again until next frame
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
-            if enemies[index].get_health() <= 0 {
+            if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
                     let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
                     if split {
@@ -148,17 +148,17 @@ pub async fn run(
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
-            if enemies[index].get_health() <= 0 {
+            if enemies[index].get_health() <= 0.0 {
                 enemies.remove(index);
             }
         }
         player.handle_inventory();
         if player.get_x() < 10.0 {
-            *last_scene = "Right".to_string();
+            *last_scene = "Left".to_string();
             return "w3s1".to_string();
         }
-        if player.get_y() > virtual_height - 10.0 {
-            *last_scene = "Down".to_string();
+        if player.get_y() < 10.0 {
+            *last_scene = "Top".to_string();
             return "w3s3".to_string();
         }
         next_frame().await;

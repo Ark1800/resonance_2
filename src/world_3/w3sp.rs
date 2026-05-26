@@ -41,6 +41,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         true,  // Enable stretching
         1.0,   // Normal zoom (100%)
     ).await;
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/magma.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
+    map.create_map_array(0, 1, 0, vec![3]).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/world1/red_portal.gif") {
         red_portal.set_preloaded_gif(preloaded, true);
     }
@@ -101,8 +103,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     for obj in 0..collidable_objects.len() {
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
     }
-    let mut map = Map::new(virtual_width, virtual_height, vec![]).await;
-    map.create_map_array(0, 0, 0, vec![]).await;
     loop {
         // set virtual resolution and clear frame
         use_virtual_resolution(virtual_width, virtual_height);
@@ -110,13 +110,16 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         let mut enemies: Vec<Enemy> = vec![];
         //backgrounds
         background1.draw();
+        if *world2_completed {
         red_portal.draw();
+        }
         //game 
         if player.get_y() > virtual_width - 10.0 {
             *last_scene = "Down".to_string();
             return "town".to_string();
         }
-        if check_collision(player.view_player(), &portal_hitbox, 1) {
+        
+        if check_collision(player.view_player(), &portal_hitbox, 1) && *world2_completed {
             *last_scene = "Top".to_string(); 
             return "w3s1".to_string();
         }

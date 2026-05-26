@@ -81,7 +81,7 @@ pub async fn run(
     lbl_tutorial.set_scrolling_text(tutorial_line.clone());
 
     let mut enemies: Vec<Enemy> = vec![];
-    let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20, 10, "", "large_slime").await;
+    let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20.0, 10.0, "", "large_slime").await;
     large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
     enemies.push(large_slime);
 
@@ -183,7 +183,7 @@ pub async fn run(
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await; //dont need to send enemies back because it doesnt get used again until next frame
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
-            if enemies[index].get_health() <= 0 {
+            if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
                     let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
                     if split {
@@ -196,7 +196,7 @@ pub async fn run(
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
-            if enemies[index].get_health() <= 0 {
+            if enemies[index].get_health() <= 0.0 {
                 enemies.remove(index);
             }
         }

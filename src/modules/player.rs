@@ -12,26 +12,30 @@ use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::preload_image::TextureManager;
-use crate::modules::musicdisc::Musicdisc;
 
 //TO DOOOOOO
 /*
+//Bug fixes
 //1. player atk lbls moving in town without player
 //2. player atks sometimes not appearing
 //3. w1s1 screen moving
-//3. All Music Discs
-//4. W1S1 Enemies
-//5. W1S2 Enemies
-//6. W1S3 Enemies
-//7. W1S4 Enemies
-//8. W1SB Boss
-//9. cleared variable
-//10. Item after each scene
-//11. All items
-//12. Player Dying
-//13. Inventory Db
-//14. Player Db
-//15. Start Screen
+//4. player switching to tm instead of set_preload 
+//5. add preloading to musicdiscs
+
+Work
+//1. All Music Discs
+//2. W1S1 Enemies
+//3. W1S2 Enemies
+//4. W1S3 Enemies
+//5. W1S4 Enemies
+//6. W1SB Boss
+//7. cleared variable
+//8. Item after each scene
+//9. All items
+//10. Player Dying
+//11. Inventory Db
+//12. Player Db
+//13. Start Screen
  
 //Keypresses:
 Move Up - W
@@ -53,6 +57,9 @@ use crate::modules::player::Player;
 use crate::modules::enemy::Enemy;
 
 funcs
+outisde loop...
+musicdisc::get_musicdisc_time();
+
 in your loop..
 let mut enemies = vec![summoner, mage, large_slime]; //list of enemies for scene
 
@@ -61,9 +68,10 @@ player.move_player();
 player.handle_player_ui(&mut enemies).await;
 player.handle_inventory();
 player.handle_playerdamaging(&enemies);
-player.handle_musicdiscs
+player.handle_musicdiscs();
 player.draw();
-musicdisc::handle_musicdisccooldowns;
+let activedisc = musicdisc::handle_musicdisccooldowns(player.get_player_activedisc(););
+player.set_player_activedisc(activedisc);
 
 ASIDES...
 Angles:
@@ -85,10 +93,10 @@ pub struct Player {
     preloads: Vec<(Texture2D, Option<Vec<u8>>, String)>, //vec of preloads for use throughout player (especially for UI and image changing)
     move_speed: f32,                                     //movement speed in pixels per second
     movement: Vec2,                                      //movement vector for current frame
-    health: i32,                                         //player health
-    maxhealth: i32,                                      //player max health (for health bar purposes and hp increases from items)
-    mledmg: i32,                                         //melee damage
-    rngdmg: i32,                                         //ranged damage
+    health: f32,                                         //player health
+    maxhealth: f32,                                      //player max health (for health bar purposes and hp increases from items)
+    mledmg: f32,                                         //melee damage
+    rngdmg: f32,                                         //ranged damage
     movespeedmult: f32,                                  //multiplier for movement speed (for items and buffs)
     cooldownmult: f32,                                   //multiplier for cooldowns (for items and buffs)
     musicoins: i32,                                      //currency
@@ -111,6 +119,7 @@ pub struct Player {
     ranged_movespeeds: Vec<Vec2>, //movement speed of the projectile for ranged attacks
     arrows: Vec<StillImage>, //list of self.arrow projectiles for ranged attacks
     player_direction: String, //current direction player is facing for attack purposes (up, down, left, right, etc.)
+    activedisc: String
 }
 
 impl Player {
@@ -135,10 +144,10 @@ impl Player {
             view,
             move_speed: 400.0, // Movement speed in pixels per second
             movement: vec2(0.0, 0.0),
-            health: 100,
-            maxhealth: 100,
-            mledmg: 5,
-            rngdmg: 3,
+            health: 100.0,
+            maxhealth: 100.0,
+            mledmg: 5.0,
+            rngdmg: 3.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
             musicoins: 0,
@@ -162,6 +171,7 @@ impl Player {
             rangedattackimgcreated: false,
             ranged_movespeeds: Vec::new(),
             arrows: Vec::new(),
+            activedisc: "none".to_string(),
         }
     }
     //movement functions
@@ -413,11 +423,11 @@ impl Player {
         self.move_speed * self.movespeedmult
     }
 
-    pub fn get_meleedmg(&self) -> i32 {
+    pub fn get_meleedmg(&self) -> f32 {
         self.mledmg
     }
 
-    pub fn get_rngdmg(&self) -> i32 {
+    pub fn get_rngdmg(&self) -> f32 {
         self.rngdmg
     }
 
@@ -431,11 +441,11 @@ impl Player {
         self.move_speed /= 5.0;
     }
     #[allow(unused)]
-    pub fn get_health(&self) -> i32 {
+    pub fn get_health(&self) -> f32 {
         self.health
     }
     #[allow(unused)]
-    pub fn get_stats(&self) -> (i32, i32, i32, f32) {
+    pub fn get_stats(&self) -> (f32, f32, f32, f32) {
         (self.health, self.mledmg, self.rngdmg, self.cooldownmult)
     }
     #[allow(unused)]
@@ -451,10 +461,10 @@ impl Player {
         self.musicoins += coins;
     }
 
-    pub fn dmgplayer(&mut self, dmg: i32) {
-        let mut dmg = dmg - self.armor;
-        if dmg < 0 {
-            dmg = 0;
+    pub fn dmgplayer(&mut self, dmg: f32) {
+        let mut dmg = dmg - self.armor as f32;
+        if dmg < 0.0 {
+            dmg = 0.0;
         }
         self.health -= dmg;
         let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
@@ -466,7 +476,7 @@ impl Player {
         self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
     }
 
-    pub fn healplayer(&mut self, heal: i32) {
+    pub fn healplayer(&mut self, heal: f32) {
         self.health += heal;
         if self.health > self.maxhealth {
             self.health = self.maxhealth;
@@ -486,6 +496,14 @@ impl Player {
                 self.dmgplayer(enemy.get_dmg());
             }
         }
+    }
+
+    pub fn get_player_activedisc(&self) -> String {
+        self.activedisc.clone()
+    }
+
+    pub fn set_player_activedisc(&mut self, disc: String) {
+        self.activedisc = disc;
     }
 
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
@@ -520,6 +538,17 @@ impl Player {
             1.0,   // Normal zoom (100%)
         )
         .await;
+        let mut img_musicoin = StillImage::new(
+            "",
+            80.0,  // width
+            80.0,  // height
+            0.0, // x position
+            40.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
+        img_musicoin.set_preload(tm.get_preload("assets/item_files/musicoin.png").unwrap().clone());
         img_arrow.set_preload(preloads[13].clone());
         let mut lbl_arrownum = Label::new("", 427.0, 32.0, 30);
         lbl_arrownum.with_colors(BLACK, None);
@@ -758,6 +787,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                 img_disc1,
                 img_disc2,
                 img_disc3,
+                img_musicoin,
             ],
             vec![
                 lbl_healthbarbg,
@@ -799,6 +829,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         for label in self.playerui.1.iter_mut() {
             label.draw();
         }
+        self.inventory.2[2].draw(); //draw gold label
         self.playerui.1[0].draw();
         self.playerui.1[1].draw(); //label must be redrawn very specifically so for loops cant be used  
         self.playerui.0[0].draw();
@@ -977,8 +1008,8 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         btn_unequip.with_text_color(WHITE);
         let mut btn_trash = TextButton::new(10.0, 690.0, 315.0, 75.0, "Trash", BLACK, RED, 30);
         btn_trash.with_text_color(WHITE);
-        let mut lbl_gold = Label::new(format!("Musicoins: 0"), 675.0, 40.0, 60);
-        lbl_gold.with_colors(WHITE, Some(BROWN));
+        let mut lbl_gold = Label::new(format!("0"), 80.0, 100.0, 60);
+        lbl_gold.with_colors(WHITE, None);
         //send back 2d vec of all inventory UI elements to be stored in player struct and used in inventory handling function
         (
             vec![lst_inventory],
@@ -1161,20 +1192,20 @@ let mut img_slash_tr = AnimatedImage::from_gif(
 
     pub fn update_stats(&mut self) {
         // Reset stats to base values
-        self.mledmg = 3;
-        self.rngdmg = 2;
+        self.mledmg = 3.0;
+        self.rngdmg = 2.0;
         self.movespeedmult = 1.0;
         self.cooldownmult = 1.0;
-        self.maxhealth = 100;
+        self.maxhealth = 100.0;
         self.armor = 0;
 
         // Apply item stat changes
         for itemindex in &self.equipped_items {
-            self.mledmg += self.items[*itemindex].get_itemmledmg();
-            self.rngdmg += self.items[*itemindex].get_itemrngdmg();
-            self.movespeedmult += self.items[*itemindex].get_itemmovespeedmult();
-            self.cooldownmult += self.items[*itemindex].get_itemcooldownmult();
-            self.maxhealth += self.items[*itemindex].get_itemhpchng();
+            self.mledmg += self.items[*itemindex].get_itemmledmg() as f32;
+            self.rngdmg += self.items[*itemindex].get_itemrngdmg() as f32;
+            self.movespeedmult += self.items[*itemindex].get_itemmovespeedmult() as f32;
+            self.cooldownmult += self.items[*itemindex].get_itemcooldownmult() as f32;
+            self.maxhealth += self.items[*itemindex].get_itemhpchng() as f32;
             self.armor += self.items[*itemindex].get_itemarmor();
         }
     }
@@ -1186,7 +1217,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                 if item.get_itemtype() == "disc".to_string() {
                     match item.get_itemtitle().as_str() {
                         "backinblack" => {
-                            Musicdisc::backinblack().await;
+                            self.activedisc = "backinblack".to_string();
                         }
                         _ => {
 
@@ -1196,5 +1227,4 @@ let mut img_slash_tr = AnimatedImage::from_gif(
             }           
         }
     }
-
 }

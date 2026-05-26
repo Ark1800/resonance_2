@@ -4,31 +4,92 @@ Date: 2026-04-14
 Program Details:
 */
 
-use crate::modules::scale::use_virtual_resolution;
-use macroquad::prelude::*;
-use crate::modules::preload_image::TextureManager;
+use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
+use crate::modules::preload_image::TextureManager;
+use crate::modules::scale::use_virtual_resolution;
+use crate::modules::still_image::StillImage;
+use macroquad::prelude::*;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
-    if last_scene == "Left" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Right" {
-        player.set_position(80.0, virtual_height / 2.0);
-    } else if last_scene == "Top" {
-        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
-    } else if last_scene == "down" {
-        player.set_position(virtual_width / 2.0, 80.0);
+pub async fn run(
+    virtual_width: f32,
+    virtual_height: f32,
+    player: &mut crate::modules::player::Player,
+    tm: &TextureManager,
+    pause: &mut bool,
+    last_scene: &mut String,
+    game_completed: &mut bool,
+) -> String {
+    player.set_position(virtual_width / 2.0, virtual_height - 100.0);
+
+    let mut map = Map::new(
+        virtual_width,
+        virtual_height,
+        vec!["assets/map_files/magma.png".to_string(), "assets/map_files/chest.png".to_string()],
+    )
+    .await;
+    map.create_map_array(0, 0, 0, vec![]).await;
+    map.change_map(
+        vec![1, 1, 1, 1, 1, 1, 1, 1],
+        vec![
+            vec![2, 2],
+            vec![2, 3],
+            vec![3, 6],
+            vec![3, 7],
+            vec![12, 2],
+            vec![12, 3],
+            vec![11, 6],
+            vec![11, 7],
+        ],
+    );
+    let mut background = StillImage::new(
+        "",
+        virtual_width,  // width
+        virtual_height, // height
+        0.0,            // x position
+        0.0,            // y position
+        true,           // Enable stretching
+        1.0,            // Normal zoom (100%)
+    )
+    .await;
+    background.set_preload(tm.get_preload("assets/map_files/magma_floor.png").unwrap());
+
+    let mut cyric = Enemy::new(
+        "",
+        50.0,                //hieght
+        50.0,                //width
+        virtual_width / 2.0, //x
+        150.0,               //y
+        true,                //stretching
+        1.0,                 //zoom level
+        500.0,                 //health
+        20.0,                  //damage
+        "",
+        "boss", //enemy type
+    )
+    .await;
+
+    cyric.set_projectile_preload(tm.get_preload("assets/cyric_files/fireball.png").unwrap());
+    let mut enemies: Vec<Enemy> = vec![];
+    if *game_completed {
+        cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
     } else {
-        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
+        cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_f.png").unwrap());
+        enemies.push(cyric);
     }
-    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    map.create_map_array(0, 4, 0, vec![1, 2, 3, 4]).await;
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
+        background.draw();
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
+
+        if enemies[0].get_health() <= 0.0 {
+            *game_completed = true;
+            enemies[0].set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
+            map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
+        }
         player.draw();
         next_frame().await;
     }

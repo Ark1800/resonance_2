@@ -9,8 +9,10 @@ use macroquad::prelude::*;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::map::Map;
 use crate::modules::still_image::StillImage;
+use crate::modules::enemy::Enemy;
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/tree.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
+     let mut enemies: Vec<Enemy> = vec![];
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
     map.create_map_array(0, 1, 0, vec![4]).await;
@@ -37,19 +39,139 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         1.0,            // Normal zoom (100%)
     )
     .await;
+let mut archery= 100.0;
+
+    for _i in 0..3 {
+        let mut archer = Enemy::new(
+            "",
+            50.0,
+            50.0,
+            700.0,
+            archery,
+            true,
+            1.0,
+            64.0,
+            20.0,
+            "",
+        "archer",
+        )
+        .await;
+        archer.set_preload(tm.get_preload("assets/archer_files/archer_standL.png").unwrap());
+        archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
+         archery += 300.0; // Adjust the x position for the next archer
+        enemies.push(archer);
+    }
+let mut magey= 200.0;
+    for _i in 0..2 {
+        let mut mage = Enemy::new(
+            "",
+            50.0,
+            50.0,
+            500.0,
+            magey,
+            true,
+            1.0,
+            55.0,
+            32.0,
+            "",
+        "mage",
+        )
+        .await;
+        mage.set_preload(tm.get_preload("assets/mage_files/mage_standL.png").unwrap());
+        mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
+         magey += 300.0; // Adjust the x position for the next mage
+        enemies.push(mage);
+    }
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
+       
     loop {
+
+ player.handle_keypresses(pause).await;
+        use_virtual_resolution(virtual_width, virtual_height);
+        clear_background(BLACK);
+        background.draw();
+        map.draw_map(&tm).await;
+        if *pause == false {
+            let old_pos = player.get_oldpos();
+            player.move_player(&map, old_pos, &vec![]);
+            //enemy loop
+            for i in 0..enemies.len() {
+                //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                match enemies[i].get_enemy_type() {
+                    "archer" => {
+                        enemies[i].archer_action(tm, player).await;
+                        enemies[i].draw_bullet(player);
+                    }
+                    "slime" => {
+                        enemies[i].slime_action( player);
+                    }
+                    "summoner" => {
+                        let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                        if summoned {
+                            enemies.push(slime1);
+                            enemies.push(slime2);
+                            enemies.push(slime3);
+                        }
+                    }
+                    "mage" => {
+                        enemies[i].mage_action(tm, player).await;
+                        enemies[i].draw_bullet(player);
+                    }
+                    "large_slime" => {
+                        enemies[i].large_slime_action(tm, player).await;
+                    }
+                    _ => {}
+                }
+                enemies[i].draw();
+            }
+        }
+        player.draw();
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await; //dont need to send enemies back because it doesnt get used again until next frame
+        if mlehit {
+            enemies[index].dmg_enemy(player.get_meleedmg());
+            if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies.remove(index);
+            }
+        }
+        if rnghit {
+            enemies[index].dmg_enemy(player.get_rngdmg());
+            if enemies[index].get_health() <= 0.0 {
+                enemies.remove(index);
+            }
+        }
+
+        if enemies.is_empty() {
+            map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]);// opens right side of map when all enemies are dead
+        }
+
+
+
+
+
+
+
+
+        if player.get_x() > virtual_width - 10.0  {
+            *last_scene = "Right".to_string();
+            return "w2s2".to_string();
+        }
+
+        
+
         if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();
             return "w2sp".to_string();
         }
-        use_virtual_resolution(virtual_width, virtual_height);
-        clear_background(BLACK);
-        background.draw();
-        player.handle_keypresses(pause).await;
-        let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos, &vec![]);
-        map.draw_map(tm).await;
+       
+        
+        
         player.draw();
         next_frame().await;
     }
