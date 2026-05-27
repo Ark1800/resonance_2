@@ -70,7 +70,7 @@ pub async fn run(
     )
     .await;
 
-    cyric.set_projectile_preload(tm.get_preload("assets/cyric_files/fireball.png").unwrap());
+    
     let mut enemies: Vec<Enemy> = vec![];
     if *game_completed {
         cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
@@ -78,7 +78,12 @@ pub async fn run(
         cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_f.png").unwrap());
         enemies.push(cyric);
     }
+    let mut counter = 0;
     loop {
+        counter += 1;
+        if counter == 10 {
+            map.change_map(vec![0], vec![vec![0, 0]]);
+        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
@@ -92,6 +97,7 @@ pub async fn run(
             map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
         }
         player.draw();
+        map.draw_map(&tm).await;
         next_frame().await;
     }
 }

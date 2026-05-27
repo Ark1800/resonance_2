@@ -49,6 +49,7 @@ async fn main() {
     "assets/map_files/grass.png", "assets/map_files/dungeon.png", "assets/map_files/world1/watertile.png", "assets/map_files/world1/beachtile.png", "assets/map_files/tree.png", "assets/map_files/world2_start.png", "assets/map_files/world1/beach2.png",
     "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/item_files/musicoin.png",
     "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png","assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif","assets/map_files/red_portal.gif" ,"assets/map_files/world1/whirlpool.gif", "assets/map_files/textbox.png", "assets/cyric_files/cyric_f.png", "assets/cyric_files/cyric_b.png", "assets/cyric_files/cyric_dead.png",
+    "assets/musicdisc_files/effectimages/bibimg.png",
     ];
     let tm = TextureManager::new();
     let all_sounds = vec!["assets/musicdisc_files/music/backinblack.ogg"];
@@ -70,7 +71,7 @@ async fn main() {
     };
     tm.preload_with_loading_screen(&all_assets, Some(&all_sounds), Some(loading_options)).await;
     //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-    let preloadlist = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap(), tm.get_preload("assets/player_files/arrow.png").unwrap(), tm.get_preload("assets/player_files/bow_arrow_image.png").unwrap()];
+    let preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)> = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap(), tm.get_preload("assets/player_files/arrow.png").unwrap(), tm.get_preload("assets/player_files/bow_arrow_image.png").unwrap()];
     let mut current_screen = "town".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
@@ -78,6 +79,7 @@ async fn main() {
     let mut musicdiscfunctions = Musicdisc::new(&tm).await;
     let mut last_scene = "None".to_string();
     let mut checkpoints: Vec<bool> = vec![false /*Dungeon*/, false /*Town*/, false /*1st world*/, false /*2nd world*/, false /*3rd world*/];
+    musicdiscfunctions.get_musicdisc_times();
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {

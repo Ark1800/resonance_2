@@ -4,30 +4,38 @@ Date: 2026-04-14
 Program Details:
 */
 
-use crate::modules::scale::use_virtual_resolution;
-use macroquad::prelude::*;
-use crate::modules::preload_image::TextureManager;
-use crate::modules::map::Map;
-use crate::modules::still_image::StillImage;
 use crate::modules::enemy::Enemy;
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc) -> String {
-    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/tree.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-     let mut enemies: Vec<Enemy> = vec![];
+use crate::modules::map::Map;
+use crate::modules::preload_image::TextureManager;
+use crate::modules::scale::use_virtual_resolution;
+use crate::modules::still_image::StillImage;
+use macroquad::prelude::*;
+pub async fn run(
+    virtual_width: f32,
+    virtual_height: f32,
+    player: &mut crate::modules::player::Player,
+    tm: &TextureManager,
+    pause: &mut bool,
+    last_scene: &mut String,
+    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+) -> String {
+    let mut map = Map::new(
+        virtual_width,
+        virtual_height,
+        vec!["assets/map_files/tree.png".to_string(), "assets/map_files/chest.png".to_string()],
+    )
+    .await;
+    let mut enemies: Vec<Enemy> = vec![];
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    map.create_map_array(0, 1, 0, vec![4]).await;
     } else if last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
-    map.create_map_array(0, 1, 0, vec![2]).await;
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
-    map.create_map_array(0, 1, 0, vec![3]).await;
     } else if last_scene == "Top" {
         player.set_position((virtual_width / 2.0) - 20.0, 80.0);
-    map.create_map_array(0, 1, 0, vec![1]).await;
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-    map.create_map_array(0, 0, 0, vec![]).await;
     }
     let mut background = StillImage::new(
         "",
@@ -39,54 +47,30 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         1.0,            // Normal zoom (100%)
     )
     .await;
-let mut archery= 100.0;
+    let mut archery = 100.0;
 
     for _i in 0..3 {
-        let mut archer = Enemy::new(
-            "",
-            50.0,
-            50.0,
-            700.0,
-            archery,
-            true,
-            1.0,
-            64.0,
-            20.0,
-            "",
-        "archer",
-        )
-        .await;
+        let mut archer = Enemy::new("", 50.0, 50.0, 700.0, archery, true, 1.0, 64.0, 20.0, "", "archer").await;
         archer.set_preload(tm.get_preload("assets/archer_files/archer_standL.png").unwrap());
         archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
-         archery += 300.0; // Adjust the x position for the next archer
+        archery += 300.0; // Adjust the x position for the next archer
         enemies.push(archer);
     }
-let mut magey= 200.0;
+    let mut magey = 200.0;
     for _i in 0..2 {
-        let mut mage = Enemy::new(
-            "",
-            50.0,
-            50.0,
-            500.0,
-            magey,
-            true,
-            1.0,
-            55.0,
-            32.0,
-            "",
-        "mage",
-        )
-        .await;
+        let mut mage = Enemy::new("", 50.0, 50.0, 500.0, magey, true, 1.0, 55.0, 32.0, "", "mage").await;
         mage.set_preload(tm.get_preload("assets/mage_files/mage_standL.png").unwrap());
         mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
-         magey += 300.0; // Adjust the x position for the next mage
+        magey += 300.0; // Adjust the x position for the next mage
         enemies.push(mage);
     }
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
-       
+    map.create_map_array(0, 1, 0, vec![2]).await;
+    if player.get_cleared() == 6 {
+        map.create_map_array(0, 2, 0, vec![2, 4]).await;
+    }
     loop {
-
- player.handle_keypresses(pause).await;
+        player.handle_keypresses(pause).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -103,7 +87,7 @@ let mut magey= 200.0;
                         enemies[i].draw_bullet(player);
                     }
                     "slime" => {
-                        enemies[i].slime_action( player);
+                        enemies[i].slime_action(player);
                     }
                     "summoner" => {
                         let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
@@ -147,31 +131,22 @@ let mut magey= 200.0;
             }
         }
 
-        if enemies.is_empty() {
-            map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]);// opens right side of map when all enemies are dead
+        if enemies.is_empty() && player.get_cleared() == 5 {
+            player.add_cleared();
+            map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
+            
         }
 
-
-
-
-
-
-
-
-        if player.get_x() > virtual_width - 10.0  {
+        if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();
             return "w2s2".to_string();
         }
-
-        
 
         if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();
             return "w2sp".to_string();
         }
-       
-        
-        
+
         player.draw();
         next_frame().await;
     }

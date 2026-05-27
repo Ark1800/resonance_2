@@ -81,7 +81,10 @@ let mut large_slimex= 100.0;
         enemies.push(summoner);
     
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
-       
+        map.create_map_array(0, 1, 0, vec![2]).await;
+    if player.get_cleared() == 6 {
+        map.create_map_array(0, 2, 0, vec![2, 1]).await;
+    }
     loop {
 
  player.handle_keypresses(pause).await;
@@ -145,7 +148,8 @@ let mut large_slimex= 100.0;
             }
         }
 
-        if enemies.is_empty() {
+        if enemies.is_empty() && player.get_cleared() == 6 {
+            player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);// opens top side of map when all enemies are dead
         }
 

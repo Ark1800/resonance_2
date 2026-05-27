@@ -30,7 +30,7 @@ impl Musicdisc {
         Musicdisc {
             musicpaths,
             sounds: vec![backinblack_sound],
-            disc_elements: Musicdisc::create_disc_elements().await,
+            disc_elements: Musicdisc::create_disc_elements(&tm).await,
             backinblack_starttime: 0.0,
         }
 
@@ -43,12 +43,13 @@ impl Musicdisc {
     }
 
 
-    pub fn get_musicdisc_time(&mut self) {
+    pub fn get_musicdisc_times(&mut self) {
         self.backinblack_starttime = get_time(); 
     }
 
     pub fn handle_musicdisccooldowns(&mut self, activedisc: String) -> String {
-        match activedisc.as_str() {
+        let mut discmatch = activedisc.as_str();
+        match discmatch {
             "backinblack" => {
                 let time = get_time() - self.backinblack_starttime;
                 if time >= 0.0 && time <= 2.0 {
@@ -72,14 +73,20 @@ impl Musicdisc {
                 else if time > 12.0 && time <= 15.0 {
                     println!("draw labels")
                 }
+                else if time > 15.0 {
+                    println!("hide labels");
+                    discmatch = "";
+                }
             },
             _ => {}
         }
-        activedisc
+        discmatch.to_string()
     }
 
-    pub async fn create_disc_elements() -> Vec<StillImage> {
-        let mut bib_img1 = StillImage::new("", 100.0, 100.0, 825.0, 50.0, true, 1.0).await;
+    pub async fn create_disc_elements(tm: &TextureManager) -> Vec<StillImage> {
+        let mut bib_img1 = StillImage::new("", 200.0, 200.0, 20.0, 50.0, true, 1.0).await; 
+        bib_img1.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/bibimg.png").unwrap());
+
         vec![bib_img1]
     }
 }

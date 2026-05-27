@@ -24,13 +24,13 @@ Work
 //4. W1S3 Enemies
 //5. W1S4 Enemies
 //6. W1SB Boss
-//7. cleared variable
 //8. Item after each scene
 //9. All items
 //10. Player Dying
 //11. Inventory Db
 //12. Player Db
-//13. Start Screen
+//13. User Db
+//14. Start Screen
  
 //Keypresses:
 Move Up - W
@@ -65,8 +65,8 @@ player.handle_inventory();
 player.handle_playerdamaging(&enemies);
 player.handle_musicdiscs();
 player.draw();
-let activedisc = musicdisc::handle_musicdisccooldowns(player.get_player_activedisc(););
-player.set_player_activedisc(activedisc);
+let activedisc = musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc(););
+musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
 
 ASIDES...
 Angles:
@@ -114,7 +114,8 @@ pub struct Player {
     ranged_movespeeds: Vec<Vec2>, //movement speed of the projectile for ranged attacks
     arrows: Vec<StillImage>, //list of self.arrow projectiles for ranged attacks
     player_direction: String, //current direction player is facing for attack purposes (up, down, left, right, etc.)
-    activedisc: String
+    activedisc: String,
+    cleared: i32,
 }
 
 impl Player {
@@ -167,6 +168,7 @@ impl Player {
             ranged_movespeeds: Vec::new(),
             arrows: Vec::new(),
             activedisc: "none".to_string(),
+            cleared: 0,
         }
     }
     //movement functions
@@ -206,6 +208,10 @@ impl Player {
         }
         if is_key_pressed(KeyCode::Right) {
             self.rangedattack = true;
+        }
+
+        if is_key_pressed(KeyCode::Q) {
+            self.handle_musicdiscs();
         }
     }
 
@@ -501,6 +507,14 @@ impl Player {
 
     pub fn set_player_activedisc(&mut self, disc: String) {
         self.activedisc = disc;
+    }
+
+    pub fn add_cleared(&mut self) {
+        self.cleared += 1;
+    }
+
+    pub fn get_cleared(&self) -> i32 {
+        self.cleared
     }
 
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII

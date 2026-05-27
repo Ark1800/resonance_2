@@ -607,16 +607,60 @@ impl Enemy {
         healthbar.draw();
     }
 
-    pub fn cyric_action(&mut self, player: &mut Player) {
-        self.moveing(player.get_x(), player.get_y());
+    pub async fn cyric_action(&mut self, player: &mut Player, tm: &TextureManager) -> bool {
+        let mut lightning = false;
+        if ((self.get_x() - player.get_x()).abs() < 150.0) && ((self.get_y() - player.get_y()).abs() < 150.0) {
+            if get_time() - self.cooldown > self.cooldown2 {
+                self.cooldown = get_time();
+                let attack_choice = rand::gen_range(0, 3);
+                if attack_choice == 0 {
+                    self.meteors(&tm, player).await;
+                    self.cooldown2 = get_time() + 5.0;
+                } else if attack_choice == 1 {
+                    self.cooldown2 = get_time() + 5.0;
+                    lightning = true;
+            } else {
+                    self.shoot(player, 80.0, 80.0).await;
+                    self.cooldown2 = get_time() + 2.0;
+                }
+            }
+        } else {
+            self.moveing(player.get_x(), player.get_y());
+        }
         let mut healthbar = self.set_healthbar();
         healthbar.draw();
+        lightning
     }
 
+        
+    
+
     pub async fn meteors(&mut self, tm: &TextureManager, player: &mut Player) {
-        for meteor in 0..20 {
+        rand::srand(date::now() as u64);
+        self.set_projectile_preload(tm.get_preload("assets/cyric_files/meteor.png").unwrap());
+        
+        for i in 0..20 {
+            let mut meteor = Projectile::new(self.projectile_image.clone(), 50.0, 50.0, rand::gen_range(100.0, 1000.0), 100.0, true, 1.0).await; // Create a projectile at the enemy's position
+            meteor.set_speed(800.0);
+            let meteor_pos = vec2(meteor.get_x(), meteor.get_y());
+            let rand_pos = rand::gen_range(100.0, 900.0);
+            self.projectiles.push(meteor.clone());
+            self.projectiles[i].set_pos(meteor_pos.x + rand_pos, meteor_pos.y - rand_pos);
+            self.projectiles[i].set_direction(meteor_pos);
             
         }
+        self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
+    } 
+
+    pub async fn lightning_bolt(&mut self, tm: &TextureManager, player: &mut Player) {
+        self.set_projectile_preload(tm.get_preload("assets/cyric_files/lightning.png").unwrap());
+        let distance = vec![self.get_x() - player.get_x(), self.get_y() - player.get_y()];
+        let mut lightning = Projectile::new(self.projectile_image.clone(), distance[0], distance[1], self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
+        // Calculate the angle towards the player and set it for the projectile
+        let angle = lightning.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
+        lightning.set_angle(angle);
+        lightning.set_direction(player.get_oldpos());
+        self.projectiles.push(lightning);
     }    
 
     pub fn get_maxhealth(&self) -> f32{

@@ -197,6 +197,9 @@ impl Map {
     pub fn change_map(&mut self, change_list: Vec<i32>, change_coords: Vec<Vec<i32>>) {
         for i in 0..change_list.len() {
             self.map_array[change_coords[i as usize][0] as usize][change_coords[i as usize][1] as usize] = change_list[i];
+            if change_list[i] == 0 {
+                self.change_wall = true;
+            }
             if change_list[i] == 1 && !self.change_wall {
                 self.change_wall = true;
             }

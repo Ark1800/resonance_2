@@ -19,7 +19,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
-    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
     let mut background = StillImage::new(
         "",
@@ -41,10 +41,14 @@ pub async fn run(
         ],
     )
     .await;
+// If cleared
+    if player.get_cleared() == 0 {
+    map.create_map_array(0, 1, 0, vec![4]).await;
+    } else {
     map.create_map_array(0, 2, 0, vec![1, 4]).await;
+    }
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
-    
     let mut summoner = Enemy::new("", 50.0, 50.0, 70.0, 80.0, true, 1.0, 20.0, 10.0, "", "summoner").await;
     let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20.0, 10.0, "", "large_slime").await;
     large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
@@ -84,6 +88,7 @@ pub async fn run(
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
+            if player.get_cleared() == 0 {
             for i in 0..enemies.len() {
                 //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                 match enemies[i].get_enemy_type() {
@@ -113,6 +118,7 @@ pub async fn run(
                 }
                 enemies[i].draw();
             }
+            }
         }
         player.draw();
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await; //dont need to send enemies back because it doesnt get used again until next frame
@@ -136,15 +142,19 @@ pub async fn run(
             }
         }
 
-        if enemies.is_empty() {
-            map.change_map(vec![0, 0], vec![vec![], vec![]]);
-        }
+      
         player.handle_inventory();
+        let activedisc = musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
+        musicdiscfunctions.handle_musicdisccooldowns(activedisc);
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();
             return "w1sp".to_string();
         }
-        if player.get_y() < 10.0 {
+        if enemies.is_empty() && player.get_cleared() == 0 {
+            player.add_cleared();
+            map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+        }
+        if player.get_y() < 10.0 && player.get_cleared() >= 1{
             *last_scene = "Top".to_string();
             println!("Returning w1s2");
             return "w1s2".to_string();
