@@ -14,7 +14,7 @@ use crate::modules::animated_image::AnimatedImage;
 use crate::modules::enemy::Enemy;
 use crate::modules::grid::draw_grid;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, world2_completed: &bool) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc, world2_completed: &bool) -> String {
     let mut background1 = StillImage::new(
         "",
         virtual_width/2.0,  // width

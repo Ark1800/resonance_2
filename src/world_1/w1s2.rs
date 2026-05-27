@@ -11,7 +11,7 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
 use crate::modules::enemy::Enemy;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc) -> String {
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -22,24 +22,18 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         1.0,    // Normal zoom (100%)
     ).await;
         background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
-    
-    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
-    if last_scene == "Left" {
+    if *last_scene == "Top" {
+        player.set_position((virtual_width / 2.0)-20.0, virtual_height - 80.0);
+    } else if *last_scene == "Down" {
+        player.set_position((virtual_width / 2.0)-20.0, 80.0);
+    } else if *last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    map.create_map_array(0, 1, 0, vec![4]).await;
-    } else if last_scene == "Right" {
+    } else if *last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
-    map.create_map_array(0, 1, 0, vec![2]).await;
-    } else if last_scene == "Down" {
-        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
-    map.create_map_array(0, 1, 0, vec![3]).await;
-    } else if last_scene == "Top" {
-        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
-    map.create_map_array(0, 1, 0, vec![1]).await;
-    } else {
-        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-    map.create_map_array(0, 0, 0, vec![]).await;
     }
+    let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
+    map.create_map_array(0, 2, 0, vec![3, 1]).await;
+    println!("HAI!");
     let mut enemies: Vec<Enemy> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);

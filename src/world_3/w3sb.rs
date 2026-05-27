@@ -18,6 +18,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
+    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     game_completed: &mut bool,
 ) -> String {
     player.set_position(virtual_width / 2.0, virtual_height - 100.0);

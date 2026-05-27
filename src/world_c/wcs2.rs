@@ -20,6 +20,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
+    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     dungeon_completed: &bool,
 ) -> String {
     let mut background = StillImage::new(

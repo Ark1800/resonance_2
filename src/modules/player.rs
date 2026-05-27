@@ -15,12 +15,7 @@ use crate::modules::preload_image::TextureManager;
 
 //TO DOOOOOO
 /*
-//Bug fixes
-//1. player atk lbls moving in town without player
-//2. player atks sometimes not appearing
-//3. w1s1 screen moving
-//4. player switching to tm instead of set_preload 
-//5. add preloading to musicdiscs
+//Bug fixes/extras
 
 Work
 //1. All Music Discs
@@ -146,8 +141,8 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 5.0,
-            rngdmg: 3.0,
+            mledmg: 1000.0,
+            rngdmg: 100.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
             musicoins: 0,
@@ -224,6 +219,7 @@ impl Player {
         }
         interact
     }
+    
     pub fn handle_image(&mut self) {
         // change image based on direction of movement (8 directions)
         // Determine the desired preload index, then only set it if different from current
@@ -287,7 +283,7 @@ impl Player {
             img.set_x(img.get_x() + self.movement.x);
             img.set_y(img.get_y() + self.movement.y);
         }
- {}        self.attackimg.set_x(self.attackimg.get_x() + self.movement.x);
+        self.attackimg.set_x(self.attackimg.get_x() + self.movement.x);
         self.attackimg.set_y(self.attackimg.get_y() + self.movement.y);
         self.move_x();
         let new_x = self.get_x();
@@ -297,6 +293,7 @@ impl Player {
             collide = true;
         }
         if map.map_collision(&self.get_playerhitbox()).0 {
+            println!("collided with map on x axis");
             //collision with map
             self.set_x(old_pos.x);
             self.playerui.3[0].set_x(old_pos.x);
@@ -310,7 +307,7 @@ impl Player {
         } else if collide {
             for img in collides {
                 if self.check_x_collision(img) {
-                    self.set_x(old_pos.x);
+                    self.set_position(old_pos.x, self.get_y()); //move player back to old x position but keep new y position for smoother movement when colliding with objects
                     break
                 }
             }
@@ -332,7 +329,7 @@ impl Player {
         } else if collide {
             for img in collides {
                 if self.check_y_collision(img) {
-                    self.set_y(old_pos.y);
+                    self.set_position(self.get_x(), old_pos.y);
                     break
                 }
             }
@@ -1053,10 +1050,9 @@ let mut img_slash_tr = AnimatedImage::from_gif(
             for image in self.inventory.1.iter_mut() {
                 image.draw();
             }
-            for label in self.inventory.2.iter_mut() {
-                label.draw();
-            }
-            self.inventory.2[2].set_text(format!("Musicoins:{}", self.musicoins));
+            self.inventory.2[0].draw();
+            self.inventory.2[1].draw();
+            //self.inventory.2[2].set_text(format!("Musicoins:{}", self.musicoins));
             if self.inventory.3[0].click() {
                 let title = self.inventory.0[0].selected_item().unwrap();
                 for (i, item) in self.items.iter().enumerate() {

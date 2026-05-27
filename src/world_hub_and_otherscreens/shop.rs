@@ -21,6 +21,7 @@ pub async fn run(
     player: &mut crate::modules::player::Player,
     tm: &TextureManager,
     _pause: &mut bool,
+    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
     let diamond_armour = Item::new(
         tm.get_preload("assets/item_files/armour/diamond_armor.png").unwrap(), // Preload

@@ -1,6 +1,7 @@
 use macroquad::prelude::*;
-use macroquad::audio::{load_sound, play_sound, PlaySoundParams};
+use macroquad::audio::{play_sound, PlaySoundParams, Sound};
 use crate::modules::still_image::StillImage;
+use crate::modules::preload_image::TextureManager;
 /* 
 run through player 
 
@@ -15,26 +16,30 @@ use musicdisc::handle_musicdisccooldowns; in each loop
 #[derive(Clone)]
 pub struct Musicdisc {
     //musicpath: &str,
-    imgpath: (Texture2D, Option<Vec<u8>>, String),
+    musicpaths: Vec<String>,
+    sounds: Vec<Sound>,
     backinblack_starttime: f64,
     disc_elements: Vec<StillImage>,
 }
 
 impl Musicdisc {
-    pub async fn new (imgpath: (Texture2D, Option<Vec<u8>>, String), musicpath: &str) -> Self {
+    pub async fn new(tm: &TextureManager) -> Self {
+        let musicpaths = vec!["assets/musicdisc_files/music/backinblack.ogg".to_string()];
+        tm.preload_sound(musicpaths[0].as_str()).await;
+        let backinblack_sound = tm.get_preloaded_sound(musicpaths[0].as_str()).unwrap();
         Musicdisc {
-            imgpath,
+            musicpaths,
+            sounds: vec![backinblack_sound],
             disc_elements: Musicdisc::create_disc_elements().await,
             backinblack_starttime: 0.0,
-            //musicpath
         }
 
     }
 
+
     pub async fn test_musicdisc(&self) {
-      //  println!("Musicdisc: {}, {}", self.imgpath.2, self.musicpath);
-       // let sound_effect = load_sound(self.musicpath).await.unwrap();
-      //  play_sound(&sound_effect, PlaySoundParams::default());
+        println!("Playing music disc: {}", self.musicpaths[0]);
+        play_sound(&self.sounds[0], PlaySoundParams {looped: false, volume: 1.0 });
     }
 
 

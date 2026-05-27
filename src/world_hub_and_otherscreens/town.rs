@@ -12,6 +12,7 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
+use crate::modules::musicdisc::Musicdisc;
 
 pub async fn run(
     virtual_width: f32,
@@ -20,6 +21,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
+    musicdiscfunctions: &mut Musicdisc,
     town_completed: &mut bool,
 ) -> String {
     let mut map = Map::new(
@@ -95,13 +97,15 @@ pub async fn run(
     name_box.with_colors(WHITE, None);
     let mut enemies: Vec<Enemy> = vec![];
     loop {
+        if is_key_pressed(KeyCode::O) {
+            musicdiscfunctions.test_musicdisc().await;
+        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         map.draw_map(&tm).await;
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
-        //player.move_player(&map, old_pos, &collidable_objects); //collidable objects breaks player speed
         if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Down".to_string();
             return "wcs1".to_string();

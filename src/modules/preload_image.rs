@@ -132,6 +132,7 @@ uses coroutines to load assets in the background, avoiding black flashing on web
 GIFs are pre-preloaded before the loading screen displays, ensuring smooth animation during loading.
 */
 use macroquad::texture::Texture2D;
+use macroquad::audio::{load_sound, Sound};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -250,6 +251,8 @@ pub struct TextureManager {
     animated_spritesheet_order: Arc<Mutex<Vec<String>>>,
     animated_gifs: Arc<Mutex<HashMap<String, PreloadedAnimatedGif>>>,
     animated_gif_order: Arc<Mutex<Vec<String>>>,
+    sounds: Arc<Mutex<HashMap<String, Sound>>>,
+    sound_order: Arc<Mutex<Vec<String>>>,
 }
 
 impl TextureManager {
@@ -262,6 +265,8 @@ impl TextureManager {
             animated_spritesheet_order: Arc::new(Mutex::new(Vec::new())),
             animated_gifs: Arc::new(Mutex::new(HashMap::new())),
             animated_gif_order: Arc::new(Mutex::new(Vec::new())),
+            sounds: Arc::new(Mutex::new(HashMap::new())),
+            sound_order: Arc::new(Mutex::new(Vec::new())),
         }
     }
     
@@ -336,6 +341,79 @@ impl TextureManager {
     pub fn get_texture_paths(&self) -> Vec<String> {
         let load_order = self.load_order.lock().unwrap();
         load_order.clone()
+    }
+
+    /// Preload a sound by its file path
+    #[allow(unused)]
+    pub async fn preload_sound(&self, path: &str) {
+        let already_loaded = {
+            let sounds = self.sounds.lock().unwrap();
+            sounds.contains_key(path)
+        };
+
+        if already_loaded {
+            return;
+        }
+
+        let sound = match load_sound(path).await {
+            Ok(sound) => sound,
+            Err(_) => return,
+        };
+
+        {
+            let mut sounds = self.sounds.lock().unwrap();
+            sounds.insert(path.to_string(), sound);
+        }
+
+        {
+            let mut sound_order = self.sound_order.lock().unwrap();
+            sound_order.push(path.to_string());
+        }
+    }
+
+    /// Preload multiple sounds at once
+    #[allow(unused)]
+    pub async fn preload_sounds<'a, T>(&self, paths: T)
+    where
+        T: AsRef<[&'a str]>,
+    {
+        let paths = paths.as_ref();
+        for path in paths {
+            self.preload_sound(path).await;
+        }
+    }
+
+    /// Get a preloaded sound by its file path
+    #[allow(unused)]
+    pub fn get_preloaded_sound(&self, path: &str) -> Option<Sound> {
+        let sounds = self.sounds.lock().unwrap();
+        sounds.get(path).cloned()
+    }
+
+    /// Get a preloaded sound by its index in preload order
+    #[allow(unused)]
+    pub fn get_preloaded_sound_by_index(&self, index: usize) -> Option<Sound> {
+        let sound_order = self.sound_order.lock().unwrap();
+        if index < sound_order.len() {
+            let path = &sound_order[index];
+            self.get_preloaded_sound(path)
+        } else {
+            None
+        }
+    }
+
+    /// Get the number of preloaded sounds
+    #[allow(unused)]
+    pub fn sound_count(&self) -> usize {
+        let sound_order = self.sound_order.lock().unwrap();
+        sound_order.len()
+    }
+
+    /// Get a list of all preloaded sound paths in load order
+    #[allow(unused)]
+    pub fn get_sound_paths(&self) -> Vec<String> {
+        let sound_order = self.sound_order.lock().unwrap();
+        sound_order.clone()
     }
 
     /// Preload an animated spritesheet and its transparency mask
@@ -447,11 +525,17 @@ impl TextureManager {
     
     /// Load assets with a built-in loading screen that works well for web
     /// This method handles all the complexities of asset loading and progress display
-    pub async fn preload_with_loading_screen<'a, T>(&self, assets: T, options: Option<LoadingScreenOptions>)
+    pub async fn preload_with_loading_screen<'a, T>(
+        &self,
+        assets: T,
+        sound_assets: Option<&[&'a str]>,
+        options: Option<LoadingScreenOptions>,
+    )
     where
         T: AsRef<[&'a str]>,
     {
         let assets = assets.as_ref();
+        let sound_assets = sound_assets.unwrap_or(&[]);
         // Use default options if none provided
         let options = options.unwrap_or_default();
         
@@ -462,7 +546,7 @@ impl TextureManager {
         
         // Thread-safe progress counters that can be shared between coroutines
         let loaded_counter = Arc::new(AtomicUsize::new(0));
-        let total_assets = assets.len();
+        let total_assets = assets.len() + sound_assets.len();
         
         // Create animation state trackers for each GIF
         #[allow(unused)]
@@ -496,6 +580,12 @@ impl TextureManager {
         {
             // Convert &[&str] to Vec<String> for the coroutine to own its data
             let assets_to_load: Vec<String> = assets.iter().map(|&s| s.to_string()).collect();
+            let sounds_to_load: Vec<String> = sound_assets.iter().map(|&s| s.to_string()).collect();
+            let load_queue: Vec<String> = assets_to_load
+                .iter()
+                .chain(sounds_to_load.iter())
+                .cloned()
+                .collect();
             let counter = loaded_counter.clone();
             let loading_tm = self.clone(); // Clone the TextureManager for the coroutine
             
@@ -516,7 +606,15 @@ impl TextureManager {
                     // Yielding control back to the main thread
                     next_frame().await;
                 }
+
+                for sound_path in sounds_to_load {
+                    loading_tm.preload_sound(&sound_path).await;
+                    counter.fetch_add(1, Ordering::SeqCst);
+                    next_frame().await;
+                }
             });
+
+            let _ = load_queue;
         }
         
         // Main rendering loop for the loading screen
@@ -623,7 +721,12 @@ impl TextureManager {
             
             // Display current file if available
             if loaded_assets > 0 && loaded_assets < total_assets {
-                let file_name = assets[loaded_assets].split('/').last().unwrap_or("");
+                let file_name = if loaded_assets < assets.len() {
+                    assets[loaded_assets].split('/').last().unwrap_or("")
+                } else {
+                    let sound_index = loaded_assets - assets.len();
+                    sound_assets[sound_index].split('/').last().unwrap_or("")
+                };
                 let file_text = format!("Loading: {}", file_name);
                 draw_text(
                     &file_text,

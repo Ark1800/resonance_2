@@ -10,7 +10,7 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::map::Map;
 use crate::modules::still_image::StillImage;
 use crate::modules::enemy::Enemy;
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc) -> String {
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/tree.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
      let mut enemies: Vec<Enemy> = vec![];
     if last_scene == "Left" {
