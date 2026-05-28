@@ -60,15 +60,18 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     }
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
     map.create_map_array(0, 1, 0, vec![4]).await;
+    let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
         whirlpool.draw();
         map.draw_map(&tm).await;
-        player.handle_keypresses(pause).await;
+        player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+        player.set_player_activedisc(activedisc);
         player.draw();
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();

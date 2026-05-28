@@ -52,7 +52,7 @@ async fn main() {
     "assets/musicdisc_files/effectimages/bibimg.png", "assets/cyric_files/lightning.png", "assets/cyric_files/lightning_charge.png", 
     ];
     let tm = TextureManager::new();
-    let all_sounds = vec!["assets/musicdisc_files/music/backinblack.ogg"];
+    let all_sounds = vec!["assets/musicdisc_files/music/backinblack.ogg", "assets/musicdisc_files/music/thickofit.ogg"];
     // Using custom loading screen appearance
     let loading_options = LoadingScreenOptions {
         title: Some("Resonance 2".to_string()),
@@ -79,7 +79,6 @@ async fn main() {
     let mut musicdiscfunctions = Musicdisc::new(&tm).await;
     let mut last_scene = "None".to_string();
     let mut checkpoints: Vec<bool> = vec![false /*Dungeon*/, false /*Town*/, false /*1st world*/, false /*2nd world*/, false /*3rd world*/];
-    musicdiscfunctions.get_musicdisc_times();
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {

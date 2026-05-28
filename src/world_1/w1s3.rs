@@ -39,10 +39,12 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
-        player.handle_keypresses(pause).await;
+        player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
-        player.handle_player_ui(&mut enemies).await;
+        player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+        player.set_player_activedisc(activedisc);
         player.draw();
         if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();

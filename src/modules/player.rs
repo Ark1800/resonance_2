@@ -18,6 +18,7 @@ use crate::modules::musicdisc::Musicdisc;
 /*
 //Bug fixes/extras
 //1. add hitboxes to swords
+//2. collision for thickofit
 
 Work
 //1. All Music Discs
@@ -55,14 +56,13 @@ use crate::modules::enemy::Enemy;
 
 funcs
 outisde loop...
-musicdisc::get_musicdisc_time();
 
 in your loop..
 let mut enemies = vec![summoner, mage, large_slime]; //list of enemies for scene
 
-player.handle_keypresses().await;
+player.handle_keypresses(pause, musicdiscs).await;
 player.move_player();
-player.handle_player_ui(&mut enemies).await;
+player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
 player.handle_inventory();
 player.handle_playerdamaging(&enemies);
 player.draw();
@@ -117,7 +117,6 @@ pub struct Player {
     player_direction: String, //current direction player is facing for attack purposes (up, down, left, right, etc.)
     activedisc: String,
     cleared: i32,
-    musicdiscfunctions: crate::modules::musicdisc::Musicdisc,
 }
 
 impl Player {
@@ -171,11 +170,10 @@ impl Player {
             arrows: Vec::new(),
             activedisc: "none".to_string(),
             cleared: 0,
-            musicdiscfunctions: Musicdisc::new(&tm).await,
         }
     }
     //movement functions
-    pub async fn handle_keypresses(&mut self, pause: &mut bool) {
+    pub async fn handle_keypresses(&mut self, pause: &mut bool, musicdiscs: &mut Musicdisc) {
         //basic movement input handling (WASD)
         let mut move_dir = vec2(0.0, 0.0);
 
@@ -214,7 +212,7 @@ impl Player {
         }
 
         if is_key_pressed(KeyCode::Q) {
-            self.handle_musicdiscs();
+            self.handle_musicdiscs(musicdiscs);
         }
     }
 
@@ -828,7 +826,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         )
     }
 
-    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>) -> (bool, bool, usize) {
+    pub async fn handle_player_ui(&mut self, enemies: &mut Vec<Enemy>, musicdiscs: &mut Musicdisc) -> (bool, bool, usize) {
         //update vars
         let mletimepassed = get_time() - self.last_attack_time;
         let rngtimepassed = get_time() - self.last_rng_attack_time;
@@ -843,20 +841,38 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         for label in self.playerui.1.iter_mut() {
             label.draw();
         }
-        self.inventory.2[2].draw(); //draw gold label
+        self.inventory.2[2].draw();//draw gold label
         self.playerui.1[0].draw();
         self.playerui.1[1].draw(); //label must be redrawn very specifically so for loops cant be used  
         self.playerui.0[0].draw();
         self.playerui.1[2].draw();
-        for item in &self.equipped_items {
+        for i  in 0..self.playerui.0.len() {
+            let img = &self.playerui.0[i];
+            match img.get_filename() {
+                "assets/fireball.png" => {
+                    let times = musicdiscs.get_musicdisc_cooldowns();
+                    self.playerui.1[i+2].set_text(format!("{:.0}", 30.0-times[0]));
+                        if times[0] <= 0.0 {
+                            self.playerui.1[i+2].set_text("".to_string());
+                        }
+                },
+                _ => {}
+            }
+        }
+            /* 
                 if self.items[*item].get_itemtype() == "disc".to_string() {
                     let title = self.items[*item].get_itemtitle();
                     let times = self.musicdiscfunctions.get_musicdisc_cooldowns();
                     if title == "Back In Black" {
                         self.playerui.1[4].set_text(format!("{}", times.0));
+                        println!("{} cooldown: {}", title, times.0);
+                        if times.0 <= 0.0 {
+                            self.playerui.1[4].set_text("".to_string());
+                        }
                     }
                 }
             }
+            */
         if self.attack {
             if self.mlevalid == true {
                 (index, mlehit) = self.create_melee_attack(enemies, index, mlehit);
@@ -1233,15 +1249,26 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         }
     }
 
-    pub fn handle_musicdiscs(&mut self) {
+
+    pub fn handle_musicdiscs(&mut self, musicdiscs: &mut Musicdisc) {
         if self.equipped_items.len() > 0 {
             for i in 0..self.equipped_items.len() {
                 let item = &self.items[self.equipped_items[i]];
                 if item.get_itemtype() == "disc".to_string() {
                     match item.get_itemtitle().as_str() {
                         "Back In Black" => {
+                            let validity = musicdiscs.get_musicdisc_validity();
+                            if validity[0] == true {
                             self.activedisc = "Back In Black".to_string();
-                            println!("Active disc: {}", self.activedisc);
+                            musicdiscs.get_musicdisc_times();
+                            }
+                        }
+                        "Thick Of It" => {
+                            let validity = musicdiscs.get_musicdisc_validity();
+                            if validity[1] == true {
+                            self.activedisc = "Thick Of It".to_string();
+                            musicdiscs.get_musicdisc_times();
+                            }
                         }
                         _ => {
 

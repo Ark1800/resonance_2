@@ -104,6 +104,7 @@ pub async fn run(
     speech_box.set_preload(tm.get_preload("assets/map_files/textbox.png").unwrap());
     let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
     name_box.with_colors(WHITE, None);
+    let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -149,10 +150,12 @@ pub async fn run(
                 }
             }
 
-            player.handle_keypresses(pause).await;
+            player.handle_keypresses(pause, _musicdiscfunctions).await;
 
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
+            let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+            player.set_player_activedisc(activedisc);
 
             if player.get_y() > virtual_height - 10.0 {
                 *last_scene = "Down".to_string();

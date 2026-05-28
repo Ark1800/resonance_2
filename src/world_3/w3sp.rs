@@ -124,8 +124,10 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
             return "w3s1".to_string();
         }
         //player
-        player.handle_keypresses(pause).await;
-        player.handle_player_ui(&mut enemies).await;
+        player.handle_keypresses(pause, _musicdiscfunctions).await;
+        player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+        player.set_player_activedisc(activedisc);
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects); 
         player.draw();

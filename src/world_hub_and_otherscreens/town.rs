@@ -98,8 +98,9 @@ pub async fn run(
     name_box.with_colors(WHITE, None);
     let mut enemies: Vec<Enemy> = vec![];
     let backinblackitem = Item::new(tm.get_preload("assets/fireball.png").unwrap(), "assets/fireball.png".to_string(), "Back In Black".to_string(), "A Disc that allows the user to summon periodic pillars of fire".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
-    musicdiscfunctions.get_musicdisc_times();
     player.add_inventory_item(backinblackitem.clone());
+    let thickofititem = Item::new(tm.get_preload("assets/arrow.png").unwrap(), "assets/arrow.png".to_string(), "Thick Of It".to_string(), "A Disc that sounds so bad all enemies stop attacking and move away".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    player.add_inventory_item(thickofititem.clone());
     loop {
         if is_key_pressed(KeyCode::O) {
             musicdiscfunctions.test_musicdisc().await;
@@ -107,7 +108,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         map.draw_map(&tm).await;
-        player.handle_keypresses(pause).await;
+        player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
         if player.get_y() > virtual_height - 10.0 {
@@ -148,11 +149,11 @@ pub async fn run(
         }
         background.draw();
         draw_grid(50.0, BLACK);
-        player.handle_player_ui(&mut enemies).await;
+        player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
         player.handle_inventory();
         player.handle_playerdamaging(&enemies);
-        let activedisc = musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
-        musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+        player.set_player_activedisc(activedisc);
         player.draw();
         next_frame().await;
     }

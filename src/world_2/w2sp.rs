@@ -69,6 +69,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         1.0,   // Normal zoom (100%)
     ).await;
     background.set_preload(tm.get_preload("assets/map_files/world2_start.png").unwrap());
+    let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
     loop {         
 
 
@@ -83,9 +84,11 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
-        player.handle_keypresses(pause).await;
+        player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+        player.set_player_activedisc(activedisc);
         background.draw();
         green_portal.draw();
         player.draw();

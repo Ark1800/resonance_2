@@ -184,6 +184,7 @@ for mage in 0..mage_list.len() {
         }
 */
 use crate::modules::collision::check_collision;
+use crate::modules::map;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::progressbar::ProgressBar;
@@ -821,6 +822,40 @@ impl Enemy {
             self.health as f32, // Initial value
         );
         healthbar
+    }
+
+    pub fn reversereverse(&mut self, player_x: f32, player_y: f32, map: &map::Map, enemy_old_pos: Vec2) {
+         // Direction to move in
+         println!("Hey niw");
+        let mut move_dir = vec2(0.0, 0.0);
+
+        self.movement = move_dir * self.move_speed * get_frame_time();
+
+        if self.view.get_x() < player_x {
+            move_dir.x -= 1.0; // Move right
+        } else if self.view.get_x() > player_x {
+            move_dir.x += 1.0; // Move left
+        }
+        if self.view.get_y() < player_y {
+            move_dir.y -= 1.0; // Move down
+        } else if self.view.get_y() > player_y {
+            move_dir.y += 1.0; // Move up
+        }
+        // Normalize the movement to prevent faster diagonal movement
+        if move_dir.length() > 0.0 {
+            move_dir = move_dir.normalize();
+        }
+        println!("Move dir: {:?}", move_dir);
+        self.set_x(enemy_old_pos.x + move_dir.x);
+        self.set_y(enemy_old_pos.y + move_dir.y);
+
+        let (_chest, wall) = map.map_collision(self.view_enemy());
+        if wall {
+        //    self.set_x(enemy_old_pos.x);
+          //  self.set_y(enemy_old_pos.y);
+
+        }
+        // Apply movement based on frame time
     }
 }
 
