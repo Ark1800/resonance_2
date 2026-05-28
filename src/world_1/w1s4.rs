@@ -21,7 +21,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         true,   // Enable stretching
         1.0,    // Normal zoom (100%)
     ).await;
-    if *last_scene == "Top" {
+    if *last_scene == "Up" {
         player.set_position((virtual_width / 2.0)-20.0, virtual_height - 80.0);
     } else if *last_scene == "Down" {
         player.set_position((virtual_width / 2.0)-20.0, 80.0);

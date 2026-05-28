@@ -13,6 +13,7 @@ use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 use crate::modules::musicdisc::Musicdisc;
+use crate::modules::item::Item;
 
 pub async fn run(
     virtual_width: f32,
@@ -96,6 +97,9 @@ pub async fn run(
     let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
     name_box.with_colors(WHITE, None);
     let mut enemies: Vec<Enemy> = vec![];
+    let backinblackitem = Item::new(tm.get_preload("assets/fireball.png").unwrap(), "assets/fireball.png".to_string(), "Back In Black".to_string(), "A Disc that allows the user to summon periodic pillars of fire".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    musicdiscfunctions.get_musicdisc_times();
+    player.add_inventory_item(backinblackitem.clone());
     loop {
         if is_key_pressed(KeyCode::O) {
             musicdiscfunctions.test_musicdisc().await;
@@ -146,6 +150,9 @@ pub async fn run(
         draw_grid(50.0, BLACK);
         player.handle_player_ui(&mut enemies).await;
         player.handle_inventory();
+        player.handle_playerdamaging(&enemies);
+        let activedisc = musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
+        musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
         player.draw();
         next_frame().await;
     }

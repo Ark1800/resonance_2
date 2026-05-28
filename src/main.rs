@@ -49,7 +49,7 @@ async fn main() {
     "assets/map_files/grass.png", "assets/map_files/dungeon.png", "assets/map_files/world1/watertile.png", "assets/map_files/world1/beachtile.png", "assets/map_files/tree.png", "assets/map_files/world2_start.png", "assets/map_files/world1/beach2.png",
     "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/item_files/musicoin.png",
     "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png","assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif","assets/map_files/red_portal.gif" ,"assets/map_files/world1/whirlpool.gif", "assets/map_files/textbox.png", "assets/cyric_files/cyric_f.png", "assets/cyric_files/cyric_b.png", "assets/cyric_files/cyric_dead.png",
-    "assets/musicdisc_files/effectimages/bibimg.png",
+    "assets/musicdisc_files/effectimages/bibimg.png", "assets/cyric_files/lightning.png", "assets/cyric_files/lightning_charge.png", 
     ];
     let tm = TextureManager::new();
     let all_sounds = vec!["assets/musicdisc_files/music/backinblack.ogg"];

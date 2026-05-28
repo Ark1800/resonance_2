@@ -23,12 +23,12 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
  
-    } else if last_scene == "Top" {
+    } else if last_scene == "Up" {
         player.set_position((virtual_width / 2.0) - 20.0, 80.0);
   
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-   
+    
     }
 
       let mut green_portal = AnimatedImage::from_gif(

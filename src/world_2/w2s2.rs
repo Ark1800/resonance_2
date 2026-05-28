@@ -16,19 +16,15 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
      let mut enemies: Vec<Enemy> = vec![];
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    map.create_map_array(0, 1, 0, vec![4]).await;
     } else if last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
-    map.create_map_array(0, 1, 0, vec![2]).await;
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
-    map.create_map_array(0, 1, 0, vec![3]).await;
-    } else if last_scene == "Top" {
-        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
-    map.create_map_array(0, 1, 0, vec![1]).await;
+    } else if last_scene == "Up" {
+        player.set_position((virtual_width / 2.0), 30.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-    map.create_map_array(0, 0, 0, vec![]).await;
+    
     }
     let mut background = StillImage::new(
         "",
@@ -45,14 +41,14 @@ let mut large_slimex= 100.0;
     for _i in 0..3 {
         let mut large_slime = Enemy::new(
             "",
-            50.0,
-            50.0,
+            75.0,
+            75.0,
             large_slimex,
             100.0,
             true,
             1.0,
-            20.0,
-            5.0,
+            65.0,
+            22.0,
             "",
         "large_slime",
         )
@@ -70,8 +66,8 @@ let mut large_slimex= 100.0;
             300.0,
             true,
             1.0,
-            10.0,
-            5.0,
+            43.0,
+            20.0,
             "",
         "summoner",
         )
@@ -82,9 +78,10 @@ let mut large_slimex= 100.0;
     
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
         map.create_map_array(0, 1, 0, vec![2]).await;
-    if player.get_cleared() == 6 {
+    if player.get_cleared() == 7 {
         map.create_map_array(0, 2, 0, vec![2, 1]).await;
     }
+     
     loop {
 
  player.handle_keypresses(pause).await;
@@ -96,6 +93,7 @@ let mut large_slimex= 100.0;
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
+             if player.get_cleared() == 7 {
             for i in 0..enemies.len() {
                 //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                 match enemies[i].get_enemy_type() {
@@ -125,7 +123,7 @@ let mut large_slimex= 100.0;
                 }
                 enemies[i].draw();
             }
-        }
+        }}
         player.draw();
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await; //dont need to send enemies back because it doesnt get used again until next frame
         if mlehit {
@@ -148,7 +146,7 @@ let mut large_slimex= 100.0;
             }
         }
 
-        if enemies.is_empty() && player.get_cleared() == 6 {
+        if enemies.is_empty() && player.get_cleared() == 7 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);// opens top side of map when all enemies are dead
         }

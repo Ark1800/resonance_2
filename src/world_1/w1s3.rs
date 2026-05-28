@@ -23,7 +23,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     ).await;
     let mut map = Map::new(virtual_width, virtual_height, vec!["assets/map_files/world1/watertile.png".to_string(), "assets/map_files/chest.png".to_string()]).await;
     background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
-    if *last_scene == "Top" {
+    if *last_scene == "Up" {
         player.set_position((virtual_width / 2.0)-20.0, virtual_height - 80.0);
     } else if *last_scene == "Down" {
         player.set_position((virtual_width / 2.0)-20.0, 80.0);

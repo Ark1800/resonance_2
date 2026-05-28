@@ -12,6 +12,8 @@ pub struct Projectile {
     view: StillImage,
     move_speed: f32,
     direction: Vec2,
+    freeze: bool,
+    atkvalid: bool,
 }
 
 impl Projectile {
@@ -28,6 +30,8 @@ impl Projectile {
             view: bob,
             move_speed: 400.0,
             direction: vec2(0.0, 0.0),
+            freeze: false,
+            atkvalid: true,
         }
     }
 
@@ -39,6 +43,22 @@ impl Projectile {
     // Sets the speed, despite the current amount
     pub fn set_speed(&mut self, speed: f32) {
         self.move_speed = speed;
+    }
+
+    pub fn set_atkvalid(&mut self, atkvalid: bool) {
+        self.atkvalid = atkvalid;
+    }
+
+    pub fn get_atkvalid(&self) -> bool {
+        self.atkvalid
+    }
+
+    pub fn set_freeze(&mut self, freeze: bool) {
+        self.freeze = freeze;
+    }
+
+    pub fn get_freeze(&self) -> bool {
+        self.freeze
     }
 
     #[allow(unused)]
@@ -59,7 +79,6 @@ impl Projectile {
         self.view.get_angle()
     }
 
-    
     pub fn set_pos(&mut self, x: f32, y: f32) {
         self.view.set_x(x);
         self.view.set_y(y);
@@ -101,7 +120,6 @@ impl Projectile {
         self.direction
     }
 
-    
     #[allow(unused)]
     pub fn set_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
         let (texture, mask, filename) = preloaded;
@@ -126,10 +144,11 @@ impl Projectile {
     // Moves the projectile in the direction it's facing, multiplied by the move speed and frame time
     #[allow(unused)]
     pub fn move_projectiles(&mut self, player_pos: Vec2) {
-        let movement = self.direction * self.move_speed * get_frame_time();
-
-        self.set_x(self.get_x() + movement.x);
-        self.set_y(self.get_y() + movement.y);
+        if !self.freeze {
+            let movement = self.direction * self.move_speed * get_frame_time();
+            self.set_x(self.get_x() + movement.x);
+            self.set_y(self.get_y() + movement.y);
+        }
     }
     // Sets the direction of the projectile based on the player's position and the projectile's current position
     pub fn set_direction(&mut self, player_pos: Vec2) {

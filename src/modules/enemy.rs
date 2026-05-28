@@ -475,13 +475,18 @@ impl Enemy {
     pub fn draw_bullet(&mut self, player: &mut Player) {
         let dmg = self.get_dmg();
         for projectile in 0..self.projectiles.len() {
-            let collision = check_collision(self.projectiles[projectile].view_player(), player.view_player(), 1);
-            if collision {
-                player.dmgplayer(dmg);
-                self.projectiles.remove(projectile);
-                break;
+            if !self.projectiles[projectile].get_freeze() {
+                let collision = check_collision(self.projectiles[projectile].view_player(), player.view_player(), 1);
+                if collision {
+                    if self.projectiles[projectile].get_atkvalid() {
+                    player.dmgplayer(dmg);
+                    self.projectiles.remove(projectile);
+                    }
+                    break;
+                }
+                self.projectiles[projectile].move_projectiles(player.get_oldpos());
             }
-            self.projectiles[projectile].move_projectiles(player.get_oldpos());
+
             self.projectiles[projectile].draw();
         }
     }
@@ -536,9 +541,48 @@ impl Enemy {
 
     // Summoner action method that handles movement, image changes, and summoning slimes based on player proximity and cooldowns
     pub async fn summoner_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, Enemy, bool) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x(), self.get_y() + 50.0, true, 1.0, self.max_health*1.3, self.dmg, "", "slime").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() + 50.0, self.get_y() - 50.0, true, 1.0, self.max_health*1.3, self.dmg, "", "slime").await;
-        let mut slime3 = Enemy::new("", 25.0, 25.0, self.get_x() - 50.0, self.get_y() - 50.0, true, 1.0, self.max_health*1.3, self.dmg, "", "slime").await;
+        let mut slime1 = Enemy::new(
+            "",
+            25.0,
+            25.0,
+            self.get_x(),
+            self.get_y() + 50.0,
+            true,
+            1.0,
+            self.max_health * 1.3,
+            self.dmg,
+            "",
+            "slime",
+        )
+        .await;
+        let mut slime2 = Enemy::new(
+            "",
+            25.0,
+            25.0,
+            self.get_x() + 50.0,
+            self.get_y() - 50.0,
+            true,
+            1.0,
+            self.max_health * 1.3,
+            self.dmg,
+            "",
+            "slime",
+        )
+        .await;
+        let mut slime3 = Enemy::new(
+            "",
+            25.0,
+            25.0,
+            self.get_x() - 50.0,
+            self.get_y() - 50.0,
+            true,
+            1.0,
+            self.max_health * 1.3,
+            self.dmg,
+            "",
+            "slime",
+        )
+        .await;
 
         let mut summoned = false;
         if get_time() - self.cooldown2 > 10.1 {
@@ -567,8 +611,34 @@ impl Enemy {
     // Slime splitting method that creates two smaller slimes upon the death of a large slime
     #[allow(unused)]
     pub async fn split(&mut self, tm: &TextureManager) -> (Enemy, Enemy) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0,self.max_health/2.0, self.dmg/2.0, "", "slime").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, self.max_health/2.0, self.dmg/2.0, "", "slime").await;
+        let mut slime1 = Enemy::new(
+            "",
+            25.0,
+            25.0,
+            self.get_x() + 10.0,
+            self.get_y(),
+            true,
+            1.0,
+            self.max_health / 2.0,
+            self.dmg / 2.0,
+            "",
+            "slime",
+        )
+        .await;
+        let mut slime2 = Enemy::new(
+            "",
+            25.0,
+            25.0,
+            self.get_x() - 10.0,
+            self.get_y(),
+            true,
+            1.0,
+            self.max_health / 2.0,
+            self.dmg / 2.0,
+            "",
+            "slime",
+        )
+        .await;
         slime1.set_preload(tm.get_preload("assets/slime.png").unwrap());
         slime2.set_preload(tm.get_preload("assets/slime.png").unwrap());
         (slime1, slime2)
@@ -587,8 +657,34 @@ impl Enemy {
     // Slime action method that handles movement and splitting into smaller slimes upon death
     #[allow(unused)]
     pub async fn large_slime_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, bool) {
-        let mut slime1 = Enemy::new("", 25.0, 25.0, self.get_x() + 10.0, self.get_y(), true, 1.0, self.max_health/2.0, self.dmg/2.0, "", "slime").await;
-        let mut slime2 = Enemy::new("", 25.0, 25.0, self.get_x() - 10.0, self.get_y(), true, 1.0, self.max_health/2.0, self.dmg/2.0, "", "slime").await;
+        let mut slime1 = Enemy::new(
+            "",
+            25.0,
+            25.0,
+            self.get_x() + 10.0,
+            self.get_y(),
+            true,
+            1.0,
+            self.max_health / 2.0,
+            self.dmg / 2.0,
+            "",
+            "slime",
+        )
+        .await;
+        let mut slime2 = Enemy::new(
+            "",
+            25.0,
+            25.0,
+            self.get_x() - 10.0,
+            self.get_y(),
+            true,
+            1.0,
+            self.max_health / 2.0,
+            self.dmg / 2.0,
+            "",
+            "slime",
+        )
+        .await;
 
         let mut split = false;
         self.moveing(player.get_x(), player.get_y());
@@ -619,7 +715,7 @@ impl Enemy {
                 } else if attack_choice == 1 {
                     self.cooldown2 = get_time() + 5.0;
                     lightning = true;
-            } else {
+                } else {
                     self.shoot(player, 80.0, 80.0).await;
                     self.cooldown2 = get_time() + 2.0;
                 }
@@ -632,39 +728,84 @@ impl Enemy {
         lightning
     }
 
-        
-    
-
     pub async fn meteors(&mut self, tm: &TextureManager, player: &mut Player) {
         rand::srand(date::now() as u64);
         self.set_projectile_preload(tm.get_preload("assets/cyric_files/meteor.png").unwrap());
-        
+
         for i in 0..20 {
-            let mut meteor = Projectile::new(self.projectile_image.clone(), 50.0, 50.0, rand::gen_range(100.0, 1000.0), 100.0, true, 1.0).await; // Create a projectile at the enemy's position
+            let mut meteor = Projectile::new(
+                self.projectile_image.clone(),
+                50.0,
+                50.0,
+                rand::gen_range(100.0, 1000.0),
+                100.0,
+                true,
+                1.0,
+            )
+            .await; // Create a projectile at the enemy's position
             meteor.set_speed(800.0);
             let meteor_pos = vec2(meteor.get_x(), meteor.get_y());
             let rand_pos = rand::gen_range(100.0, 900.0);
             self.projectiles.push(meteor.clone());
             self.projectiles[i].set_pos(meteor_pos.x + rand_pos, meteor_pos.y - rand_pos);
             self.projectiles[i].set_direction(meteor_pos);
-            
         }
         self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
-    } 
+    }
 
-    pub async fn lightning_bolt(&mut self, tm: &TextureManager, player: &mut Player) {
-        self.set_projectile_preload(tm.get_preload("assets/cyric_files/lightning.png").unwrap());
+    pub async fn lightning_bolt1(&mut self, tm: &TextureManager, player: &mut Player) {
+        self.set_projectile_preload(tm.get_preload("assets/cyric_files/lightning_charge.png").unwrap());
         let distance = vec![self.get_x() - player.get_x(), self.get_y() - player.get_y()];
-        let mut lightning = Projectile::new(self.projectile_image.clone(), distance[0], distance[1], self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
+        let mut lightning = Projectile::new(self.projectile_image.clone(), distance[0], 1000.0, self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
+        lightning.set_freeze(true);
         // Calculate the angle towards the player and set it for the projectile
         let angle = lightning.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
         lightning.set_angle(angle);
-        lightning.set_direction(player.get_oldpos());
         self.projectiles.push(lightning);
-    }    
+        self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
+    }
 
-    pub fn get_maxhealth(&self) -> f32{
-  
+    pub fn lightning_bolt2(&mut self, countdown: &mut f32, player: &mut Player) -> bool {
+        *countdown -= 0.1;
+        let mut cooldown_over = false;
+        if *countdown < 0.0 {
+            *countdown = 0.0;
+            cooldown_over = true;
+        } else {
+            for i in 0..self.projectiles.len() {
+                if self.projectiles[i].get_freeze() {
+                    let position = self.get_pos();
+                    self.projectiles[i].set_x(position.x);
+                    self.projectiles[i].set_y(position.y);
+                    let angle = self.projectiles[i].set_rotation(player.get_x(), player.get_y(), position.x, position.y);
+                    self.projectiles[i].set_angle(angle);
+                    break;
+                }
+            }
+        }
+
+        cooldown_over
+    }
+
+    pub async fn lightning_bolt3(&mut self, tm: &TextureManager, player: &mut Player) {
+        let mut angle: f32;
+        for i in 0..self.projectiles.len() {
+            if self.projectiles[i].get_freeze() {
+                angle = self.projectiles[i].get_angle();
+                self.set_projectile_preload(tm.get_preload("assets/cyric_files/lightning.png").unwrap());
+                let distance = vec![self.get_x() - player.get_x(), self.get_y() - player.get_y()];
+                let mut lightning = Projectile::new(self.projectile_image.clone(), distance[0], 1000.0, self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
+                lightning.set_freeze(true);
+                lightning.set_angle(angle);
+                self.projectiles.remove(i);
+                self.projectiles.push(lightning);
+                self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
+                break;
+            }
+        }
+    }
+
+    pub fn get_maxhealth(&self) -> f32 {
         self.max_health
     }
     pub fn set_healthbar(&self) -> ProgressBar {
@@ -680,7 +821,8 @@ impl Enemy {
             self.health as f32, // Initial value
         );
         healthbar
- }  }
+    }
+}
 
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {
 //         let mut answer = false;

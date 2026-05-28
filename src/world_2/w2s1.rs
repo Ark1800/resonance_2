@@ -32,7 +32,7 @@ pub async fn run(
         player.set_position(80.0, virtual_height / 2.0);
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
-    } else if last_scene == "Top" {
+    } else if last_scene == "Up" {
         player.set_position((virtual_width / 2.0) - 20.0, 80.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
@@ -79,6 +79,7 @@ pub async fn run(
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
+             if player.get_cleared() == 6 {
             for i in 0..enemies.len() {
                 //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                 match enemies[i].get_enemy_type() {
@@ -108,7 +109,7 @@ pub async fn run(
                 }
                 enemies[i].draw();
             }
-        }
+        }}
         player.draw();
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies).await; //dont need to send enemies back because it doesnt get used again until next frame
         if mlehit {

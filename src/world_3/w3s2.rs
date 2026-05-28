@@ -47,7 +47,7 @@ pub async fn run(
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
         map.create_map_array(0, 1, 0, vec![3]).await;
-    } else if last_scene == "Top" {
+    } else if last_scene == "Up" {
         player.set_position((virtual_width / 2.0) - 20.0, 80.0);
         map.create_map_array(0, 1, 0, vec![1]).await;
     } else {
@@ -159,7 +159,7 @@ pub async fn run(
             return "w3s1".to_string();
         }
         if player.get_y() < 10.0 {
-            *last_scene = "Top".to_string();
+            *last_scene = "Up".to_string();
             return "w3s3".to_string();
         }
         next_frame().await;

@@ -1,4 +1,4 @@
-use crate::modules::{self};
+use crate::modules::{self, musicdisc};
 use crate::modules::collision::check_collision;
 use crate::modules::item::Item;
 use crate::modules::label::Label;
@@ -12,10 +12,12 @@ use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::musicdisc::Musicdisc;
 
 //TO DOOOOOO
 /*
 //Bug fixes/extras
+//1. add hitboxes to swords
 
 Work
 //1. All Music Discs
@@ -63,7 +65,6 @@ player.move_player();
 player.handle_player_ui(&mut enemies).await;
 player.handle_inventory();
 player.handle_playerdamaging(&enemies);
-player.handle_musicdiscs();
 player.draw();
 let activedisc = musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc(););
 musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
@@ -116,6 +117,7 @@ pub struct Player {
     player_direction: String, //current direction player is facing for attack purposes (up, down, left, right, etc.)
     activedisc: String,
     cleared: i32,
+    musicdiscfunctions: crate::modules::musicdisc::Musicdisc,
 }
 
 impl Player {
@@ -169,6 +171,7 @@ impl Player {
             arrows: Vec::new(),
             activedisc: "none".to_string(),
             cleared: 0,
+            musicdiscfunctions: Musicdisc::new(&tm).await,
         }
     }
     //movement functions
@@ -574,7 +577,7 @@ impl Player {
         )
         .await;
         img_disc1.set_preload(preloads[1].clone());
-        let mut lbl_disc1num = Label::new("99", 472.0, 32.0, 30);
+        let mut lbl_disc1num = Label::new("", 472.0, 32.0, 30);
         lbl_disc1num.with_colors(WHITE, None);
         let mut img_disc2 = StillImage::new(
             "",
@@ -587,7 +590,7 @@ impl Player {
         )
         .await;
         img_disc2.set_preload(preloads[1].clone());
-        let mut lbl_disc2num = Label::new("99", 517.0, 32.0, 30);
+        let mut lbl_disc2num = Label::new("", 517.0, 32.0, 30);
         lbl_disc2num.with_colors(WHITE, None);
         let mut img_disc3 = StillImage::new(
             "",
@@ -600,7 +603,7 @@ impl Player {
         )
         .await;
         img_disc3.set_preload(preloads[1].clone());
-        let mut lbl_disc3num = Label::new("99", 562.0, 32.0, 30);
+        let mut lbl_disc3num = Label::new("", 562.0, 32.0, 30);
         lbl_disc3num.with_colors(WHITE, None);
         //ATTACK LABELSui();
         let player_x = x;
@@ -845,6 +848,15 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         self.playerui.1[1].draw(); //label must be redrawn very specifically so for loops cant be used  
         self.playerui.0[0].draw();
         self.playerui.1[2].draw();
+        for item in &self.equipped_items {
+                if self.items[*item].get_itemtype() == "disc".to_string() {
+                    let title = self.items[*item].get_itemtitle();
+                    let times = self.musicdiscfunctions.get_musicdisc_cooldowns();
+                    if title == "Back In Black" {
+                        self.playerui.1[4].set_text(format!("{}", times.0));
+                    }
+                }
+            }
         if self.attack {
             if self.mlevalid == true {
                 (index, mlehit) = self.create_melee_attack(enemies, index, mlehit);
@@ -1099,6 +1111,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                             }
                         }
                         self.inventory.1[imageboxindex].set_preload(item.get_itemimgpath());
+                        self.playerui.0[2].set_preload(item.get_itemimgpath());
                         self.equipped_items.push(i);
                         self.update_stats();
                         println!("equipped items: {:?}", self.equipped_items);
@@ -1220,14 +1233,15 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         }
     }
 
-    pub async fn handle_musicdiscs(&mut self) {
+    pub fn handle_musicdiscs(&mut self) {
         if self.equipped_items.len() > 0 {
             for i in 0..self.equipped_items.len() {
                 let item = &self.items[self.equipped_items[i]];
                 if item.get_itemtype() == "disc".to_string() {
                     match item.get_itemtitle().as_str() {
-                        "backinblack" => {
-                            self.activedisc = "backinblack".to_string();
+                        "Back In Black" => {
+                            self.activedisc = "Back In Black".to_string();
+                            println!("Active disc: {}", self.activedisc);
                         }
                         _ => {
 

@@ -10,8 +10,9 @@ use macroquad::prelude::*;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
 use crate::modules::enemy::Enemy;
+use crate::modules::item::Item;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc) -> String {
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -22,7 +23,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         1.0,    // Normal zoom (100%)
     ).await;
         background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
-    if *last_scene == "Top" {
+    if *last_scene == "Up" {
         player.set_position((virtual_width / 2.0)-20.0, virtual_height - 80.0);
     } else if *last_scene == "Down" {
         player.set_position((virtual_width / 2.0)-20.0, 80.0);
@@ -38,15 +39,20 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
-        background.draw();
+        background.draw();  
         map.draw_map(&tm).await;
+        player.handle_inventory();      
+        player.handle_playerdamaging(&enemies);
+        player.handle_musicdiscs();
+        let activedisc = musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
+        musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
         player.handle_keypresses(pause).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
         player.handle_player_ui(&mut enemies).await;
         player.draw();
         if player.get_y() < 10.0 {
-            *last_scene = "Top".to_string();
+            *last_scene = "Up".to_string();
             return "w1s3".to_string();
         }
         if player.get_y() > virtual_height - 10.0 {

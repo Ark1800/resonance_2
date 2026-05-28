@@ -63,14 +63,13 @@ pub async fn run(
         150.0,               //y
         true,                //stretching
         1.0,                 //zoom level
-        500.0,                 //health
-        20.0,                  //damage
+        500.0,               //health
+        20.0,                //damage
         "",
         "boss", //enemy type
     )
     .await;
 
-    
     let mut enemies: Vec<Enemy> = vec![];
     if *game_completed {
         cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
@@ -79,11 +78,12 @@ pub async fn run(
         enemies.push(cyric);
     }
     let mut counter = 0;
+    let mut lightning_countdown = 0.0;
+    let mut lightning_start = false;
+    let mut lightning_cast = false;
+    let mut lightning_end = false;
+    let mut lightning_phase = 0;
     loop {
-        counter += 1;
-        if counter == 10 {
-            map.change_map(vec![0], vec![vec![0, 0]]);
-        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
@@ -95,6 +95,24 @@ pub async fn run(
             *game_completed = true;
             enemies[0].set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
             map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
+        } else {
+            lightning_start = enemies[0].cyric_action(player, tm).await;
+            if lightning_start {
+                lightning_countdown = 3.0;
+                lightning_phase = 1;
+                lightning_start = false;
+                enemies[0].lightning_bolt1(&tm, player).await;
+            } else if lightning_phase == 1 {    
+                lightning_cast = enemies[0].lightning_bolt2(&mut lightning_countdown, player);
+                if lightning_cast {
+                    lightning_phase = 2;
+                    lightning_countdown = 0.2;
+                    lightning_cast = false;
+                    enemies[0].lightning_bolt3(&tm, player).await;
+                }
+            } else if lightning_phase == 2 {
+                enemies[0].draw_bullet(player);
+            }
         }
         player.draw();
         map.draw_map(&tm).await;
