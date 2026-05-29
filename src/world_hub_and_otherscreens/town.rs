@@ -99,7 +99,7 @@ pub async fn run(
     let mut enemies: Vec<Enemy> = vec![];
     let backinblackitem = Item::new(tm.get_preload("assets/fireball.png").unwrap(), "assets/fireball.png".to_string(), "Back In Black".to_string(), "A Disc that allows the user to summon periodic pillars of fire".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
     player.add_inventory_item(backinblackitem.clone());
-    let thickofititem = Item::new(tm.get_preload("assets/arrow.png").unwrap(), "assets/arrow.png".to_string(), "Thick Of It".to_string(), "A Disc that sounds so bad all enemies stop attacking and move away".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    let thickofititem = Item::new(tm.get_preload("assets/arrow.png").unwrap(), "assets/arrow.png".to_string(), "Thick Of It".to_string(), "A Disc that sounds so bad all enemies stop attacking and move away, enemies hate it so much they will teleport away if need be".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
     player.add_inventory_item(thickofititem.clone());
     loop {
         if is_key_pressed(KeyCode::O) {

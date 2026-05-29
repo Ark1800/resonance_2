@@ -18,7 +18,7 @@ use crate::modules::musicdisc::Musicdisc;
 /*
 //Bug fixes/extras
 //1. add hitboxes to swords
-//2. collision for thickofit
+//2. no dmg from bib
 
 Work
 //1. All Music Discs

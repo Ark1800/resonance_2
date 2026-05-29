@@ -97,6 +97,7 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for enemy in enemies.iter_mut() {
                                     if check_collision(image, enemy.view_enemy(), 1) {
+                                        println!("Hit enemy with Back In Black for 20 damage!");
                                         enemy.dmg_enemy(20.0);
                                     }
                                 }
@@ -114,6 +115,7 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for enemy in enemies.iter_mut() {
                                     if check_collision(image, enemy.view_enemy(), 1) {
+                                        println!("Hit enemy with Back In Black for 20 damage!");
                                         enemy.dmg_enemy(20.0);
                                     }
                                 }
@@ -130,6 +132,7 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for enemy in enemies.iter_mut() {
                                     if check_collision(image, enemy.view_enemy(), 1) {
+                                        println!("Hit enemy with Back In Black for 20 damage!");
                                         enemy.dmg_enemy(20.0);
                                     }
                                 }
@@ -146,6 +149,7 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for enemy in enemies.iter_mut() {
                                     if check_collision(image, enemy.view_enemy(), 1) {
+                                        println!("Hit enemy with Back In Black for 20 damage!");
                                         enemy.dmg_enemy(20.0);
                                     }
                                 }
@@ -162,6 +166,7 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for enemy in enemies.iter_mut() {
                                     if check_collision(image, enemy.view_enemy(), 1) {
+                                        println!("Hit enemy with Back In Black for 20 damage!");
                                         enemy.dmg_enemy(20.0);
                                     }
                                 }
@@ -178,6 +183,7 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for enemy in enemies.iter_mut() {
                                     if check_collision(image, enemy.view_enemy(), 1) {
+                                        println!("Hit enemy with Back In Black for 20 damage!");
                                         enemy.dmg_enemy(20.0);
                                     }
                                 }
@@ -194,6 +200,7 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for enemy in enemies.iter_mut() {
                                     if check_collision(image, enemy.view_enemy(), 1) {
+                                        println!("Hit enemy with Back In Black for 20 damage!");
                                         enemy.dmg_enemy(20.0);
                                     }
                                 }
@@ -210,6 +217,7 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for enemy in enemies.iter_mut() {
                                     if check_collision(image, enemy.view_enemy(), 1) {
+                                        println!("Hit enemy with Back In Black for 20 damage!");
                                         enemy.dmg_enemy(20.0);
                                     }
                                 }

@@ -184,7 +184,7 @@ for mage in 0..mage_list.len() {
         }
 */
 use crate::modules::collision::check_collision;
-use crate::modules::map;
+use crate::modules::{enemy, map};
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::progressbar::ProgressBar;
@@ -777,8 +777,7 @@ impl Enemy {
     }
 
     pub fn reversereverse(&mut self, player_x: f32, player_y: f32, map: &map::Map, enemy_old_pos: Vec2) {
-        // Direction to move in
-        println!("Hey niw");
+         // Direction to move in
         let mut move_dir = vec2(0.0, 0.0);
 
         self.movement = move_dir * self.move_speed * get_frame_time();
@@ -797,16 +796,32 @@ impl Enemy {
         if move_dir.length() > 0.0 {
             move_dir = move_dir.normalize();
         }
-        println!("Move dir: {:?}", move_dir);
         self.set_x(enemy_old_pos.x + move_dir.x);
-        self.set_y(enemy_old_pos.y + move_dir.y);
-
-        let (_chest, wall) = map.map_collision(self.view_enemy());
-        if wall {
-            //    self.set_x(enemy_old_pos.x);
-            //  self.set_y(enemy_old_pos.y);
+        if map.map_collision(self.view_enemy()).0 {
+            //collision with map
+            self.set_x(enemy_old_pos.x);
         }
-        // Apply movement based on frame time
+        if self.view.get_x() > 930.0 {
+            self.set_x(enemy_old_pos.x);
+        }
+        self.set_y(enemy_old_pos.y + move_dir.y);
+        if map.map_collision(self.view_enemy()).0 {
+            //collision with map
+            self.set_y(enemy_old_pos.y);
+        }
+        let dx = player_x - self.get_x();
+        let dy = player_y - self.get_y();
+        if dx.abs() < 90.0 && dy.abs() < 90.0 {
+            if self.get_x() < 512.0 && self.get_y() < 384.0 {
+                self.set_position(550.0, 300.0);
+            } else if self.get_x() < 512.0 && self.get_y() > 384.0 {
+                self.set_position(450.0, 400.0);
+            } else if self.get_x() > 512.0 && self.get_y() < 384.0 {
+                self.set_position(550.0, 300.0);
+            } else {
+                self.set_position(450.0, 300.0);
+            }
+        }
     }
 }
 
@@ -833,3 +848,4 @@ impl Enemy {
 //         answer
 //     }
 // }
+

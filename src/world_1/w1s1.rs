@@ -129,6 +129,7 @@ pub async fn run(
                             }
                             enemies.remove(i+rec);
                             rec += 1;
+                            break;
                         }
                     }
                     else {
