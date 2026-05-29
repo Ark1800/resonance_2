@@ -67,6 +67,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         background.draw();
         whirlpool.draw();
         map.draw_map(&tm).await;
+        player.handle_inventory();      
+        player.handle_save_menu().await;
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);

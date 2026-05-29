@@ -151,6 +151,7 @@ pub async fn run(
         draw_grid(50.0, BLACK);
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
         player.handle_inventory();
+        player.handle_save_menu().await;
         player.handle_playerdamaging(&enemies);
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
         player.set_player_activedisc(activedisc);

@@ -151,6 +151,7 @@ pub async fn run(
         }
       
         player.handle_inventory();
+        player.handle_save_menu().await;
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();
             return "w1sp".to_string();

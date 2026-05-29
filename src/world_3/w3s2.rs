@@ -155,7 +155,8 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
-        player.handle_inventory();
+        player.handle_inventory();      
+        player.handle_save_menu().await;
         if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();
             return "w3s1".to_string();

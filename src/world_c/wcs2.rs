@@ -203,6 +203,7 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
+        player.handle_save_menu().await;
         player.handle_inventory();
         if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Up".to_string();

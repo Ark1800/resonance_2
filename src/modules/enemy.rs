@@ -459,7 +459,7 @@ impl Enemy {
         }
         dead
     }
-
+    #[allow(unused)]
     pub fn get_projectiles(&self) -> &Vec<Projectile> {
         &self.projectiles
     }
@@ -476,16 +476,24 @@ impl Enemy {
     pub fn draw_bullet(&mut self, player: &mut Player) {
         let dmg = self.get_dmg();
         for projectile in 0..self.projectiles.len() {
-            if !self.projectiles[projectile].get_freeze() {
-                let collision = check_collision(self.projectiles[projectile].view_player(), player.view_player(), 1);
-                if collision {
-                    if self.projectiles[projectile].get_atkvalid() {
+            let collision = check_collision(self.projectiles[projectile].view_player(), player.view_player(), 1);
+            if collision {
+                if self.projectiles[projectile].get_atkvalid() {
                     player.dmgplayer(dmg);
-                    self.projectiles.remove(projectile);
+                    if self.projectiles[projectile].get_freeze() {
+                        self.projectiles[projectile].set_atkvalid(false);
+                    } else {
+                        self.projectiles.remove(projectile);
                     }
+                }
+                break;
+            }
+            if !self.projectiles[projectile].get_freeze() {
+                self.projectiles[projectile].move_projectiles(player.get_oldpos());
+                if self.projectiles[projectile].get_x() > 3000.0 || self.projectiles[projectile].get_y() > 2000.0 {
+                    self.projectiles.remove(projectile);
                     break;
                 }
-                self.projectiles[projectile].move_projectiles(player.get_oldpos());
             }
 
             self.projectiles[projectile].draw();
@@ -704,33 +712,29 @@ impl Enemy {
         healthbar.draw();
     }
 
-    pub async fn cyric_action(&mut self, player: &mut Player, tm: &TextureManager) -> bool {
-        let mut lightning = false;
-        if ((self.get_x() - player.get_x()).abs() < 150.0) && ((self.get_y() - player.get_y()).abs() < 150.0) {
-            if get_time() - self.cooldown > self.cooldown2 {
+    pub async fn cyric_action(&mut self, player: &mut Player, tm: &TextureManager) {
+        rand::srand(date::now() as u64);
+        if !((self.get_x() - player.get_x()).abs() < 150.0) || !((self.get_y() - player.get_y()).abs() < 150.0) {
+            self.moveing(player.get_x(), player.get_y());
+        }
+            if (get_time() - self.cooldown).abs() > self.cooldown2 {
                 self.cooldown = get_time();
-                let attack_choice = rand::gen_range(0, 3);
-                if attack_choice == 0 {
-                    self.meteors(&tm, player).await;
-                    self.cooldown2 = get_time() + 5.0;
-                } else if attack_choice == 1 {
-                    self.cooldown2 = get_time() + 5.0;
-                    lightning = true;
+                let attack_choice = rand::gen_range(0, 2);
+                if attack_choice >= 0 {
+                    println!("Cyric used Meteors!");
+                    self.meteors(&tm).await;
+                    self.cooldown2 = get_time() + 2.0;
                 } else {
+                    println!("Cyric used Chromatic Orb!");
                     self.shoot(player, 80.0, 80.0).await;
                     self.cooldown2 = get_time() + 2.0;
                 }
             }
-        } else {
-            self.moveing(player.get_x(), player.get_y());
-        }
         let mut healthbar = self.set_healthbar();
         healthbar.draw();
-        lightning
     }
 
-    pub async fn meteors(&mut self, tm: &TextureManager, player: &mut Player) {
-        rand::srand(date::now() as u64);
+    pub async fn meteors(&mut self, tm: &TextureManager) {
         self.set_projectile_preload(tm.get_preload("assets/cyric_files/meteor.png").unwrap());
 
         for i in 0..20 {
@@ -738,72 +742,20 @@ impl Enemy {
                 self.projectile_image.clone(),
                 50.0,
                 50.0,
-                rand::gen_range(100.0, 1000.0),
+                rand::gen_range(200.0, 1800.0),
                 100.0,
                 true,
                 1.0,
             )
             .await; // Create a projectile at the enemy's position
-            meteor.set_speed(800.0);
+            meteor.set_speed(600.0);
             let meteor_pos = vec2(meteor.get_x(), meteor.get_y());
-            let rand_pos = rand::gen_range(100.0, 900.0);
+            let rand_pos = rand::gen_range(300.0, 1000.0);
             self.projectiles.push(meteor.clone());
             self.projectiles[i].set_pos(meteor_pos.x + rand_pos, meteor_pos.y - rand_pos);
             self.projectiles[i].set_direction(meteor_pos);
         }
         self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
-    }
-
-    pub async fn lightning_bolt1(&mut self, tm: &TextureManager, player: &mut Player) {
-        self.set_projectile_preload(tm.get_preload("assets/cyric_files/lightning_charge.png").unwrap());
-        let distance = vec![self.get_x() - player.get_x(), self.get_y() - player.get_y()];
-        let mut lightning = Projectile::new(self.projectile_image.clone(), distance[0], 1000.0, self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
-        lightning.set_freeze(true);
-        // Calculate the angle towards the player and set it for the projectile
-        let angle = lightning.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
-        lightning.set_angle(angle);
-        self.projectiles.push(lightning);
-        self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
-    }
-
-    pub fn lightning_bolt2(&mut self, countdown: &mut f32, player: &mut Player) -> bool {
-        *countdown -= 0.1;
-        let mut cooldown_over = false;
-        if *countdown < 0.0 {
-            *countdown = 0.0;
-            cooldown_over = true;
-        } else {
-            for i in 0..self.projectiles.len() {
-                if self.projectiles[i].get_freeze() {
-                    let position = self.get_pos();
-                    self.projectiles[i].set_x(position.x);
-                    self.projectiles[i].set_y(position.y);
-                    let angle = self.projectiles[i].set_rotation(player.get_x(), player.get_y(), position.x, position.y);
-                    self.projectiles[i].set_angle(angle);
-                    break;
-                }
-            }
-        }
-
-        cooldown_over
-    }
-
-    pub async fn lightning_bolt3(&mut self, tm: &TextureManager, player: &mut Player) {
-        let mut angle: f32;
-        for i in 0..self.projectiles.len() {
-            if self.projectiles[i].get_freeze() {
-                angle = self.projectiles[i].get_angle();
-                self.set_projectile_preload(tm.get_preload("assets/cyric_files/lightning.png").unwrap());
-                let distance = vec![self.get_x() - player.get_x(), self.get_y() - player.get_y()];
-                let mut lightning = Projectile::new(self.projectile_image.clone(), distance[0], 1000.0, self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
-                lightning.set_freeze(true);
-                lightning.set_angle(angle);
-                self.projectiles.remove(i);
-                self.projectiles.push(lightning);
-                self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
-                break;
-            }
-        }
     }
 
     pub fn get_maxhealth(&self) -> f32 {
@@ -825,8 +777,8 @@ impl Enemy {
     }
 
     pub fn reversereverse(&mut self, player_x: f32, player_y: f32, map: &map::Map, enemy_old_pos: Vec2) {
-         // Direction to move in
-         println!("Hey niw");
+        // Direction to move in
+        println!("Hey niw");
         let mut move_dir = vec2(0.0, 0.0);
 
         self.movement = move_dir * self.move_speed * get_frame_time();
@@ -851,9 +803,8 @@ impl Enemy {
 
         let (_chest, wall) = map.map_collision(self.view_enemy());
         if wall {
-        //    self.set_x(enemy_old_pos.x);
-          //  self.set_y(enemy_old_pos.y);
-
+            //    self.set_x(enemy_old_pos.x);
+            //  self.set_y(enemy_old_pos.y);
         }
         // Apply movement based on frame time
     }

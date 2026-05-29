@@ -64,6 +64,7 @@ player.handle_keypresses(pause, musicdiscs).await;
 player.move_player();
 player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
 player.handle_inventory();
+player.handle_save_menu();
 player.handle_playerdamaging(&enemies);
 player.draw();
 let activedisc = musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc(););
@@ -102,7 +103,9 @@ pub struct Player {
     itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), //2d list for stats
     inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for inventory UI elements (listviews, images, labels, buttons)
     playerui: (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>),             //2d list for player UI elements (images, labels)
-    inventoryopen: bool,                                 //is inventory open
+    inventoryopen: bool,
+    savemenu: (Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for save menu UI elements (images, labels, buttons)
+    save_menu_open: bool,                                 //is inventory open
     armor: i32,                                          //armor value for damage reduction
     attack: bool,                                        //is player currently attacking (for drawing attack labels)
     last_attack_time: f64,                               //time of last attack for timing attack labels
@@ -135,6 +138,7 @@ impl Player {
 
         let playerui = Player::create_player_ui(x, y, &preloadlist, tm).await;
         let inventory = Player::create_inventory(&preloadlist).await;
+        let savemenu = Player::create_save_menu(&preloadlist).await;
         let attackimg = playerui.2[0].clone();
 
         Player {
@@ -155,6 +159,8 @@ impl Player {
             preloads: preloadlist.clone(),
             inventory,
             inventoryopen: false,
+            savemenu,
+            save_menu_open: false,
             armor: 0,
             playerui,
             attack: false,
@@ -198,10 +204,25 @@ impl Player {
         self.movement = movement;
         self.handle_image(); //handle if image changes
         if is_key_pressed(KeyCode::Tab) {
+            if self.save_menu_open { //if save menu is open, close save menu instead of inventory on tab press
+                self.save_menu_open = false;
+                *pause = false; //unpause game when closing save menu
+            }
            self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
            match pause {
                 true => *pause = false, //unpause game when closing inventory
                 false => *pause = true, //pause game when opening inventory
+            }
+        }
+        if is_key_pressed(KeyCode::Escape) {
+            if self.inventoryopen { //if inventory is open, close inventory instead of save menu on escape press
+                self.inventoryopen = false;
+                *pause = false; //unpause game when closing inventory
+            }
+            self.save_menu_open = !self.save_menu_open; //open/close save menu on escape press (draw vs not draw)
+             match pause {
+                true => *pause = false, //unpause game when closing save menu
+                false => *pause = true, //pause game when opening save menu
             }
         }
         if is_key_pressed(KeyCode::Up) {
@@ -215,7 +236,7 @@ impl Player {
             self.handle_musicdiscs(musicdiscs);
         }
     }
-
+#[allow(unused)]
     pub fn interact(&mut self, interactable: &StillImage) -> bool {
         let mut interact = false;
         //handle interaction with interactable objects
@@ -422,7 +443,7 @@ impl Player {
         &self.view
     }
 
-
+#[allow(unused)]
     pub fn get_movespeed(&self) -> f32 {
         self.move_speed * self.movespeedmult
     }
@@ -436,11 +457,11 @@ impl Player {
     }
 
     //PLAYER STATS AND MOVEMENTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
+#[allow(unused)]
     pub fn dash_start(&mut self) {
         self.move_speed *= 5.0;
     }
-
+#[allow(unused)]
     pub fn dash_end(&mut self) {
         self.move_speed /= 5.0;
     }
@@ -479,7 +500,7 @@ impl Player {
         self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
         self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
     }
-
+#[allow(unused)]
     pub fn healplayer(&mut self, heal: f32) {
         self.health += heal;
         if self.health > self.maxhealth {
@@ -519,6 +540,7 @@ impl Player {
     }
 
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+    #[allow(unused)]
     pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>, tm: &TextureManager) -> (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>) {
         let mut img_heart = StillImage::new(
             "",
@@ -1003,7 +1025,39 @@ let mut img_slash_tr = AnimatedImage::from_gif(
             self.last_rng_attack_time = get_time();
         }
     }
+    //SAVE MENUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU:)
+    async fn create_save_menu(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
+        let mut shadow = StillImage::new("", 1200.0, 800.0, 0.0, 0.0, true, 1.0).await;
+        shadow.set_preload(preloads[2].clone());
+        let mut lbl_paused = Label::new("Paused", 500.0, 200.0, 60);
+        lbl_paused.with_colors(WHITE, Some(BROWN));
+        let mut btn_save = TextButton::new(500.0, 300.0, 200.0, 75.0, "Save", BLACK, GREEN, 30);
+        btn_save.with_text_color(WHITE);
+        let mut btn_exit = TextButton::new(500.0, 400.0, 200.0, 75.0, "Exit to Menu", BLACK, RED, 30);
+        btn_exit.with_text_color(WHITE);
+        (vec![shadow], vec![lbl_paused], vec![btn_save, btn_exit])
+    }
 
+    pub async fn handle_save_menu(&mut self, )  {
+        if self.save_menu_open==true{
+        //draw menu
+        for image in self.savemenu.0.iter_mut() {
+            image.draw();
+        }
+        for label in self.savemenu.1.iter_mut() {
+            label.draw();
+        }
+        //handle button interactions
+        
+            if self.savemenu.2[0].click() { //save button
+                
+            }
+            else if self.savemenu.2[1].click() { //exit to menu button
+              
+            }
+        }
+        
+    }
     //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
     async fn create_inventory(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
         //creating all inventory UI elements

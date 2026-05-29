@@ -159,7 +159,8 @@ pub async fn run(
         if enemies.is_empty() {
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]);
         }
-        player.handle_inventory();
+        player.handle_inventory();      
+        player.handle_save_menu().await;
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();
             return "w3s2".to_string();

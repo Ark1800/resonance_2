@@ -93,6 +93,8 @@ for _i in 0..2 {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
+        player.handle_inventory();      
+        player.handle_save_menu().await;
         map.draw_map(&tm).await;
         if *pause == false {
             let old_pos = player.get_oldpos();

@@ -275,7 +275,7 @@ pub async fn run(
                 lbl_speech.scrolling_text_draw();
                 cyric.draw();
             }
-
+player.handle_save_menu().await;
             draw_grid(50.0, BROWN);
             next_frame().await;
         }

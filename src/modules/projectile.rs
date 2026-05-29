@@ -53,6 +53,7 @@ impl Projectile {
         self.atkvalid
     }
 
+    #[allow(unused)]
     pub fn set_freeze(&mut self, freeze: bool) {
         self.freeze = freeze;
     }
@@ -74,7 +75,7 @@ impl Projectile {
     pub fn set_angle(&mut self, angle: f32) {
         self.view.set_angle(angle);
     }
-
+#[allow(unused)]
     pub fn get_angle(&self) -> f32 {
         self.view.get_angle()
     }

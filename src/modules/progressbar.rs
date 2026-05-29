@@ -123,12 +123,22 @@ impl ProgressBar {
     }
     
     // Set colors for the progress bar
+    #[allow(unused)]
     pub fn with_colors(&mut self, background: Color, fill: Color, text: Color) -> &mut Self {
         self.background_color = background;
         self.fill_color = fill;
         self.text_color = text;
         self
     }
+
+    // Setter for position
+    #[allow(unused)]
+    pub fn set_position(&mut self, x: f32, y: f32) -> &mut Self {
+        self.x = x;
+        self.y = y;
+        self
+    }
+    
     
     // Set a label for the progress bar
     #[allow(dead_code)]
@@ -196,6 +206,7 @@ impl ProgressBar {
     }
     
     // Set progress value
+    #[allow(unused)]
     pub fn set_value(&mut self, value: f32) {
         let was_complete = self.is_complete();
         let new_value = value.clamp(self.min_value, self.max_value);
@@ -215,6 +226,7 @@ impl ProgressBar {
     }
     
     // Increment progress by specified amount
+    #[allow(unused)]
     pub fn increment(&mut self, amount: f32) {
         self.set_value(self.current_value + amount);
     }

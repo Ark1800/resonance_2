@@ -84,12 +84,16 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
+        background.draw();
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
+
         player.move_player(&map, old_pos, &vec![]);
         let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
         player.set_player_activedisc(activedisc);
-        background.draw();
+        
+        player.handle_inventory();      
+        player.handle_save_menu().await;
         green_portal.draw();
         player.draw();
         map.draw_map(&tm).await;

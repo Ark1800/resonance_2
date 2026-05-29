@@ -139,6 +139,8 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
         player.set_player_activedisc(activedisc);
         let old_pos = player.get_oldpos();
+        player.handle_inventory();      
+        player.handle_save_menu().await;
         player.move_player(&map, old_pos, &collidable_objects); 
         player.draw();
         draw_grid(50.0, BLACK);

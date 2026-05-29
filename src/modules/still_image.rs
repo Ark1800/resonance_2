@@ -77,11 +77,12 @@ pub struct StillImage {
     y: f32,
     width: f32,
     height: f32,
-   pub transparency_mask: Option<Vec<u8>>, // Changed to Option<Vec<u8>> to make it optional
+    pub transparency_mask: Option<Vec<u8>>, // Changed to Option<Vec<u8>> to make it optional
     stretch_enabled: bool, // Flag to control image stretching
     zoom_level: f32, // Zoom factor to scale the image
-   pub filename: String, // Store the original filename/path
+    pub filename: String, // Store the original filename/path
     angle: f32, // Angle of rotation
+    opacity: f32, // Opacity/alpha value (0.0 = fully transparent, 1.0 = fully opaque)
 }
 
 impl StillImage {
@@ -113,6 +114,7 @@ impl StillImage {
                 zoom_level: zoom_level.max(0.1), // Ensure minimum zoom
                 filename: "__empty__".to_string(), // Use a special filename
                 angle: 0.0, // Default angle
+                opacity: 1.0, // Default opacity (fully opaque)
             };
         }
         
@@ -129,10 +131,10 @@ impl StillImage {
             zoom_level: zoom_level.max(0.1), // Ensure minimum zoom
             filename: asset_path.to_string(), // Store the original filename
             angle: 0.0, // Default angle
+            opacity: 1.0, // Default opacity (fully opaque)
         }
     }
 
-    
     // Method to draw the image with current settings
     pub fn draw(&self) {
         // Get the size to use for drawing
@@ -147,11 +149,14 @@ impl StillImage {
         let final_width = draw_width * self.zoom_level;
         let final_height = draw_height * self.zoom_level;
         
+        // Create a color with the opacity applied
+        let color = Color::new(1.0, 1.0, 1.0, self.opacity);
+        
         draw_texture_ex(
             &self.texture,
             self.x,
             self.y,
-            WHITE,
+            color,
             DrawTextureParams {
                 rotation: self.angle,
                 dest_size: Some(vec2(final_width, final_height)),
@@ -287,7 +292,6 @@ impl StillImage {
         self.height = height;
         
     }
-  
     #[allow(unused)]
     pub fn get_zoom_level(&self) -> f32 {
         self.zoom_level
@@ -297,6 +301,29 @@ impl StillImage {
     pub fn reset_zoom(&mut self) {
         self.zoom_level = 1.0;
     }
+    
+    // Opacity/Transparency methods
+    #[allow(unused)]
+    pub fn set_opacity(&mut self, opacity: f32) {
+        self.opacity = opacity.clamp(0.0, 1.0); // Clamp between 0.0 and 1.0
+    }
+    
+    #[allow(unused)]
+    pub fn get_opacity(&self) -> f32 {
+        self.opacity
+    }
+    
+    #[allow(unused)]
+    pub fn fade_in(&mut self, amount: f32) {
+        self.opacity = (self.opacity + amount).min(1.0);
+    }
+    
+    #[allow(unused)]
+    pub fn fade_out(&mut self, amount: f32) {
+        self.opacity = (self.opacity - amount).max(0.0);
+    }
+    
+ 
     
     // Check if the image is currently cleared/empty
     #[allow(unused)]
@@ -331,6 +358,7 @@ impl StillImage {
         self.texture = empty_texture;
         self.transparency_mask = empty_mask;
         self.filename = "__empty__".to_string();
+        self.opacity = 1.0; // Reset opacity to fully opaque
     }
 
     /// Method to set a new image
