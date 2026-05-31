@@ -18,10 +18,18 @@ use crate::modules::musicdisc::Musicdisc;
 /*
 //Bug fixes/extras
 //1. add hitboxes to swords
-//2. no dmg from bib
+//2. add all music disc images
 
 Work
 //1. All Music Discs
+
+
+//1.3 imstillstanding
+
+//1.5 sixhundredstrike
+//1.6 sodapop
+//1.7 greatestshow
+
 //2. W1S1 Enemies
 //3. W1S2 Enemies
 //4. W1S3 Enemies
@@ -539,6 +547,26 @@ impl Player {
         self.cleared
     }
 
+    pub fn get_movespeedmult(&self) -> f32 {
+        self.movespeedmult
+    }
+
+    pub fn get_cooldownmult(&self) -> f32 {
+        self.cooldownmult
+    }
+
+    pub fn get_musicoins(&self) -> i32 {
+        self.musicoins
+    }
+
+    pub fn get_maxhealth(&self) -> f32 {
+        self.maxhealth
+    }
+
+    pub fn get_armor(&self) -> i32 {
+        self.armor
+    }
+
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
     #[allow(unused)]
     pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>, tm: &TextureManager) -> (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>) {
@@ -875,6 +903,20 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                     let times = musicdiscs.get_musicdisc_cooldowns();
                     self.playerui.1[i+2].set_text(format!("{:.0}", 30.0-times[0]));
                         if times[0] <= 0.0 {
+                            self.playerui.1[i+2].set_text("".to_string());
+                        }
+                },
+                "assets/arrow.png" => {
+                    let times = musicdiscs.get_musicdisc_cooldowns();
+                    self.playerui.1[i+2].set_text(format!("{:.0}", 30.0-times[1]));
+                        if times[1] <= 0.0 {
+                            self.playerui.1[i+2].set_text("".to_string());
+                        }
+                },
+                "assets/disc.png" => {
+                    let times = musicdiscs.get_musicdisc_cooldowns();
+                    self.playerui.1[i+2].set_text(format!("{:.0}", 30.0-times[2]));
+                        if times[2] <= 0.0 {
                             self.playerui.1[i+2].set_text("".to_string());
                         }
                 },
@@ -1303,6 +1345,15 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         }
     }
 
+    pub fn stat_override(&mut self, mledmg: f32, rngdmg: f32, movespeedmult: f32, cooldownmult: f32, maxhealth: f32, armor: i32) {
+        self.mledmg = mledmg;
+        self.rngdmg = rngdmg;
+        self.movespeedmult = movespeedmult;
+        self.cooldownmult = cooldownmult;
+        self.maxhealth = maxhealth;
+        self.armor = armor;
+    }
+
 
     pub fn handle_musicdiscs(&mut self, musicdiscs: &mut Musicdisc) {
         if self.equipped_items.len() > 0 {
@@ -1321,6 +1372,48 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                             let validity = musicdiscs.get_musicdisc_validity();
                             if validity[1] == true {
                             self.activedisc = "Thick Of It".to_string();
+                            musicdiscs.get_musicdisc_times();
+                            }
+                        }
+                        "How It's Done" => {
+                            let validity = musicdiscs.get_musicdisc_validity();
+                            if validity[2] == true {
+                            self.activedisc = "How It's Done".to_string();
+                            musicdiscs.get_musicdisc_times();
+                            }
+                        }
+                        "I'm Still Standing" => {
+                            let validity = musicdiscs.get_musicdisc_validity();
+                            if validity[3] == true {
+                            self.activedisc = "I'm Still Standing".to_string();
+                            musicdiscs.get_musicdisc_times();
+                            }
+                        }
+                        "Pandemonium" => {
+                            let validity = musicdiscs.get_musicdisc_validity();
+                            if validity[4] == true {
+                            self.activedisc = "Pandemonium".to_string();
+                            musicdiscs.get_musicdisc_times();
+                            }
+                        }
+                        "Six Hundred Strike" => {
+                            let validity = musicdiscs.get_musicdisc_validity();
+                            if validity[5] == true {
+                            self.activedisc = "Six Hundred Strike".to_string();
+                            musicdiscs.get_musicdisc_times();
+                            }
+                        }
+                        "Soda Pop" => {
+                            let validity = musicdiscs.get_musicdisc_validity();
+                            if validity[6] == true {
+                            self.activedisc = "Soda Pop".to_string();
+                            musicdiscs.get_musicdisc_times();
+                            }
+                        }
+                        "The Greatest Show" => {
+                            let validity = musicdiscs.get_musicdisc_validity();
+                            if validity[7] == true {
+                            self.activedisc = "The Greatest Show".to_string();
                             musicdiscs.get_musicdisc_times();
                             }
                         }

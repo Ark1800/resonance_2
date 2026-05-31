@@ -89,7 +89,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         let old_pos = player.get_oldpos();
 
         player.move_player(&map, old_pos, &vec![]);
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player);
         player.set_player_activedisc(activedisc);
         
         player.handle_inventory();      

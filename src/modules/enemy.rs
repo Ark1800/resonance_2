@@ -823,6 +823,66 @@ impl Enemy {
             }
         }
     }
+
+    pub fn pandemonium(&mut self, highesthealthenemypos: Vec2, enemy_old_pos: Vec2) {
+         // Direction to move in
+        let mut move_dir = vec2(0.0, 0.0);
+
+        self.movement = move_dir * self.move_speed * get_frame_time();
+
+        if self.view.get_x() < highesthealthenemypos.x {
+            move_dir.x += 1.0; // Move right
+        } else if self.view.get_x() > highesthealthenemypos.x {
+            move_dir.x -= 1.0; // Move left
+        }
+        if self.view.get_y() < highesthealthenemypos.y {
+            move_dir.y += 1.0; // Move down
+        } else if self.view.get_y() >  highesthealthenemypos.y {
+            move_dir.y -= 1.0; // Move up
+        }
+        // Normalize the movement to prevent faster diagonal movement
+        if move_dir.length() > 0.0 {
+            move_dir = move_dir.normalize();
+        }
+        
+        self.set_x(enemy_old_pos.x + move_dir.x / 2.0);
+        self.set_y(enemy_old_pos.y + move_dir.y / 2.0);
+    }
+
+    pub fn check_collision(&self, img2: &StillImage) -> bool {
+        let mut collided = false; // Placeholder for collision check
+        if check_collision(self.view_enemy(), img2, 1) {
+            collided = true;
+        }
+        collided
+    }
+
+    pub fn pushback(&mut self, enemy_old_pos: Vec2, other_pos: Vec2) {
+        if enemy_old_pos.x < other_pos.x {
+            self.set_x(self.get_x() - 40.0);
+        }
+        if enemy_old_pos.x > other_pos.x {
+            self.set_x(self.get_x() + 40.0);
+        }
+        if enemy_old_pos.y < other_pos.y {
+            self.set_y(self.get_y() - 40.0);
+        }
+        if enemy_old_pos.y > other_pos.y {
+            self.set_y(self.get_y() + 40.0);
+        }
+        if self.get_x() < 70.0 {
+            self.set_x(70.0);
+        }
+        if self.get_x() > 900.0 {
+            self.set_x(930.0);
+        }
+        if self.get_y() < 50.0 {
+            self.set_y(50.0);
+        }
+        if self.get_y() > 600.0 {
+            self.set_y(600.0);
+        }
+    }
 }
 
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {

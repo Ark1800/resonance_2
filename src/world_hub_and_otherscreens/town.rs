@@ -101,6 +101,12 @@ pub async fn run(
     player.add_inventory_item(backinblackitem.clone());
     let thickofititem = Item::new(tm.get_preload("assets/arrow.png").unwrap(), "assets/arrow.png".to_string(), "Thick Of It".to_string(), "A Disc that sounds so bad all enemies stop attacking and move away, enemies hate it so much they will teleport away if need be".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
     player.add_inventory_item(thickofititem.clone());
+    let howitsdoneitem = Item::new(tm.get_preload("assets/slime.png").unwrap(), "assets/slime.png".to_string(), "How It's Done".to_string(), "A Disc that puts the user into a flow state multiplying all stats largely making the user near invincible".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    player.add_inventory_item(howitsdoneitem.clone());
+    let mut pandemoniumitem = Item::new(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap(), "assets/summoner_files/summoner_standR.png".to_string(), "Pandemonium".to_string(), "A Disc that causes extreme confusion, making all enemies attack the highest health enemy on screen".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    player.add_inventory_item(pandemoniumitem.clone());
+    let mut sixhundredstrikeitem = Item::new(tm.get_preload("assets/arrow.png").unwrap(), "assets/arrow.png".to_string(), "Six Hundred Strike".to_string(), "A Disc that calls upon the wrath of odysseus to strike down the highest opponent for massive damage periodically".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    player.add_inventory_item(sixhundredstrikeitem.clone());
     loop {
         if is_key_pressed(KeyCode::O) {
             musicdiscfunctions.test_musicdisc().await;
@@ -153,7 +159,7 @@ pub async fn run(
         player.handle_inventory();
         player.handle_save_menu().await;
         player.handle_playerdamaging(&enemies);
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player);
         player.set_player_activedisc(activedisc);
         player.draw();
         next_frame().await;

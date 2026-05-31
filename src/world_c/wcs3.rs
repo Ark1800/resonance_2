@@ -206,7 +206,7 @@ pub async fn run(
                 player.handle_keypresses(pause, _musicdiscfunctions).await;
                 let old_pos = player.get_oldpos();
                 player.move_player(&map, old_pos, &podium_list);
-                let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
+                let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player);
                 player.set_player_activedisc(activedisc);
             }
 
