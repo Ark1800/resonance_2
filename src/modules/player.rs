@@ -1,4 +1,4 @@
-use crate::modules::{self, musicdisc};
+use crate::modules;
 use crate::modules::collision::check_collision;
 use crate::modules::item::Item;
 use crate::modules::label::Label;
@@ -21,15 +21,7 @@ use crate::modules::musicdisc::Musicdisc;
 //2. add all music disc images
 
 Work
-//1. All Music Discs
-
-
 //1.3 imstillstanding
-
-//1.5 sixhundredstrike
-//1.6 sodapop
-//1.7 greatestshow
-
 //2. W1S1 Enemies
 //3. W1S2 Enemies
 //4. W1S3 Enemies
@@ -155,8 +147,8 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 1000.0,
-            rngdmg: 100.0,
+            mledmg: 3.0,
+            rngdmg: 5.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
             musicoins: 0,
@@ -239,9 +231,16 @@ impl Player {
         if is_key_pressed(KeyCode::Right) {
             self.rangedattack = true;
         }
-
-        if is_key_pressed(KeyCode::Q) {
-            self.handle_musicdiscs(musicdiscs);
+        if self.get_player_activedisc() == "none" {
+            if is_key_pressed(KeyCode::Q) {
+                self.handle_musicdiscs(musicdiscs, 7);
+            }
+            if is_key_pressed(KeyCode::E) {
+                self.handle_musicdiscs(musicdiscs, 8);
+            }
+            if is_key_pressed(KeyCode::X) {
+                self.handle_musicdiscs(musicdiscs, 9);
+            }
         }
     }
 #[allow(unused)]
@@ -536,7 +535,11 @@ impl Player {
     }
 
     pub fn set_player_activedisc(&mut self, disc: String) {
-        self.activedisc = disc;
+        if disc.is_empty() {
+            self.activedisc = "none".to_string();
+        } else {
+            self.activedisc = disc;
+        }
     }
 
     pub fn add_cleared(&mut self) {
@@ -555,6 +558,7 @@ impl Player {
         self.cooldownmult
     }
 
+    #[allow(unused)]
     pub fn get_musicoins(&self) -> i32 {
         self.musicoins
     }
@@ -899,24 +903,59 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         for i  in 0..self.playerui.0.len() {
             let img = &self.playerui.0[i];
             match img.get_filename() {
-                "assets/fireball.png" => {
+                "assets/musicdisc_files/covers/backinblack.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", 30.0-times[0]));
+                    self.playerui.1[i+2].set_text(format!("{:.0}", times[0]));
                         if times[0] <= 0.0 {
                             self.playerui.1[i+2].set_text("".to_string());
                         }
                 },
-                "assets/arrow.png" => {
+                "assets/musicdisc_files/covers/thickofit.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", 30.0-times[1]));
+                    self.playerui.1[i+2].set_text(format!("{:.0}", times[1]));
                         if times[1] <= 0.0 {
                             self.playerui.1[i+2].set_text("".to_string());
                         }
                 },
-                "assets/disc.png" => {
+                "assets/musicdisc_files/covers/howitsdone.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", 30.0-times[2]));
+                    self.playerui.1[i+2].set_text(format!("{:.0}", times[2]));
                         if times[2] <= 0.0 {
+                            self.playerui.1[i+2].set_text("".to_string());
+                        }
+                },
+                "assets/musicdisc_files/covers/imstillstanding.png" => {
+                    let times = musicdiscs.get_musicdisc_cooldowns();
+                    self.playerui.1[i+2].set_text(format!("{:.0}", times[3]));
+                        if times[3] <= 0.0 {
+                            self.playerui.1[i+2].set_text("".to_string());
+                        }
+                },
+                "assets/musicdisc_files/covers/pandemonium.png" => {
+                    let times = musicdiscs.get_musicdisc_cooldowns();
+                    self.playerui.1[i+2].set_text(format!("{:.0}", times[4]));
+                        if times[4] <= 0.0 {
+                            self.playerui.1[i+2].set_text("".to_string());
+                        }
+                },
+                "assets/musicdisc_files/covers/sixhundredstrike.png" => {
+                    let times = musicdiscs.get_musicdisc_cooldowns();
+                    self.playerui.1[i+2].set_text(format!("{:.0}", times[5]));
+                        if times[5] <= 0.0 {
+                            self.playerui.1[i+2].set_text("".to_string());
+                        }
+                },
+                "assets/musicdisc_files/covers/sodapop.png" => {
+                    let times = musicdiscs.get_musicdisc_cooldowns();
+                    self.playerui.1[i+2].set_text(format!("{:.0}", times[6]));
+                        if times[6] <= 0.0 {
+                            self.playerui.1[i+2].set_text("".to_string());
+                        }
+                },
+                "assets/musicdisc_files/covers/greatestshow.png" => {
+                    let times = musicdiscs.get_musicdisc_cooldowns();
+                    self.playerui.1[i+2].set_text(format!("{:.0}", times[7]));
+                        if times[7] <= 0.0 {
                             self.playerui.1[i+2].set_text("".to_string());
                         }
                 },
@@ -973,7 +1012,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                 let x = self.arrows[idx].get_x();
                 let movement = vec2(self.ranged_movespeeds[idx].x * get_frame_time(), self.ranged_movespeeds[idx].y * get_frame_time());
                 if movement.x > 0.0 && movement.y > 0.0 { //if diagonal movement, normalize to prevent faster diagonal movement
-                    self.movement.normalize(); //normalize diagonal movement to prevent faster movement when moving diagonally
+                    self.movement = self.movement.normalize(); //normalize diagonal movement to prevent faster movement when moving diagonally
                 }
                 self.arrows[idx].set_x(x + movement.x);
                 self.arrows[idx].set_y(y + movement.y);
@@ -984,14 +1023,12 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                     rac += 1;
                     continue; //skip collision check if arrow is removed for being out of bounds
                 }
-                let mut rec = 0; //remove enemy counter so that only one enemy is removed per arrow
                 for j in 0..enemies.len() {
                     if check_collision(&self.arrows[idx], enemies[j].view_enemy(), 1) {
                         //ENEMY DAMAGE: mark hit and remove arrow
                         rnghit = true;
                         self.arrows.remove(idx);
                         self.ranged_movespeeds.remove(idx);
-                        rec += 1;
                         break; //break to prevent multiple enemies being damaged by one arrow
                     }
                 }
@@ -1197,6 +1234,16 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                     if item.get_itemtitle() == *title {
                         println!("Equipping item: {}", item.get_itemtitle());
                         println!("Item type: {}", item.get_itemtype());
+                        if item.get_itemtype() == "disc" {
+                            let already_equipped = self.equipped_items.iter().any(|equipped_item| {
+                                self.items[*equipped_item].get_itemtype() == "disc"
+                                    && self.items[*equipped_item].get_itemtitle() == item.get_itemtitle()
+                            });
+
+                            if already_equipped {
+                                break;
+                            }
+                        }
                         let imageboxindex = match item.get_itemtype().as_str() {
                             "helmet" => 2,
                             "bodyarmor" => 3,
@@ -1223,8 +1270,10 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                             }
                         }
                         self.inventory.1[imageboxindex].set_preload(item.get_itemimgpath());
-                        self.playerui.0[2].set_preload(item.get_itemimgpath());
                         self.equipped_items.push(i);
+                        if item.get_itemtype() == "disc" {
+                            self.refresh_disc_display();
+                        }
                         self.update_stats();
                         println!("equipped items: {:?}", self.equipped_items);
                         println!(
@@ -1276,34 +1325,34 @@ let mut img_slash_tr = AnimatedImage::from_gif(
     }
 
     pub fn unequip_item(&mut self, title: &str) {
-        for (equipped_pos, index) in self.equipped_items.iter().enumerate() {
-            if *title == self.items[*index].get_itemtitle() {
-                let imageboxindex = match self.items[*index].get_itemtype().as_str() {
-                    "helmet" => 2,
-                    "bodyarmor" => 3,
-                    "boots" => 4,
-                    "melee" => 5,
-                    "ranged" => 6,
-                    "disc" => {
-                        if self.inventory.1[7].get_filename() == self.items[*index].get_itemassetpath() {
-                            7
-                        } else if self.inventory.1[8].get_filename() == self.items[*index].get_itemassetpath() {
-                            8
-                        } else {
-                            9
-                        }
+        let equipped_pos = self.equipped_items.iter().position(|index| *title == self.items[*index].get_itemtitle());
+
+        if let Some(equipped_pos) = equipped_pos {
+            let index = self.equipped_items[equipped_pos];
+            let imageboxindex = match self.items[index].get_itemtype().as_str() {
+                "helmet" => 2,
+                "bodyarmor" => 3,
+                "boots" => 4,
+                "melee" => 5,
+                "ranged" => 6,
+                "disc" => {
+                    if self.inventory.1[7].get_filename() == self.items[index].get_itemassetpath() {
+                        7
+                    } else if self.inventory.1[8].get_filename() == self.items[index].get_itemassetpath() {
+                        8
+                    } else {
+                        9
                     }
-                    _ => 2,
-                };
-                if self.equipped_items.len() == 1 {
-                    self.equipped_items.clear();
-                } else {
-                    self.equipped_items.remove(equipped_pos);
                 }
-                self.inventory.1[imageboxindex].set_preload(self.preloads[1].clone());
-                self.update_stats();
-                break;
+                _ => 2,
+            };
+
+            self.equipped_items.remove(equipped_pos);
+            self.inventory.1[imageboxindex].set_preload(self.preloads[1].clone());
+            if self.items[index].get_itemtype() == "disc" {
+                self.refresh_disc_display();
             }
+            self.update_stats();
         }
     }
 
@@ -1355,74 +1404,98 @@ let mut img_slash_tr = AnimatedImage::from_gif(
     }
 
 
-    pub fn handle_musicdiscs(&mut self, musicdiscs: &mut Musicdisc) {
-        if self.equipped_items.len() > 0 {
-            for i in 0..self.equipped_items.len() {
-                let item = &self.items[self.equipped_items[i]];
-                if item.get_itemtype() == "disc".to_string() {
-                    match item.get_itemtitle().as_str() {
-                        "Back In Black" => {
-                            let validity = musicdiscs.get_musicdisc_validity();
-                            if validity[0] == true {
-                            self.activedisc = "Back In Black".to_string();
-                            musicdiscs.get_musicdisc_times();
-                            }
-                        }
-                        "Thick Of It" => {
-                            let validity = musicdiscs.get_musicdisc_validity();
-                            if validity[1] == true {
-                            self.activedisc = "Thick Of It".to_string();
-                            musicdiscs.get_musicdisc_times();
-                            }
-                        }
-                        "How It's Done" => {
-                            let validity = musicdiscs.get_musicdisc_validity();
-                            if validity[2] == true {
-                            self.activedisc = "How It's Done".to_string();
-                            musicdiscs.get_musicdisc_times();
-                            }
-                        }
-                        "I'm Still Standing" => {
-                            let validity = musicdiscs.get_musicdisc_validity();
-                            if validity[3] == true {
-                            self.activedisc = "I'm Still Standing".to_string();
-                            musicdiscs.get_musicdisc_times();
-                            }
-                        }
-                        "Pandemonium" => {
-                            let validity = musicdiscs.get_musicdisc_validity();
-                            if validity[4] == true {
-                            self.activedisc = "Pandemonium".to_string();
-                            musicdiscs.get_musicdisc_times();
-                            }
-                        }
-                        "Six Hundred Strike" => {
-                            let validity = musicdiscs.get_musicdisc_validity();
-                            if validity[5] == true {
-                            self.activedisc = "Six Hundred Strike".to_string();
-                            musicdiscs.get_musicdisc_times();
-                            }
-                        }
-                        "Soda Pop" => {
-                            let validity = musicdiscs.get_musicdisc_validity();
-                            if validity[6] == true {
-                            self.activedisc = "Soda Pop".to_string();
-                            musicdiscs.get_musicdisc_times();
-                            }
-                        }
-                        "The Greatest Show" => {
-                            let validity = musicdiscs.get_musicdisc_validity();
-                            if validity[7] == true {
-                            self.activedisc = "The Greatest Show".to_string();
-                            musicdiscs.get_musicdisc_times();
-                            }
-                        }
-                        _ => {
+    fn refresh_disc_display(&mut self) {               //just an index, like a vec2 or a 2d list, check slot7 hud2, slot8 hud3, slot9 hud4, if disc in inventory slot, set preload to disc img, else set to invslot preload
+        let disc_slots = [(7usize, 2usize), (8usize, 3usize), (9usize, 4usize)];
 
-                        }
-                    }
+        for (inventory_slot, hud_slot) in disc_slots {
+            let slot_filename = self.inventory.1[inventory_slot].get_filename().to_string();
+            let mut found_disc = false;
+
+            for item in self.items.iter() {
+                if item.get_itemtype() == "disc" && item.get_itemassetpath() == slot_filename {
+                    self.playerui.0[hud_slot].set_preload(item.get_itemimgpath());
+                    found_disc = true;
+                    break;
                 }
-            }           
+            }
+
+            if found_disc == false {
+                self.playerui.0[hud_slot].set_preload(self.preloads[1].clone());
+            }
+        }
+    }
+
+    fn activate_disc_by_title(&mut self, musicdiscs: &mut Musicdisc, disc_title: &str) {
+        let validity = musicdiscs.get_musicdisc_validity();
+
+        match disc_title {
+            "Back In Black" => {
+                if validity[0] == true {
+                    self.activedisc = "Back In Black".to_string();
+                    musicdiscs.start_musicdisc_time("Back In Black");
+                }
+            }
+            "Thick Of It" => {
+                if validity[1] == true {
+                    self.activedisc = "Thick Of It".to_string();
+                    musicdiscs.start_musicdisc_time("Thick Of It");
+                }
+            }
+            "How It's Done" => {
+                if validity[2] == true {
+                    self.activedisc = "How It's Done".to_string();
+                    musicdiscs.start_musicdisc_time("How It's Done");
+                }
+            }
+            "I'm Still Standing" => {
+                if validity[3] == true {
+                    self.activedisc = "I'm Still Standing".to_string();
+                    musicdiscs.start_musicdisc_time("I'm Still Standing");
+                }
+            }
+            "Pandemonium" => {
+                if validity[4] == true {
+                    self.activedisc = "Pandemonium".to_string();
+                    musicdiscs.start_musicdisc_time("Pandemonium");
+                }
+            }
+            "Six Hundred Strike" => {
+                if validity[5] == true {
+                    self.activedisc = "Six Hundred Strike".to_string();
+                    musicdiscs.start_musicdisc_time("Six Hundred Strike");
+                }
+            }
+            "Soda Pop" => {
+                if validity[6] == true {
+                    self.activedisc = "Soda Pop".to_string();
+                    musicdiscs.start_musicdisc_time("Soda Pop");
+                }
+            }
+            "The Greatest Show" => {
+                if validity[7] == true {
+                    self.activedisc = "The Greatest Show".to_string();
+                    musicdiscs.start_musicdisc_time("The Greatest Show");
+                }
+            }
+            _ => {}
+        }
+    }
+
+    pub fn handle_musicdiscs(&mut self, musicdiscs: &mut Musicdisc, inventory_slot_index: usize) {
+        if inventory_slot_index >= self.inventory.1.len() {
+            return;
+        }
+
+        let slot_filename = self.inventory.1[inventory_slot_index].get_filename().to_string();
+        if slot_filename == "assets/player_files/invslot.png" {
+            return;
+        }
+
+        for item in self.items.iter() {
+            if item.get_itemtype() == "disc" && item.get_itemassetpath() == slot_filename {
+                self.activate_disc_by_title(musicdiscs, &item.get_itemtitle());
+                break;
+            }
         }
     }
 }

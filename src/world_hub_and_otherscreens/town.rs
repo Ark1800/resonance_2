@@ -97,20 +97,21 @@ pub async fn run(
     let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
     name_box.with_colors(WHITE, None);
     let mut enemies: Vec<Enemy> = vec![];
-    let backinblackitem = Item::new(tm.get_preload("assets/fireball.png").unwrap(), "assets/fireball.png".to_string(), "Back In Black".to_string(), "A Disc that allows the user to summon periodic pillars of fire".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    let backinblackitem = Item::new(tm.get_preload("assets/musicdisc_files/covers/backinblack.png").unwrap(), "assets/musicdisc_files/covers/backinblack.png".to_string(), "Back In Black".to_string(), "A Disc that allows the user to summon periodic pillars of fire".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
     player.add_inventory_item(backinblackitem.clone());
-    let thickofititem = Item::new(tm.get_preload("assets/arrow.png").unwrap(), "assets/arrow.png".to_string(), "Thick Of It".to_string(), "A Disc that sounds so bad all enemies stop attacking and move away, enemies hate it so much they will teleport away if need be".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    let thickofititem = Item::new(tm.get_preload("assets/musicdisc_files/covers/thickofit.png").unwrap(), "assets/musicdisc_files/covers/thickofit.png".to_string(), "Thick Of It".to_string(), "A Disc that sounds so bad all enemies stop attacking and move away, enemies hate it so much they will teleport away if need be".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
     player.add_inventory_item(thickofititem.clone());
-    let howitsdoneitem = Item::new(tm.get_preload("assets/slime.png").unwrap(), "assets/slime.png".to_string(), "How It's Done".to_string(), "A Disc that puts the user into a flow state multiplying all stats largely making the user near invincible".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    let howitsdoneitem = Item::new(tm.get_preload("assets/musicdisc_files/covers/howitsdone.png").unwrap(), "assets/musicdisc_files/covers/howitsdone.png".to_string(), "How It's Done".to_string(), "A Disc that puts the user into a flow state multiplying all stats largely making the user near invincible".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
     player.add_inventory_item(howitsdoneitem.clone());
-    let mut pandemoniumitem = Item::new(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap(), "assets/summoner_files/summoner_standR.png".to_string(), "Pandemonium".to_string(), "A Disc that causes extreme confusion, making all enemies attack the highest health enemy on screen".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    let mut pandemoniumitem = Item::new(tm.get_preload("assets/musicdisc_files/covers/pandemonium.png").unwrap(), "assets/musicdisc_files/covers/pandemonium.png".to_string(), "Pandemonium".to_string(), "A Disc that causes extreme confusion, making all enemies attack the highest health enemy on screen".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
     player.add_inventory_item(pandemoniumitem.clone());
-    let mut sixhundredstrikeitem = Item::new(tm.get_preload("assets/arrow.png").unwrap(), "assets/arrow.png".to_string(), "Six Hundred Strike".to_string(), "A Disc that calls upon the wrath of odysseus to strike down the highest opponent for massive damage periodically".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    let mut sixhundredstrikeitem = Item::new(tm.get_preload("assets/musicdisc_files/covers/sixhundredstrike.png").unwrap(), "assets/musicdisc_files/covers/sixhundredstrike.png".to_string(), "Six Hundred Strike".to_string(), "A Disc that calls upon the wrath of odysseus to strike down the highest opponent for massive damage periodically".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
     player.add_inventory_item(sixhundredstrikeitem.clone());
+    let mut sodapopitem = Item::new(tm.get_preload("assets/musicdisc_files/covers/sodapop.png").unwrap(), "assets/musicdisc_files/covers/sodapop.png".to_string(), "Soda Pop".to_string(), "A Disc that forces all enemies to stop and dance for 10 seconds".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    player.add_inventory_item(sodapopitem.clone());
+    let mut greatestshowitem = Item::new(tm.get_preload("assets/musicdisc_files/covers/greatestshowman.png").unwrap(), "assets/musicdisc_files/covers/greatestshowman.png".to_string(), "The Greatest Show".to_string(), "A Disc that calls upon the power of the greatest showman, summoning a meteor that gets bigger the longer you arent hit".to_string(), "disc".to_string(), 0, 0, 0.0, 0.0, 0, 0).await;
+    player.add_inventory_item(greatestshowitem.clone());
     loop {
-        if is_key_pressed(KeyCode::O) {
-            musicdiscfunctions.test_musicdisc().await;
-        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         map.draw_map(&tm).await;
@@ -159,7 +160,7 @@ pub async fn run(
         player.handle_inventory();
         player.handle_save_menu().await;
         player.handle_playerdamaging(&enemies);
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player);
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         player.draw();
         next_frame().await;

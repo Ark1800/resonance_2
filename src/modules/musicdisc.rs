@@ -1,10 +1,12 @@
 use macroquad::prelude::*;
 use macroquad::audio::{play_sound, PlaySoundParams, Sound};
+use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
 use crate::modules::collision::check_collision;
 use crate::modules::player::Player;
 use crate::modules::still_image::StillImage;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::enemy::Enemy;
+use crate::modules::map::Map;
 
 /* 
 run through player 
@@ -28,6 +30,7 @@ use musicdisc::handle_musicdisccooldowns; in each loop
 #[derive(Clone)]
 pub struct Musicdisc {
     //musicpath: &str,
+    #[allow(unused)]
     musicpaths: Vec<String>,
     sounds: Vec<Sound>,
     backinblack_starttime: f64,
@@ -63,17 +66,24 @@ pub struct Musicdisc {
     sixhundredstrike_last_cycle: i32,
     sixhundredstrike_cooldown: f64,
     sixhundredstrike_cct: f64,
+    sixhundredstrike_imagetime: f64,
     sodapop_starttime: f64,
     sodapop_valid: bool,
     sodapop_hit: bool,
     sodapop_cooldown: f64,
     sodapop_cct: f64,
+    sodapop: bool,
+    sodapopposlist: Vec<Vec2>,
     greatestshow_starttime: f64,
     greatestshow_valid: bool,
     greatestshow_hit: bool,
     greatestshow_cooldown: f64,
     greatestshow_cct: f64,
-    disc_elements: (Vec<StillImage>, Vec<StillImage>),
+    greatestshow_complete: bool,
+    greatestshow_playerhealth: f64,
+    greatestshow_timevalid: bool,
+    greatestshow_currentime: f64,
+    disc_elements: (Vec<StillImage>, Vec<StillImage>, Vec<StillImage>), //0 is backinblack, 1 is sixhundredstrike, 2 is greatestshow
 }
 
 impl Musicdisc {
@@ -132,40 +142,77 @@ impl Musicdisc {
             sixhundredstrike_last_cycle: -1,
             sixhundredstrike_cooldown: 0.0, 
             sixhundredstrike_cct: 0.0,
+            sixhundredstrike_imagetime: 0.0,
             sodapop_starttime: 0.0,
             sodapop_valid: true,
             sodapop_hit: false, 
             sodapop_cooldown: 0.0,
             sodapop_cct: 0.0,
+            sodapop: false,
+            sodapopposlist: vec![],
+            greatestshow_complete: false,
             greatestshow_starttime: 0.0,
             greatestshow_valid: true,
             greatestshow_hit: false,
             greatestshow_cooldown: 0.0,
-            greatestshow_cct: 0.0
+            greatestshow_cct: 0.0,
+            greatestshow_playerhealth: 0.0,
+            greatestshow_timevalid: true,
+            greatestshow_currentime: 0.0,
         }
 
     }
 
 
+    #[allow(unused)]
     pub async fn test_musicdisc(&self) {
         println!("Playing music disc: {}", self.musicpaths[0]);
         play_sound(&self.sounds[0], PlaySoundParams {looped: false, volume: 1.0 });
     }
 
 
-    pub fn get_musicdisc_times(&mut self) {
-        self.backinblack_starttime = get_time(); 
-        self.thickofit_starttime = get_time();
-        self.howitsdone_starttime = get_time();
-        self.imstillstanding_starttime = get_time();
-        self.pandemonium_starttime = get_time();
-        self.sixhundredstrike_starttime = get_time();
-        self.sodapop_starttime = get_time();
-        self.greatestshow_starttime = get_time();
+    pub fn start_musicdisc_time(&mut self, disc_title: &str) {
+        match disc_title {
+            "Back In Black" => {
+                self.backinblack_starttime = get_time();
+            }
+            "Thick Of It" => {
+                self.thickofit_starttime = get_time();
+            }
+            "How It's Done" => {
+                self.howitsdone_starttime = get_time();
+            }
+            "I'm Still Standing" => {
+                self.imstillstanding_starttime = get_time();
+            }
+            "Pandemonium" => {
+                self.pandemonium_starttime = get_time();
+            }
+            "Six Hundred Strike" => {
+                self.sixhundredstrike_starttime = get_time();
+                self.sixhundredstrike_imagetime = get_time();
+            }
+            "Soda Pop" => {
+                self.sodapop_starttime = get_time();
+            }
+            "The Greatest Show" => {
+                self.greatestshow_starttime = get_time();
+            }
+            _ => {}
+        }
     }
 
     pub fn get_musicdisc_cooldowns(&mut self) -> Vec<f64> {
-        vec![self.backinblack_cct, self.thickofit_cct, self.howitsdone_cct, self.imstillstanding_cct, self.pandemonium_cct, self.sixhundredstrike_cct, self.sodapop_cct, self.greatestshow_cct]
+        let backinblack_remaining = (45.0 - (get_time() - self.backinblack_cooldown)).max(0.0);
+        let thickofit_remaining = (60.0 - (get_time() - self.thickofitcooldown)).max(0.0);
+        let howitsdone_remaining = (70.0 - (get_time() - self.howitsdone_cooldown)).max(0.0);
+        let imstillstanding_remaining = (120.0 - (get_time() - self.imstillstanding_cooldown)).max(0.0);
+        let pandemonium_remaining = (100.0 - (get_time() - self.pandemonium_cooldown)).max(0.0);
+        let sixhundredstrike_remaining = (70.0 - (get_time() - self.sixhundredstrike_cooldown)).max(0.0);
+        let sodapop_remaining = (70.0 - (get_time() - self.sodapop_cooldown)).max(0.0);
+        let greatestshow_remaining = (80.0 - (get_time() - self.greatestshow_cooldown)).max(0.0);
+
+        vec![backinblack_remaining, thickofit_remaining, howitsdone_remaining, imstillstanding_remaining, pandemonium_remaining, sixhundredstrike_remaining, sodapop_remaining, greatestshow_remaining]
     }
 
     pub fn get_musicdisc_validity(&self) -> Vec<bool> {
@@ -180,7 +227,77 @@ impl Musicdisc {
         self.pandemonium
     }
 
-    pub fn handle_musicdiscs(&mut self, activedisc: String, enemies: &mut Vec<Enemy>, player: &mut Player) -> String {
+    pub fn get_sodapop_active(&self) -> bool {
+        self.sodapop
+    }
+
+    fn update_musicdisc_cooldowns(&mut self) {
+        if self.backinblack_valid == false {
+            self.backinblack_cct = get_time() - self.backinblack_cooldown;
+            if self.backinblack_cct >= 45.0 {
+                self.backinblack_valid = true;
+                self.backinblack_cct = 0.0;
+            }
+        }
+        if self.thickofitvalid == false {
+            self.thickofit_cct = get_time() - self.thickofitcooldown;
+            if self.thickofit_cct >= 60.0 {
+                self.thickofitvalid = true;
+                self.thickofit_cct = 0.0;
+            }
+        }
+        if self.howitsdone_valid == false {
+            self.howitsdone_cct = get_time() - self.howitsdone_cooldown;
+            if self.howitsdone_cct >= 70.0 {
+                self.howitsdone_valid = true;
+                self.howitsdone_hit = false;
+                self.howitsdone_cct = 0.0;
+            }
+        }
+        if self.imstillstanding_valid == false {
+            self.imstillstanding_cct = get_time() - self.imstillstanding_cooldown;
+            if self.imstillstanding_cct >= 120.0 {
+                self.imstillstanding_valid = true;
+                self.imstillstanding_hit = false;
+                self.imstillstanding_cct = 0.0;
+            }
+        }
+        if self.pandemonium_valid == false {
+            self.pandemonium_cct = get_time() - self.pandemonium_cooldown;
+            if self.pandemonium_cct >= 100.0 {
+                self.pandemonium_valid = true;
+                self.pandemonium_hit = false;
+                self.pandemonium_cct = 0.0;
+            }
+        }
+        if self.sixhundredstrike_valid == false {
+            self.sixhundredstrike_cct = get_time() - self.sixhundredstrike_cooldown;
+            if self.sixhundredstrike_cct >= 70.0 {
+                self.sixhundredstrike_valid = true;
+                self.sixhundredstrike_hit = false;
+                self.sixhundredstrike_cct = 0.0;
+            }
+        }
+        if self.sodapop_valid == false {
+            self.sodapop_cct = get_time() - self.sodapop_cooldown;
+            if self.sodapop_cct >= 70.0 {
+                self.sodapop_valid = true;
+                self.sodapop_hit = false;
+                self.sodapop_cct = 0.0;
+            }
+        }
+        if self.greatestshow_valid == false {
+            self.greatestshow_cct = get_time() - self.greatestshow_cooldown;
+            if self.greatestshow_cct >= 80.0 {
+                self.greatestshow_valid = true;
+                self.greatestshow_hit = false;
+                self.greatestshow_cct = 0.0;
+            }
+        }
+    }
+
+    pub fn handle_musicdiscs(&mut self, activedisc: String, enemies: &mut Vec<Enemy>, player: &mut Player, map: &mut Map, tm: &TextureManager) -> String {
+        self.update_musicdisc_cooldowns();
         let mut discmatch = activedisc.as_str();
         match discmatch {
             "Back In Black" => { //fireball hit 8 times in 15 seconds
@@ -229,7 +346,14 @@ impl Musicdisc {
                     }
                     let time = get_time() - self.thickofit_starttime;
                     self.thickofit=true;
-                    if time >= 25.0 {
+                    if time < 30.0 {
+                        for i in 0..enemies.len() {
+                            enemies[i].draw();
+                            let enemy_old_pos = enemies[i].get_pos();
+                            enemies[i].reversereverse(player.get_x(), player.get_y(), &map, enemy_old_pos);
+                        }
+                    }
+                    if time >= 30.0 {
                         self.thickofit = false;
                         self.thickofit_hit = false;
                         self.thickofitvalid = false;
@@ -272,6 +396,29 @@ impl Musicdisc {
                     }
                     let time = get_time() - self.pandemonium_starttime;
                     self.pandemonium=true;
+                    if time < 15.0 {
+                        for i in 0..enemies.len() {
+                            enemies[i].draw();
+                        let mut enemy_healthlist: Vec<i32> = vec![];
+                        for j in 0..enemies.len() {
+                            let health = enemies[j].get_health();
+                            enemy_healthlist.push(health as i32);
+                        }
+                        let highesthealthenemy = enemy_healthlist.iter().max().unwrap();
+                        let highesthealthenemyindex = enemy_healthlist.iter().position(|&x| x == *highesthealthenemy).unwrap(); // find index with same value
+                        let highesthealthenemypos = enemies[highesthealthenemyindex].get_pos();
+                        if i == highesthealthenemyindex {
+                        }
+                        else {
+                            let enemy_old_pos = enemies[i].get_pos();
+                            enemies[i].pandemonium(highesthealthenemypos, enemy_old_pos);
+                            if enemies[i].check_collision(enemies[highesthealthenemyindex].view_enemy()) {
+                                enemies[highesthealthenemyindex].dmg_enemy(1.0);
+                                enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
+                            }
+                        }
+                        }
+                    }
                     if time >= 15.0 {
                         self.pandemonium = false;
                         self.pandemonium_hit = false;
@@ -292,32 +439,32 @@ impl Musicdisc {
                         self.sixhundredstrike_cooldown = get_time();
                         discmatch = "";
                     } else {
-                        if !enemies.is_empty() && !self.disc_elements.1.is_empty() {
-                            let phase = time % 3.0; // every 3 seconds run cycle
-                            let cycle = (time / 3.0).floor() as i32; //draws for only 0.5 seconds each cycle (floor returns 0.33->0.5)
-
-                            let mut highesthealthenemyindex = 0;
+                        let attack_cycle = (time / 3.0).floor() as i32; //sets 0.3->0.5 etc. so every 0.5 seconds image dissapears and every 3 seconds runs again
+                        if attack_cycle != self.sixhundredstrike_last_cycle {
+                            self.sixhundredstrike_last_cycle = attack_cycle;
+                            self.sixhundredstrike_imagetime = get_time();
+                            self.sixhundredstrike_hit = false;
+                        }
+                        let is_attack_window = get_time() - self.sixhundredstrike_imagetime <= 0.5;
+                        if is_attack_window && !enemies.is_empty() {
                             let mut enemy_healthlist: Vec<i32> = vec![];
                             for j in 0..enemies.len() {
                                 let health = enemies[j].get_health();
                                 enemy_healthlist.push(health as i32);
                             }
                             let highesthealthenemy = enemy_healthlist.iter().max().unwrap();
-                            highesthealthenemyindex = enemy_healthlist.iter().position(|&x| x == *highesthealthenemy).unwrap(); // find index with same value
-                            if phase < 0.5 {
-                                let highesthealthenemypos = enemies[highesthealthenemyindex].get_pos();
-                                self.disc_elements.1[0].set_position(highesthealthenemypos);
-                                self.disc_elements.1[0].draw();
-
-                                // Damage once at the start of each 3-second cycle.
-                                if self.sixhundredstrike_last_cycle != cycle {
-                                    enemies[highesthealthenemyindex].dmg_enemy(100.0);
-                                    self.sixhundredstrike_last_cycle = cycle;
-                                }
+                            let highesthealthenemyindex = enemy_healthlist.iter().position(|&x| x == *highesthealthenemy).unwrap(); // find index with same value
+                            let highesthealthenemypos = enemies[highesthealthenemyindex].get_pos();
+                            for image in self.disc_elements.1.iter_mut() {
+                                image.set_position(highesthealthenemypos);
+                                image.draw();
                             }
-                                
                             if self.sixhundredstrike_hit == false {
-                                play_sound(&self.sounds[5], PlaySoundParams {looped: false, volume: 1.0 });
+                                if time <= 1.0 {
+                                    play_sound(&self.sounds[5], PlaySoundParams {looped: false, volume: 1.0 });
+                                }
+                                println!("Hit enemy with Six Hundred Strike for 60 damage!");
+                                enemies[highesthealthenemyindex].dmg_enemy(60.0);
                                 self.sixhundredstrike_hit = true;
                             }
                         }
@@ -325,80 +472,85 @@ impl Musicdisc {
                 }
             }
             "Soda Pop" => {
-
+                if self.sodapop_valid == true {
+                    if self.sodapop_hit == false {
+                        play_sound(&self.sounds[6], PlaySoundParams {looped: false, volume: 1.0 });
+                        for i in 0..enemies.len() {
+                            self.sodapopposlist.push(enemies[i].get_pos());
+                        }
+                        self.sodapop_hit = true;
+                    }
+                    let time = get_time() - self.sodapop_starttime;
+                    self.sodapop=true;
+                    if time < 20.0 {
+                        for i in 0..enemies.len() {
+                            enemies[i].draw();
+                            enemies[i].sodapop(self.sodapopposlist[i], map);
+                        }
+                    }
+                    if time >= 20.0 {
+                        self.sodapop = false;
+                        self.sodapop_hit = false;
+                        self.sodapop_valid = false;
+                        self.sodapop_cooldown = get_time();
+                        discmatch = "";
+                    }
+                }
             }
             "The Greatest Show" => {
-            }
-            _ => {
-                if self.backinblack_valid == false {
-                    self.backinblack_cct = get_time() - self.backinblack_cooldown;
-                    if self.backinblack_cct >= 45.0 {
-                        self.backinblack_valid = true;
-                        self.backinblack_cct = 0.0;
+                if self.greatestshow_valid == true {
+                    if self.greatestshow_hit == false {
+                        play_sound(&self.sounds[7], PlaySoundParams {looped: false, volume: 1.0 });
+                        self.greatestshow_hit = true;
+                        self.greatestshow_playerhealth = player.get_health() as f64;
                     }
-                }
-                if self.thickofitvalid == false {
-                    self.thickofit_cct = get_time() - self.thickofitcooldown;
-                    if self.thickofit_cct >= 60.0 {
-                        self.thickofitvalid = true;
-                        self.thickofit_cct = 0.0;
+                    let time = get_time() - self.greatestshow_starttime;
+                    if time < 60.0{
+                        for i in 0..self.disc_elements.2.len() {
+                            let width = self.disc_elements.2[i].get_width() + (time * 0.001) as f32; //multiply by 20.0 for even growing time * 20.0) as f32;
+                            let height = self.disc_elements.2[i].get_height() + (time * 0.001) as f32;
+                            let new_position = vec2(self.disc_elements.2[i].get_x() - (time * 0.0005) as f32, self.disc_elements.2[i].get_y() - (time * 0.0005) as f32); //multiply by half for even growing
+                            self.disc_elements.2[i].set_size(width, height);
+                            self.disc_elements.2[i].set_position(new_position);
+                            self.disc_elements.2[i].draw();
+                        }
                     }
-                }
-                if self.howitsdone_valid == false {
-                    self.howitsdone_cct = get_time() - self.howitsdone_cooldown;
-                    if self.howitsdone_cct >= 70.0 {
-                        self.howitsdone_valid = true;
-                        self.howitsdone_hit = false;
-                        self.howitsdone_cct = 0.0;
-                    }
-                }
-                if self.imstillstanding_valid == false {
-                    self.imstillstanding_cct = get_time() - self.imstillstanding_cooldown;
-                    if self.imstillstanding_cct >= 60.0 {
-                        self.imstillstanding_valid = true;
-                        self.imstillstanding_hit = false;
-                        self.imstillstanding_cct = 0.0;
-                    }
-                }
-                if self.pandemonium_valid == false {
-                    self.pandemonium_cct = get_time() - self.pandemonium_cooldown;
-                    if self.pandemonium_cct >= 60.0 {
-                        self.pandemonium_valid = true;
-                        self.pandemonium_hit = false;
-                        self.pandemonium_cct = 0.0;
-                    }
-                }
-                if self.sixhundredstrike_valid == false {
-                    self.sixhundredstrike_cct = get_time() - self.sixhundredstrike_cooldown;
-                    if self.sixhundredstrike_cct >= 60.0 {
-                        self.sixhundredstrike_valid = true;
-                        self.sixhundredstrike_hit = false;
-                        self.sixhundredstrike_cct = 0.0;
-                    }
-                }
-                if self.sodapop_valid == false {
-                    self.sodapop_cct = get_time() - self.sodapop_cooldown;
-                    if self.sodapop_cct >= 60.0 {
-                        self.sodapop_valid = true;
-                        self.sodapop_hit = false;
-                        self.sodapop_cct = 0.0;
-                    }
-                }
-                if self.greatestshow_valid == false {
-                    self.greatestshow_cct = get_time() - self.greatestshow_cooldown;
-                    if self.greatestshow_cct >= 60.0 {
-                        self.greatestshow_valid = true;
-                        self.greatestshow_hit = false;
-                        self.greatestshow_cct = 0.0;
+                    if time >= 60.0 || self.greatestshow_playerhealth > player.get_health() as f64 {
+                        if self.greatestshow_timevalid == true {
+                            self.greatestshow_timevalid = false;
+                            self.greatestshow_currentime = time;
+                        }
+                        if self.greatestshow_complete == true {
+                            self.greatestshow_hit = false;
+                            self.greatestshow_valid = false;
+                            self.greatestshow_cooldown = get_time();
+                            self.greatestshow_playerhealth = 0.0;
+                            discmatch = "";
+                        }
+                        else if time >= self.greatestshow_currentime && time <= self.greatestshow_currentime + 1.0 {
+                            for i in 0..self.disc_elements.2.len() {
+                                self.disc_elements.2[i].set_preload(tm.get_preload("assets/musicdisc_files/effectimages/meteor.png").unwrap());
+                                self.disc_elements.2[i].draw();
+                            }
+                            for i in 0..enemies.len() {
+                                if enemies[i].check_collision(&self.disc_elements.2[0]) {
+                                    enemies[i].dmg_enemy(200.0);
+                                }
+                            }
+                        }
+                        else if time > 61.0 {
+                            self.greatestshow_complete = true;
+                        }
                     }
                 }
             }
+            _ => {}
         }
         //println!("Discmatch: {}", discmatch);
         discmatch.to_string()
     }
 
-    pub async fn create_disc_elements(tm: &TextureManager) -> (Vec<StillImage>, Vec<StillImage>) {
+    pub async fn create_disc_elements(tm: &TextureManager) -> (Vec<StillImage>, Vec<StillImage>, Vec<StillImage>) {
         let mut bib_img1 = StillImage::new(
         "",
         200.0,  // width
@@ -471,10 +623,21 @@ impl Musicdisc {
             1.0,    // Normal zoom (100%)
         ).await;
         trident_img.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/trident.png").unwrap());
+        let mut greatestshow_preimg = StillImage::new(
+            "",
+            20.0,  // width
+            20.0,  // height
+            VIRTUAL_WIDTH/2.0,  // x position
+            VIRTUAL_HEIGHT/2.0,   // y position
+            true,   // Enable stretching
+            1.0,    // Normal zoom (100%)
+        ).await;
+        greatestshow_preimg.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/black.png").unwrap());
+
         let bibs = vec![bib_img1, bib_img2, bib_img3, bib_img4, bib_img5, bib_img6];
         let tridents = vec![trident_img];
-        (bibs, tridents)
-        
+        let greatestshow = vec![greatestshow_preimg];
+        (bibs, tridents, greatestshow)
     }
 }
 

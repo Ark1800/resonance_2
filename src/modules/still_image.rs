@@ -225,6 +225,22 @@ impl StillImage {
         &self.filename
     }
 
+    pub fn get_width(&self) -> f32 {
+        if self.stretch_enabled {
+            self.width * self.zoom_level
+        } else {
+            self.texture.width() * self.zoom_level
+        }
+    }
+
+    pub fn get_height(&self) -> f32 {
+        if self.stretch_enabled {
+            self.height * self.zoom_level
+        } else {
+            self.texture.height() * self.zoom_level
+        }
+    }
+
     // Get the transparency mask (bitmask)
     #[allow(unused)]
     pub fn get_mask(&self) -> Option<Vec<u8>> {

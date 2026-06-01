@@ -182,7 +182,7 @@ pub async fn run(
             }
         }
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player);
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
