@@ -41,11 +41,11 @@ pub async fn run(
         ],
     )
     .await;
-// If cleared
+    // If cleared
     if player.get_cleared() == 0 {
-    map.create_map_array(0, 1, 0, vec![4]).await;
+        map.create_map_array(0, 1, 0, vec![4]).await;
     } else {
-    map.create_map_array(0, 2, 0, vec![1, 4]).await;
+        map.create_map_array(0, 2, 0, vec![1, 4]).await;
     }
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
@@ -70,9 +70,9 @@ pub async fn run(
         enemies.push(archer);
     }
     if *last_scene == "Top" {
-        player.set_position((virtual_width / 2.0)-20.0, virtual_height - 80.0);
+        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
     } else if *last_scene == "Down" {
-        player.set_position((virtual_width / 2.0)-20.0, 80.0);
+        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
     } else if *last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
     } else if *last_scene == "Right" {
@@ -92,59 +92,36 @@ pub async fn run(
                 let mut rec = 0;
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                    if musicdiscfunctions.get_thickofit_active() == false && musicdiscfunctions.get_pandemonium_active() == false && musicdiscfunctions.get_sodapop_active() == false {
-                        match enemies[i+rec].get_enemy_type() {
-                            "archer" => {
-                                enemies[i+rec].archer_action(tm, player).await;
-                                enemies[i+rec].draw_bullet(player);
-                            }
-                            "slime" => {
-                                enemies[i+rec].slime_action( player);
-                            }
-                            "summoner" => {
-                                let (slime1, slime2, slime3, summoned) = enemies[i+rec].summoner_action(tm, player).await;
-                                if summoned {
-                                    enemies.push(slime1);
-                                    enemies.push(slime2);
-                                    enemies.push(slime3);
-                                }
-                            }
-                            "mage" => {
-                                enemies[i+rec].mage_action(tm, player).await;
-                                enemies[i+rec].draw_bullet(player);
-                            }
-                            "large_slime" => {
-                                enemies[i+rec].large_slime_action(tm, player).await;
-                            }
-                            _ => {}
+                    if musicdiscfunctions.get_thickofit_active() == false
+                        && musicdiscfunctions.get_pandemonium_active() == false
+                        && musicdiscfunctions.get_sodapop_active() == false
+                    {
+                                            match enemies[i].get_enemy_type() {
+                        "archer" => {
+                            enemies[i].archer_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
                         }
-                        enemies[i+rec].draw();
-                        if enemies[i+rec].get_health() <= 0.0 {
-                            if enemies[i+rec].get_enemy_type() == "large_slime" {
-                                let (slime1, slime2, split) = enemies[i+rec].large_slime_action(tm, player).await;
-                                if split {
-                                    enemies.push(slime1);
-                                    enemies.push(slime2);
-                                }
-                            }
-                            enemies.remove(i+rec);
-                            break;
+                        "slime" => {
+                            enemies[i].slime_action(player);
                         }
-                    }
-                    let mut healthbar = enemies[i].set_healthbar();
-                        healthbar.draw();
-                        if enemies[i].get_health() <= 0.0 {
-                            if enemies[i].get_enemy_type() == "large_slime" {
-                                let (slime1, slime2, split) = enemies[i].large_slime_action(tm, player).await;
-                                if split {
-                                    enemies.push(slime1);
-                                    enemies.push(slime2);
-                                }
+                        "summoner" => {
+                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                            if summoned {
+                                enemies.push(slime1);
+                                enemies.push(slime2);
+                                enemies.push(slime3);
                             }
-                            enemies.remove(i);
-                            rec += 1;
-                            break;
+                        }
+                        "mage" => {
+                            enemies[i].mage_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "large_slime" => {
+                            enemies[i].large_slime_action(tm, player).await;
+                        }
+                        _ => {}
                     }
+                    enemies[i].draw();
                 }
             }
         }
@@ -154,11 +131,33 @@ pub async fn run(
         player.set_player_activedisc(activedisc);
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
+            if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
+                enemies.remove(index);
+            }
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
+            if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
+                enemies.remove(index);
+            }
         }
-      
+
         player.handle_inventory();
         player.handle_save_menu().await;
         if player.get_x() > virtual_width - 10.0 {
@@ -169,11 +168,14 @@ pub async fn run(
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
         }
-        if player.get_y() < 10.0 && player.get_cleared() >= 1{
+        if player.get_y() < 10.0 && player.get_cleared() >= 1 {
             *last_scene = "Top".to_string();
             println!("Returning w1s2");
-            return "w1s2".to_string();
+            return "w1s2".to_string
+        
+        
+        ();
         }
         next_frame().await;
     }
-}
+}}

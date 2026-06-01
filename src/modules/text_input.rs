@@ -10,7 +10,7 @@ In your mod.rs file located in the modules folder add the following to the end o
 Add with the other use statements
     use crate::modules::text_input::TextInput;
 
-Then to use this you would put the following above the loop: 
+Then to use this you would put the following above the loop:
     let mut txt_input = TextInput::new(100.0, 100.0, 300.0, 40.0, 25.0);
 Where the parameters are x, y, width, height, font size
 
@@ -31,20 +31,20 @@ LIMITS AND MULTILINE:
 APPEARANCE CUSTOMIZATION:
     // Set colors (text, border, background, cursor)
     txt_input.with_colors(WHITE, BLUE, DARKGRAY, RED);
-    
+
     // Set individual colors
     txt_input.set_text_color(WHITE)
           .set_border_color(BLUE)
           .set_background_color(DARKGRAY)
           .set_cursor_color(RED);
-    
+
     // Set custom font
     txt_input.with_font(my_font.clone());
-    
+
     // Change position and dimensions
     txt_input.set_position(150.0, 150.0);
     txt_input.set_dimensions(250.0, 50.0);
-    
+
     // Set prompt text and color (shown when input is empty)
     txt_input.set_prompt("Enter your name...");
     txt_input.set_prompt_color(DARKGRAY);
@@ -53,19 +53,19 @@ APPEARANCE CUSTOMIZATION:
     txt_input.set_enabled(false); // Disable the text input (becomes read-only)
     txt_input.set_enabled(true);  // Enable the text input
     txt_input.set_disabled_color(Color::new(0.7, 0.7, 0.7, 0.5)); // Customize disabled appearance
-    
+
 TEXT MANIPULATION:
     // Get current text
     let current_text = txt_input.get_text();
-    
+
     // Set text content
     txt_input.set_text("Hello World");
-    
+
     // Check active state
     if txt_input.is_active() {
         // Do something when textbox is active
     }
-    
+
     // Set cursor position
     txt_input.set_cursor_index(5);
 
@@ -79,13 +79,13 @@ Then in the main loop you would use:
     // Update and draw the textbox in one step
     txt_input.draw();
 */
-use macroquad::prelude::*;
 #[cfg(feature = "scale")]
 use crate::modules::scale::mouse_position_world as mouse_position;
+use macroquad::prelude::*;
 
 pub struct TextInput {
-        // For vertical navigation, store the preferred column
-        preferred_col: Option<usize>,
+    // For vertical navigation, store the preferred column
+    preferred_col: Option<usize>,
     // Make all fields private for complete encapsulation
     x: f32,
     y: f32,
@@ -105,25 +105,23 @@ pub struct TextInput {
     prompt: Option<String>, // New field for prompt text
     prompt_color: Color,    // Color for the prompt text
     // Add key repeat functionality
-    key_repeat_delay: f32,  // Initial delay before key starts repeating (in seconds)
-    key_repeat_rate: f32,   // How often the key repeats after initial delay (in seconds) 
-    key_repeat_timer: f32,  // Timer to track key repeat
+    key_repeat_delay: f32,     // Initial delay before key starts repeating (in seconds)
+    key_repeat_rate: f32,      // How often the key repeats after initial delay (in seconds)
+    key_repeat_timer: f32,     // Timer to track key repeat
     last_key: Option<KeyCode>, // Track the last key that was pressed
-    enabled: bool,          // Controls whether the text input can be interacted with
-    disabled_color: Color,  // Color used when the text input is disabled
+    enabled: bool,             // Controls whether the text input can be interacted with
+    disabled_color: Color,     // Color used when the text input is disabled
     // New: Multiline and max chars support
-    multiline: bool,        // If true, wraps text to next line within box
-    max_chars: Option<usize>, // Optional maximum number of characters
-    allowed_chars: Option<String>, // Optional whitelist of allowed typed characters
+    multiline: bool,                 // If true, wraps text to next line within box
+    max_chars: Option<usize>,        // Optional maximum number of characters
+    allowed_chars: Option<String>,   // Optional whitelist of allowed typed characters
     selection_anchor: Option<usize>, // Selection anchor byte index for range selection
-    is_dragging_selection: bool, // Tracks active mouse drag selection
+    is_dragging_selection: bool,     // Tracks active mouse drag selection
 }
 
 impl TextInput {
     fn is_char_allowed(&self, c: char) -> bool {
-        self.allowed_chars
-            .as_ref()
-            .map_or(true, |allowed| allowed.contains(c))
+        self.allowed_chars.as_ref().map_or(true, |allowed| allowed.contains(c))
     }
 
     fn apply_text_constraints(&self, text: &str) -> String {
@@ -136,10 +134,7 @@ impl TextInput {
                 constrained.push(c);
             }
 
-            if self
-                .max_chars
-                .is_some_and(|max| constrained.chars().count() >= max)
-            {
+            if self.max_chars.is_some_and(|max| constrained.chars().count() >= max) {
                 break;
             }
         }
@@ -156,8 +151,7 @@ impl TextInput {
             return false;
         }
 
-        self.max_chars
-            .map_or(true, |max| self.text.chars().count() < max)
+        self.max_chars.map_or(true, |max| self.text.chars().count() < max)
     }
 
     /// Returns (wrapped_lines, mapping) where mapping[byte_idx] = (line, col)
@@ -228,16 +222,16 @@ impl TextInput {
         (lines, mapping)
     }
 
-        /// Ensure the cursor index is always at a valid UTF-8 boundary and in bounds
-        fn ensure_cursor_validity(&mut self) {
-            if self.cursor_index > self.text.len() {
-                self.cursor_index = self.text.len();
-            }
-            // Clamp to char boundary
-            while self.cursor_index > 0 && !self.text.is_char_boundary(self.cursor_index) {
-                self.cursor_index -= 1;
-            }
+    /// Ensure the cursor index is always at a valid UTF-8 boundary and in bounds
+    fn ensure_cursor_validity(&mut self) {
+        if self.cursor_index > self.text.len() {
+            self.cursor_index = self.text.len();
         }
+        // Clamp to char boundary
+        while self.cursor_index > 0 && !self.text.is_char_boundary(self.cursor_index) {
+            self.cursor_index -= 1;
+        }
+    }
 
     fn get_selection_range(&self) -> Option<(usize, usize)> {
         let anchor = self.selection_anchor?;
@@ -251,11 +245,7 @@ impl TextInput {
             end -= 1;
         }
 
-        if start == end {
-            None
-        } else {
-            Some((start, end))
-        }
+        if start == end { None } else { Some((start, end)) }
     }
 
     fn clear_selection(&mut self) {
@@ -321,12 +311,7 @@ impl TextInput {
             .sum()
     }
 
-    fn line_col_for_index(
-        &self,
-        mapping: &[(usize, usize)],
-        wrapped_lines: &[String],
-        index: usize,
-    ) -> (usize, usize) {
+    fn line_col_for_index(&self, mapping: &[(usize, usize)], wrapped_lines: &[String], index: usize) -> (usize, usize) {
         let idx = index.min(self.text.len());
         if idx < mapping.len() {
             mapping[idx]
@@ -337,10 +322,10 @@ impl TextInput {
             )
         }
     }
-   #[allow(unused)]
+    #[allow(unused)]
     pub fn new(x: f32, y: f32, width: f32, height: f32, font_size: f32) -> Self {
-                Self {
-                        preferred_col: None,
+        Self {
+            preferred_col: None,
             x,
             y,
             width,
@@ -351,19 +336,19 @@ impl TextInput {
             cursor_timer: 0.0,
             cursor_visible: true,
             font_size,
-            text_color: BLACK, // Default color for text
-            border_color: DARKGRAY, // Default color for border
+            text_color: BLACK,           // Default color for text
+            border_color: DARKGRAY,      // Default color for border
             background_color: LIGHTGRAY, // Default color for background
-            cursor_color: BLACK, // Default color for cursor
-            font: None, // Default to None (use system font)
-            prompt: None, // Default to None (no prompt text)
-            prompt_color: GRAY, // Default color for prompt text
+            cursor_color: BLACK,         // Default color for cursor
+            font: None,                  // Default to None (use system font)
+            prompt: None,                // Default to None (no prompt text)
+            prompt_color: GRAY,          // Default color for prompt text
             // Initialize key repeat values
             key_repeat_delay: 0.4, // 400ms initial delay before repeat
             key_repeat_rate: 0.05, // 50ms between repeats after initial delay
             key_repeat_timer: 0.0,
             last_key: None,
-            enabled: true, // Default to enabled
+            enabled: true,                                  // Default to enabled
             disabled_color: Color::new(0.7, 0.7, 0.7, 0.5), // Semi-transparent gray for disabled state
             multiline: false,
             max_chars: None,
@@ -383,78 +368,78 @@ impl TextInput {
     pub fn is_multiline(&self) -> bool {
         self.multiline
     }
-    
+
     // Position and dimension getters/setters
     #[allow(unused)]
     pub fn get_x(&self) -> f32 {
         self.x
     }
-    
+
     #[allow(unused)]
     pub fn set_x(&mut self, x: f32) -> &mut Self {
         self.x = x;
         self
     }
-    
+
     #[allow(unused)]
     pub fn get_y(&self) -> f32 {
         self.y
     }
-    
+
     #[allow(unused)]
     pub fn set_y(&mut self, y: f32) -> &mut Self {
         self.y = y;
         self
     }
-    
+
     #[allow(unused)]
     pub fn get_width(&self) -> f32 {
         self.width
     }
-    
+
     #[allow(unused)]
     pub fn set_width(&mut self, width: f32) -> &mut Self {
         self.width = width;
         self
     }
-    
+
     #[allow(unused)]
     pub fn get_height(&self) -> f32 {
         self.height
     }
-    
+
     #[allow(unused)]
     pub fn set_height(&mut self, height: f32) -> &mut Self {
         self.height = height;
         self
     }
-    
+
     // Position convenience methods
     #[allow(unused)]
     pub fn get_position(&self) -> (f32, f32) {
         (self.x, self.y)
     }
-    
+
     #[allow(unused)]
     pub fn set_position(&mut self, x: f32, y: f32) -> &mut Self {
         self.x = x;
         self.y = y;
         self
     }
-    
+
     // Dimension convenience methods
     #[allow(unused)]
     pub fn get_dimensions(&self) -> (f32, f32) {
         (self.width, self.height)
     }
-    
+
     #[allow(unused)]
     pub fn set_dimensions(&mut self, width: f32, height: f32) -> &mut Self {
         self.width = width;
         self.height = height;
         self
     }
-    
+
     // Add a method to change colors
     #[allow(unused)]
     pub fn with_colors(&mut self, text_color: Color, border_color: Color, background_color: Color, cursor_color: Color) -> &mut Self {
@@ -477,7 +462,7 @@ impl TextInput {
     pub fn get_text(&self) -> String {
         self.text.clone()
     }
-    
+
     // Set the text content - now accepts both String and &str
     #[allow(unused)]
     pub fn set_text<T: Into<String>>(&mut self, text: T) -> &mut Self {
@@ -486,7 +471,7 @@ impl TextInput {
         self.clear_selection();
         self
     }
-    
+
     // Active state getters/setters
     #[allow(unused)]
     pub fn is_active(&self) -> bool {
@@ -651,12 +636,12 @@ impl TextInput {
         }
         self
     }
-    
+
     #[allow(unused)]
     pub fn get_disabled_color(&self) -> Color {
         self.disabled_color
     }
-    
+
     #[allow(unused)]
     pub fn set_disabled_color(&mut self, color: Color) -> &mut Self {
         self.disabled_color = color;
@@ -704,13 +689,13 @@ impl TextInput {
         self.update_internal();
         self.draw_internal();
     }
-    
+
     // For cases when only drawing is needed without updating
     #[allow(unused)]
     pub fn draw_only(&self) {
         self.draw_internal();
     }
-    
+
     // For cases when only updating is needed without drawing
     #[allow(unused)]
     pub fn update_only(&mut self) {
@@ -761,7 +746,7 @@ impl TextInput {
         if is_mouse_button_released(MouseButton::Left) {
             self.is_dragging_selection = false;
         }
-    
+
         if self.active {
             let shortcut_mod_down = is_key_down(KeyCode::LeftControl)
                 || is_key_down(KeyCode::RightControl)
@@ -779,10 +764,7 @@ impl TextInput {
                     self.cursor_index = self.text.len();
                     self.ensure_cursor_validity();
                     consumed_shortcut = true;
-                } else if is_key_pressed(KeyCode::C)
-                    || is_key_pressed(KeyCode::X)
-                    || is_key_pressed(KeyCode::V)
-                {
+                } else if is_key_pressed(KeyCode::C) || is_key_pressed(KeyCode::X) || is_key_pressed(KeyCode::V) {
                     consumed_shortcut = true;
                 }
             }
@@ -910,7 +892,10 @@ impl TextInput {
                 let (cur_line, cur_col) = if cursor_idx < mapping.len() {
                     mapping[cursor_idx]
                 } else {
-                    (wrapped_lines.len().saturating_sub(1), wrapped_lines.last().map(|l| l.chars().count()).unwrap_or(0))
+                    (
+                        wrapped_lines.len().saturating_sub(1),
+                        wrapped_lines.last().map(|l| l.chars().count()).unwrap_or(0),
+                    )
                 };
                 if shift_down {
                     if self.selection_anchor.is_none() {
@@ -1030,7 +1015,6 @@ impl TextInput {
         }
     }
 
-    
     // Now private - internal implementation only
     fn draw_internal(&self) {
         let padding = 5.0;
@@ -1093,7 +1077,7 @@ impl TextInput {
                                 ..Default::default()
                             },
                         );
-                    },
+                    }
                     None => {
                         draw_text(prompt, text_x, text_y, self.font_size, prompt_color);
                     }
@@ -1116,7 +1100,7 @@ impl TextInput {
                                 ..Default::default()
                             },
                         );
-                    },
+                    }
                     None => {
                         draw_text(line, text_x, y, self.font_size, text_color);
                     }
@@ -1176,5 +1160,3 @@ impl TextInput {
         draw_rectangle_lines(self.x, self.y, self.width, self.height, 2.0, border_color);
     }
 }
-
-

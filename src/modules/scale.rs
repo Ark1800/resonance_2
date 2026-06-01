@@ -13,7 +13,7 @@ In the Cargo.toml file add the following:
     default = ["scale"]
 
 Then in your main.rs file add the following to the top of the file:
-    
+
 Then add the following with the use commands:
 use crate::modules::scale::use_virtual_resolution;
 
@@ -22,7 +22,7 @@ Usage examples:
     loop {
         // Set the virtual resolution to 1024x768
         use_virtual_resolution(1024.0, 768.0);
-        
+
         // Rest of your game code...
         clear_background(DARKGREEN);
         // Draw your game objects...
@@ -45,7 +45,7 @@ thread_local! {
         target: vec2(0.0, 0.0),
         ..Default::default()
     });
-    
+
     // We'll store the current virtual resolution here - made pub so other modules can access it
     pub static VIRTUAL_RESOLUTION: RefCell<(f32, f32)> = RefCell::new((1024.0, 768.0));
 }
@@ -56,7 +56,7 @@ pub fn use_virtual_resolution(virtual_width: f32, virtual_height: f32) {
     VIRTUAL_RESOLUTION.with(|res| {
         *res.borrow_mut() = (virtual_width, virtual_height);
     });
-    
+
     let screen_aspect = screen_width() / screen_height();
     let virtual_aspect = virtual_width / virtual_height;
 
@@ -88,11 +88,11 @@ pub fn use_virtual_resolution(virtual_width: f32, virtual_height: f32) {
 
 /// Function to get the mouse position in world coordinates based on the current camera state
 pub fn mouse_position_world() -> (f32, f32) {
-    let (mouse_x, mouse_y) = ::macroquad::input::mouse_position();  // Get the raw mouse position
+    let (mouse_x, mouse_y) = ::macroquad::input::mouse_position(); // Get the raw mouse position
 
     VIRTUAL_RESOLUTION.with(|res| {
         let (virtual_width, virtual_height) = *res.borrow();
-        
+
         // Get screen dimensions
         let screen_width = screen_width();
         let screen_height = screen_height();
@@ -100,7 +100,7 @@ pub fn mouse_position_world() -> (f32, f32) {
         // Calculate the scale factor between screen and virtual resolution
         let screen_aspect = screen_width / screen_height;
         let virtual_aspect = virtual_width / virtual_height;
-        
+
         let scale_factor = if screen_aspect > virtual_aspect {
             // Screen is wider than virtual - height is matched
             screen_height / virtual_height

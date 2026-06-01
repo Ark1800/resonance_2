@@ -209,6 +209,10 @@ pub async fn run(
             *last_scene = "Up".to_string();
             return "wcs3".to_string();
         }
+
+        if enemies.is_empty() {
+            map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
+        }
         if player.get_y() < 10.0 {
             *last_scene = "Down".to_string();
             return "wcs1".to_string();

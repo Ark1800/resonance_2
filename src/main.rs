@@ -17,7 +17,7 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::preload_image::LoadingScreenOptions;
 use crate::modules::preload_image::GifLoadingScreenInfo;
 use crate::modules::musicdisc::Musicdisc;
-
+use crate::modules::database::{create_database_client, DatabaseTable};
 /// Set up window settings before the app runs
 fn window_conf() -> Conf {
     Conf {
@@ -44,12 +44,13 @@ async fn main() {
     "assets/mage_files/mage_shootL.png", "assets/mage_files/mage_shootR.png", "assets/mage_files/mage_standL.png", "assets/mage_files/mage_standR.png", 
     "assets/slime.png", "assets/fireball.png", "assets/arrow.png", "assets/map_files/magma.png", "assets/map_files/magma_floor.png",
     "assets/archer_files/archer_deadL.png", "assets/archer_files/archer_deadR.png", "assets/archer_files/archer_knockbackL.png", "assets/archer_files/archer_knockbackR.png", "assets/archer_files/archer_readyL.png", "assets/archer_files/archer_readyR.png", "assets/archer_files/archer_runL.png", "assets/archer_files/archer_runR.png", "assets/archer_files/archer_shootL.png", "assets/archer_files/archer_shootR.png", "assets/archer_files/archer_standL.png", "assets/archer_files/archer_standR.png", 
-    "assets/map_files/wall.png", "assets/map_files/chest.png", "assets/map_files/world1/beach.png", "assets/map_files/red_portal.gif",
+    "assets/map_files/wall.png", "assets/map_files/chest.png", "assets/map_files/world1/beach.png", "assets/map_files/red_portal.gif", "assets/map_files/background_start.png",
     "assets/summoner_files/summoner_standL.png", "assets/summoner_files/summoner_standR.png", "assets/summoner_files/summoner_summonL.png", "assets/summoner_files/summoner_summonR.png","assets/summoner_files/portalL.png", "assets/summoner_files/portalR.png", 
-    "assets/map_files/grass.png", "assets/map_files/dungeon.png", "assets/map_files/world1/watertile.png", "assets/map_files/world1/beachtile.png", "assets/map_files/tree.png", "assets/map_files/world2_start.png", "assets/map_files/world1/beach2.png",
+    "assets/map_files/grass.png", "assets/map_files/dungeon.png", "assets/map_files/world1/watertile.png", "assets/map_files/world1/beachtile.png", "assets/map_files/tree.png", "assets/map_files/world2_start.png", "assets/map_files/world1/beach2.png","assets/map_files/black_square.png",
     "assets/item_files/armour/diamond_armor.png", "assets/item_files/armour/hermes_armor.png", "assets/item_files/weapons/time_sword.png", "assets/item_files/weapons/future_bow.png", "assets/item_files/musicoin.png",
-    "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png","assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif","assets/map_files/red_portal.gif" ,"assets/map_files/world1/whirlpool.gif", "assets/map_files/textbox.png", "assets/cyric_files/cyric_f.png", "assets/cyric_files/cyric_b.png", "assets/cyric_files/cyric_dead.png",
-    "assets/musicdisc_files/effectimages/bibimg.png", "assets/musicdisc_files/effectimages/trident.png", "assets/musicdisc_files/effectimages/black.png", "assets/musicdisc_files/effectimages/meteor.png", "assets/cyric_files/lightning.png", "assets/cyric_files/lightning_charge.png", "assets/cyric_files/meteor.png",
+    "assets/map_files/pedestal.png", "assets/map_files/town.png", "assets/map_files/shop.png","assets/map_files/world1/blueportal.gif", "assets/map_files/green_portal.gif","assets/map_files/red_portal.gif" ,"assets/map_files/world1/whirlpool.gif", "assets/map_files/textbox.png", 
+    "assets/cyric_files/cyric_f.png", "assets/cyric_files/cyric_b.png", "assets/cyric_files/cyric_dead.png","assets/cyric_files/lightning.png", "assets/cyric_files/lightning_charge.png", "assets/cyric_files/meteor.png",
+    "assets/musicdisc_files/effectimages/bibimg.png", "assets/musicdisc_files/effectimages/trident.png", "assets/musicdisc_files/effectimages/black.png", "assets/musicdisc_files/effectimages/meteor.png", 
     "assets/musicdisc_files/covers/backinblack.png", "assets/musicdisc_files/covers/thickofit.png", "assets/musicdisc_files/covers/howitsdone.png", "assets/musicdisc_files/covers/imstillstanding.png", "assets/musicdisc_files/covers/pandemonium.png", "assets/musicdisc_files/covers/sixhundredstrike.png", "assets/musicdisc_files/covers/sodapop.png", "assets/musicdisc_files/covers/greatestshowman.png",
     ];
     let tm = TextureManager::new();
@@ -72,14 +73,25 @@ async fn main() {
     };
     tm.preload_with_loading_screen(&all_assets, Some(&all_sounds), Some(loading_options)).await;
     //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-    let preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)> = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap(), tm.get_preload("assets/player_files/arrow.png").unwrap(), tm.get_preload("assets/player_files/bow_arrow_image.png").unwrap()];
+    let preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)> = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap(), tm.get_preload("assets/player_files/arrow.png").unwrap(), tm.get_preload("assets/player_files/bow_arrow_image.png").unwrap(), tm.get_preload("assets/map_files/black_square.png").unwrap()];
     let mut current_screen = "town".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
-    let mut player = Player::new(preloadlist, 30.0, 30.0, &tm).await;
     let mut musicdiscfunctions = Musicdisc::new(&tm).await;
     let mut last_scene = "None".to_string();
     let mut checkpoints: Vec<bool> = vec![false /*Dungeon*/, false /*Town*/, false /*1st world*/, false /*2nd world*/, false /*3rd world*/];
+    let mut player = Player::new(preloadlist, 30.0, 30.0, &tm).await;
+    //Save Data
+    let client = create_database_client();
+    let mut records: Vec<DatabaseTable> = Vec::new();
+    let fetched_results = client.fetch_table("save_table").await;
+    if let Ok(result) = fetched_results {
+        records = result;
+        //current_screen = records.player_currentscreenvar.clone();
+        player.set_save_data(records);
+    } else {
+       println!("Error fetching records from database: {} ",fetched_results.err().unwrap());
+    }
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {

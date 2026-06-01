@@ -6,7 +6,7 @@ Program Details: Central texture manager for preloading and sharing textures wit
 To use this:
 1. In your mod.rs file located in the modules folder add the following to the end of the file:
     pub mod preload_image;
-    
+
 2. Add the following use commands:
     use crate::modules::preload_image::TextureManager;
     use crate::modules::preload_image::LoadingScreenOptions; // If you want to customize the loading screen
@@ -14,20 +14,20 @@ To use this:
 
 3. Create and initialize a TextureManager:
     let tm = TextureManager::new();
-    
+
 4. Preload your textures at startup - multiple approaches:
 
    // Option 1: Basic preloading without a loading screen
    // Preload a list of textures
    tm.preload_all(&["assets/image1.png", "assets/image2.png"]).await;
-   
+
    // Or preload individual textures
    tm.preload("assets/image3.png").await;
-   
+
    // Option 2: Preload with a built-in loading screen (best for web)
    // Using default loading screen appearance
    tm.preload_with_loading_screen(&all_assets, None).await;
-   
+
    // Using custom loading screen appearance
    let loading_options = LoadingScreenOptions {
        title: Some("MY GAME".to_string()),
@@ -64,13 +64,13 @@ To use this:
        ..Default::default()
    };
    tm.preload_with_loading_screen(&all_assets, Some(loading_options)).await;
-    
+
 5. Get preloaded textures for use with StillImage - two approaches:
 
    // Approach 1: Using unwrap() - Simple but will panic if image doesn't exist
    // Only use this when you're certain the texture was preloaded
    img.set_preload(tm.get_preload("assets/image1.png").unwrap());
-   
+
    // Approach 2: Using if let Some() - Safer, handles missing textures gracefully
    if let Some(preloaded) = tm.get_preload("assets/image2.png") {
        img.set_preload(preloaded);
@@ -78,42 +78,42 @@ To use this:
        println!("Warning: Image not found in texture manager");
        // Handle the error case (e.g., try to load it or use a placeholder)
    }
-    
+
 6. Access textures by index:
     // Using unwrap() approach:
     img.set_preload(tm.get_preload_by_index(0).unwrap());
-    
+
     // Using if let Some() approach:
     if let Some(preloaded) = tm.get_preload_by_index(1) {
         img.set_preload(preloaded);
     }
-    
+
 7. Getting the number of preloaded textures:
     let count = tm.texture_count();
-    
+
 8. Customizing the loading screen appearance:
    // LoadingScreenOptions provides many customization options:
    let custom_options = LoadingScreenOptions {
        // Game title (optional)
        title: Some("YOUR GAME TITLE".to_string()),
-       
+
        // Colors
        background_color: DARKGREEN,        // Background of the entire screen
        bar_background_color: DARKGRAY,     // Background of the progress bar
        bar_fill_color: GREEN,              // Fill color of the progress bar
        text_color: WHITE,                  // Color for title and progress text
        filename_color: SKYBLUE,            // Color for the filename text
-       
+
        // Font sizes
        title_font_size: 60,                // Size of the title text
        progress_font_size: 30,             // Size of the progress percentage text
        filename_font_size: 20,             // Size of the filename text
-       
+
        // Completion behavior
        show_completion_message: true,                    // Whether to show completion message
        completion_message: "Loading Complete!".to_string(), // Custom completion message
        completion_delay: 0.5,                            // Delay in seconds after completion
-       
+
        // Animated GIFs
        loading_screen_gifs: vec![
            // Add as many GIFs as you want!
@@ -131,14 +131,14 @@ Note: This TextureManager implementation is thread-safe and web-compatible. The 
 uses coroutines to load assets in the background, avoiding black flashing on web platforms.
 GIFs are pre-preloaded before the loading screen displays, ensuring smooth animation during loading.
 */
-use macroquad::texture::Texture2D;
-use macroquad::audio::{load_sound, Sound};
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use macroquad::prelude::*;
-use macroquad::experimental::coroutines::start_coroutine;
 use crate::modules::still_image::set_texture_main;
+use macroquad::audio::{Sound, load_sound};
+use macroquad::experimental::coroutines::start_coroutine;
+use macroquad::prelude::*;
+use macroquad::texture::Texture2D;
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone)]
 #[allow(unused)]
@@ -269,7 +269,7 @@ impl TextureManager {
             sound_order: Arc::new(Mutex::new(Vec::new())),
         }
     }
-    
+
     /// Preload a texture by its file path
     pub async fn preload(&self, path: &str) {
         // First, check if the texture already exists
@@ -277,25 +277,25 @@ impl TextureManager {
             let textures = self.textures.lock().unwrap();
             textures.contains_key(path)
         };
-        
+
         // If it doesn't exist, load it
         if !texture_exists {
             // Load the texture outside of any locks
             let (texture, mask) = set_texture_main(path).await;
-            
+
             // Now update the maps with short-lived locks
             {
                 let mut textures = self.textures.lock().unwrap();
                 textures.insert(path.to_string(), (texture, mask));
             }
-            
+
             {
                 let mut load_order = self.load_order.lock().unwrap();
                 load_order.push(path.to_string());
             }
         }
     }
-    
+
     /// Preload multiple textures at once
     #[allow(unused)]
     pub async fn preload_all<'a, T>(&self, paths: T)
@@ -307,16 +307,16 @@ impl TextureManager {
             self.preload(path).await;
         }
     }
-    
+
     /// Get a preloaded texture for use in an ImageObject
     #[allow(unused)]
     pub fn get_preload(&self, path: &str) -> Option<(Texture2D, Option<Vec<u8>>, String)> {
         let textures = self.textures.lock().unwrap();
-        textures.get(path).map(|(texture, mask)| 
-            (texture.clone(), mask.clone(), path.to_string())
-        )
+        textures
+            .get(path)
+            .map(|(texture, mask)| (texture.clone(), mask.clone(), path.to_string()))
     }
-    
+
     /// Get a preloaded texture by its index in the preload order
     #[allow(unused)]
     pub fn get_preload_by_index(&self, index: usize) -> Option<(Texture2D, Option<Vec<u8>>, String)> {
@@ -328,14 +328,14 @@ impl TextureManager {
             None
         }
     }
-    
+
     /// Get the number of preloaded textures
     #[allow(unused)]
     pub fn texture_count(&self) -> usize {
         let load_order = self.load_order.lock().unwrap();
         load_order.len()
     }
-    
+
     /// Get a list of all preloaded texture paths in load order
     #[allow(unused)]
     pub fn get_texture_paths(&self) -> Vec<String> {
@@ -522,15 +522,10 @@ impl TextureManager {
             None
         }
     }
-    
+
     /// Load assets with a built-in loading screen that works well for web
     /// This method handles all the complexities of asset loading and progress display
-    pub async fn preload_with_loading_screen<'a, T>(
-        &self,
-        assets: T,
-        sound_assets: Option<&[&'a str]>,
-        options: Option<LoadingScreenOptions>,
-    )
+    pub async fn preload_with_loading_screen<'a, T>(&self, assets: T, sound_assets: Option<&[&'a str]>, options: Option<LoadingScreenOptions>)
     where
         T: AsRef<[&'a str]>,
     {
@@ -538,16 +533,16 @@ impl TextureManager {
         let sound_assets = sound_assets.unwrap_or(&[]);
         // Use default options if none provided
         let options = options.unwrap_or_default();
-        
+
         // Pre-preload any GIFs specified for the loading screen
         for gif_info in &options.loading_screen_gifs {
             self.preload_animated_gif(&gif_info.gif_path).await;
         }
-        
+
         // Thread-safe progress counters that can be shared between coroutines
         let loaded_counter = Arc::new(AtomicUsize::new(0));
         let total_assets = assets.len() + sound_assets.len();
-        
+
         // Create animation state trackers for each GIF
         #[allow(unused)]
         struct GifAnimationState {
@@ -558,9 +553,9 @@ impl TextureManager {
             texture: Texture2D,
             frame_masks: Vec<Vec<u8>>,
         }
-        
+
         let mut gif_states: Vec<GifAnimationState> = Vec::new();
-        
+
         // Initialize animation states for each GIF
         for gif_info in &options.loading_screen_gifs {
             if let Some(preloaded_gif) = self.get_preloaded_animated_gif(&gif_info.gif_path) {
@@ -574,21 +569,17 @@ impl TextureManager {
                 });
             }
         }
-        
+
         // Start a background coroutine for loading assets WITHOUT awaiting it
         // This is the key to avoiding black flashes on web
         {
             // Convert &[&str] to Vec<String> for the coroutine to own its data
             let assets_to_load: Vec<String> = assets.iter().map(|&s| s.to_string()).collect();
             let sounds_to_load: Vec<String> = sound_assets.iter().map(|&s| s.to_string()).collect();
-            let load_queue: Vec<String> = assets_to_load
-                .iter()
-                .chain(sounds_to_load.iter())
-                .cloned()
-                .collect();
+            let load_queue: Vec<String> = assets_to_load.iter().chain(sounds_to_load.iter()).cloned().collect();
             let counter = loaded_counter.clone();
             let loading_tm = self.clone(); // Clone the TextureManager for the coroutine
-            
+
             // Important: We start the coroutine but DON'T await it
             start_coroutine(async move {
                 for asset_path in assets_to_load {
@@ -599,10 +590,10 @@ impl TextureManager {
                         // Load asset into the shared texture manager
                         loading_tm.preload(&asset_path).await;
                     }
-                    
+
                     // Update the counter atomically
                     counter.fetch_add(1, Ordering::SeqCst);
-                    
+
                     // Yielding control back to the main thread
                     next_frame().await;
                 }
@@ -616,17 +607,17 @@ impl TextureManager {
 
             let _ = load_queue;
         }
-        
+
         // Main rendering loop for the loading screen
         // This runs in the main thread and never awaits the asset loading
         loop {
             // Read the current progress atomically
             let loaded_assets = loaded_counter.load(Ordering::SeqCst);
             let progress = loaded_assets as f32 / total_assets as f32;
-            
+
             // Clear the screen with custom background color
             clear_background(options.background_color);
-            
+
             // Draw title if one is provided
             if let Some(title) = &options.title {
                 let title_size = options.title_font_size;
@@ -636,17 +627,17 @@ impl TextureManager {
                     screen_width() / 2.0 - title_dim.width / 2.0,
                     screen_height() / 3.0,
                     title_size as f32,
-                    options.text_color
+                    options.text_color,
                 );
             }
-            
+
             // Update and draw animated GIFs
             let delta_time = get_frame_time();
             for (idx, gif_state) in gif_states.iter_mut().enumerate() {
                 if gif_state.total_frames == 0 {
                     continue;
                 }
-                
+
                 // Update animation
                 gif_state.time_accumulated += delta_time;
                 let frame_duration = if gif_state.current_frame < gif_state.frame_durations.len() {
@@ -654,11 +645,11 @@ impl TextureManager {
                 } else {
                     0.1
                 };
-                
+
                 if gif_state.time_accumulated >= frame_duration {
                     gif_state.time_accumulated -= frame_duration;
                     gif_state.current_frame += 1;
-                    
+
                     if gif_state.current_frame >= gif_state.total_frames {
                         if idx < options.loading_screen_gifs.len() && options.loading_screen_gifs[idx].loop_animation {
                             gif_state.current_frame = 0;
@@ -667,31 +658,26 @@ impl TextureManager {
                         }
                     }
                 }
-                
+
                 // Draw the current frame
                 if let Some(gif_info) = options.loading_screen_gifs.get(idx) {
                     let frame_width = gif_state.texture.width() / gif_state.total_frames as f32;
                     let frame_height = gif_state.texture.height();
-                    
+
                     draw_texture_ex(
                         &gif_state.texture,
                         gif_info.x,
                         gif_info.y,
                         WHITE,
                         DrawTextureParams {
-                            source: Some(Rect::new(
-                                gif_state.current_frame as f32 * frame_width,
-                                0.0,
-                                frame_width,
-                                frame_height,
-                            )),
+                            source: Some(Rect::new(gif_state.current_frame as f32 * frame_width, 0.0, frame_width, frame_height)),
                             dest_size: Some(Vec2::new(gif_info.width, gif_info.height)),
                             ..Default::default()
                         },
                     );
                 }
             }
-            
+
             // Draw progress text
             let progress_text = format!("Loading: {:.0}%", progress * 100.0);
             draw_text(
@@ -699,26 +685,26 @@ impl TextureManager {
                 screen_width() / 2.0 - measure_text(&progress_text, None, options.progress_font_size, 1.0).width / 2.0,
                 screen_height() / 2.0,
                 options.progress_font_size as f32,
-                options.text_color
+                options.text_color,
             );
-            
+
             // Draw loading bar
             let bar_width = screen_width() * 0.6;
             let bar_height = 30.0;
             let bar_x = screen_width() / 2.0 - bar_width / 2.0;
             let bar_y = screen_height() / 2.0 + 40.0;
-            
+
             // Background bar
             draw_rectangle(bar_x, bar_y, bar_width, bar_height, options.bar_background_color);
-            
+
             // Progress bar
             if progress > 0.0 {
                 draw_rectangle(bar_x, bar_y, bar_width * progress, bar_height, options.bar_fill_color);
             }
-            
+
             // Border
             draw_rectangle_lines(bar_x, bar_y, bar_width, bar_height, 2.0, options.text_color);
-            
+
             // Display current file if available
             if loaded_assets > 0 && loaded_assets < total_assets {
                 let file_name = if loaded_assets < assets.len() {
@@ -733,49 +719,44 @@ impl TextureManager {
                     screen_width() / 2.0 - measure_text(&file_text, None, options.filename_font_size, 1.0).width / 2.0,
                     bar_y + bar_height + 30.0,
                     options.filename_font_size as f32,
-                    options.filename_color
+                    options.filename_color,
                 );
             }
-            
+
             // Check if loading is complete
             if loaded_assets >= total_assets {
                 // Show completion message if enabled
                 if options.show_completion_message {
                     clear_background(options.background_color);
-                    
+
                     // Draw final GIF frames on completion screen
                     for (idx, gif_state) in gif_states.iter().enumerate() {
                         if let Some(gif_info) = options.loading_screen_gifs.get(idx) {
                             let frame_width = gif_state.texture.width() / gif_state.total_frames as f32;
                             let frame_height = gif_state.texture.height();
-                            
+
                             draw_texture_ex(
                                 &gif_state.texture,
                                 gif_info.x,
                                 gif_info.y,
                                 WHITE,
                                 DrawTextureParams {
-                                    source: Some(Rect::new(
-                                        gif_state.current_frame as f32 * frame_width,
-                                        0.0,
-                                        frame_width,
-                                        frame_height,
-                                    )),
+                                    source: Some(Rect::new(gif_state.current_frame as f32 * frame_width, 0.0, frame_width, frame_height)),
                                     dest_size: Some(Vec2::new(gif_info.width, gif_info.height)),
                                     ..Default::default()
                                 },
                             );
                         }
                     }
-                    
+
                     let text_size = options.progress_font_size + 20; // Slightly larger than progress font
                     let text_dimensions = measure_text(&options.completion_message, None, text_size, 1.0);
                     let text_x = screen_width() / 2.0 - text_dimensions.width / 2.0;
                     let text_y = screen_height() / 2.0;
-                    
+
                     draw_text(&options.completion_message, text_x, text_y, text_size as f32, options.text_color);
                     next_frame().await;
-                    
+
                     // Apply completion delay if specified
                     if options.completion_delay > 0.0 {
                         let start_time = get_time();
@@ -784,11 +765,11 @@ impl TextureManager {
                         }
                     }
                 }
-                
+
                 // Break the loading loop and proceed with the game
                 break;
             }
-            
+
             // Update the screen WITHOUT awaiting asset loading
             next_frame().await;
         }
@@ -805,11 +786,7 @@ fn build_preloaded_gif(path: &str, data: &[u8]) -> Option<PreloadedAnimatedGif> 
     let spritesheet_width = width_px * frame_count;
     let spritesheet_height = height_px;
 
-    let mut combined_image = Image::gen_image_color(
-        spritesheet_width as u16,
-        spritesheet_height as u16,
-        Color::new(0.0, 0.0, 0.0, 0.0),
-    );
+    let mut combined_image = Image::gen_image_color(spritesheet_width as u16, spritesheet_height as u16, Color::new(0.0, 0.0, 0.0, 0.0));
 
     let mut frame_masks = Vec::with_capacity(frame_count);
 
@@ -835,12 +812,7 @@ fn build_preloaded_gif(path: &str, data: &[u8]) -> Option<PreloadedAnimatedGif> 
                 combined_image.set_pixel(
                     dest_x as u32,
                     y as u32,
-                    Color::new(
-                        src_r as f32 / 255.0,
-                        src_g as f32 / 255.0,
-                        src_b as f32 / 255.0,
-                        src_a as f32 / 255.0,
-                    ),
+                    Color::new(src_r as f32 / 255.0, src_g as f32 / 255.0, src_b as f32 / 255.0, src_a as f32 / 255.0),
                 );
             }
         }

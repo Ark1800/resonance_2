@@ -1,18 +1,19 @@
-use crate::modules;
+use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH, modules};
+use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
+use crate::modules::enemy::Enemy;
 use crate::modules::item::Item;
 use crate::modules::label::Label;
 use crate::modules::listview::ListView;
 use crate::modules::map::Map;
+use crate::modules::musicdisc::Musicdisc;
+use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
-use crate::modules::enemy::Enemy;
 use crate::modules::text_button::TextButton;
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 use std::f32::consts::PI;
-use crate::modules::animated_image::AnimatedImage;
-use crate::modules::preload_image::TextureManager;
-use crate::modules::musicdisc::Musicdisc;
+use crate::modules::database::DatabaseTable;
 
 //TO DOOOOOO
 /*
@@ -30,10 +31,10 @@ Work
 //9. All items
 //10. Player Dying
 //11. Inventory Db
-//12. Player Db
+//12. Save Db
 //13. User Db
 //14. Start Screen
- 
+
 //Keypresses:
 Move Up - W
 Move Down - S
@@ -84,7 +85,7 @@ img_bob.set_angle(-PI*3/2); //rotate 270 degrees CW
 img_bob.set_angle(-PI*2); //rotate 360 degrees CW
 */
 pub struct Player {
-    view: StillImage,                                    //stillimage of player
+    view: StillImage,                                                                        //stillimage of player
     preloads: Vec<(Texture2D, Option<Vec<u8>>, String)>, //vec of preloads for use throughout player (especially for UI and image changing)
     move_speed: f32,                                     //movement speed in pixels per second
     movement: Vec2,                                      //movement vector for current frame
@@ -100,24 +101,28 @@ pub struct Player {
     equipped_items: Vec<usize>,                          //vector of indices of equipped items in the items vector
     itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), //2d list for stats
     inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for inventory UI elements (listviews, images, labels, buttons)
-    playerui: (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>),             //2d list for player UI elements (images, labels)
+    playerui: (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>), //2d list for player UI elements (images, labels)
     inventoryopen: bool,
     savemenu: (Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for save menu UI elements (images, labels, buttons)
-    save_menu_open: bool,                                 //is inventory open
-    armor: i32,                                          //armor value for damage reduction
-    attack: bool,                                        //is player currently attacking (for drawing attack labels)
-    last_attack_time: f64,                               //time of last attack for timing attack labels
+    save_menu_open: bool,                                     //is inventory open
+    armor: i32,                                               //armor value for damage reduction
+    attack: bool,                                             //is player currently attacking (for drawing attack labels)
+    last_attack_time: f64,                                    //time of last attack for timing attack labels
     attackimgfound: bool, //has the correct attack label been found for the current direction of attack (to prevent repeatedly searching for it every frame)
-    attackimg: AnimatedImage, //current attack label to be drawn when attacking 
-    mlevalid: bool, //is player currently performing a melee attack (for preventing multiple melee hits from one attack input)
-    rangedattack: bool, //is player currently performing a ranged attack (for drawing ranged attack labels)
+    attackimg: AnimatedImage, //current attack label to be drawn when attacking
+    mlevalid: bool,       //is player currently performing a melee attack (for preventing multiple melee hits from one attack input)
+    rangedattack: bool,   //is player currently performing a ranged attack (for drawing ranged attack labels)
     last_rng_attack_time: f64, //time of last ranged attack for timing ranged attack labels and cooldowns
     rangedattackimgcreated: bool, //has the correct ranged attack label been found/created for the current direction of attack (to prevent repeatedly searching/creating for it every frame)
     ranged_movespeeds: Vec<Vec2>, //movement speed of the projectile for ranged attacks
-    arrows: Vec<StillImage>, //list of self.arrow projectiles for ranged attacks
-    player_direction: String, //current direction player is facing for attack purposes (up, down, left, right, etc.)
+    arrows: Vec<StillImage>,      //list of self.arrow projectiles for ranged attacks
+    player_direction: String,     //current direction player is facing for attack purposes (up, down, left, right, etc.)
     activedisc: String,
     cleared: i32,
+    death_screen: (Vec<StillImage>, Vec<Label>, Vec<TextButton>),
+    death_screen_open: bool,
+    name: String,
+    password: String,
 }
 
 impl Player {
@@ -137,6 +142,7 @@ impl Player {
         let playerui = Player::create_player_ui(x, y, &preloadlist, tm).await;
         let inventory = Player::create_inventory(&preloadlist).await;
         let savemenu = Player::create_save_menu(&preloadlist).await;
+        let death_screen = Player::create_death_screen(&preloadlist).await;
         let attackimg = playerui.2[0].clone();
 
         Player {
@@ -145,7 +151,7 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 3.0,
+            mledmg: 50.0,
             rngdmg: 5.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
@@ -174,6 +180,10 @@ impl Player {
             arrows: Vec::new(),
             activedisc: "none".to_string(),
             cleared: 0,
+            death_screen,
+            death_screen_open: false,
+            name: String::new(),
+            password: String::new(),
         }
     }
     //movement functions
@@ -202,23 +212,25 @@ impl Player {
         self.movement = movement;
         self.handle_image(); //handle if image changes
         if is_key_pressed(KeyCode::Tab) {
-            if self.save_menu_open { //if save menu is open, close save menu instead of inventory on tab press
+            if self.save_menu_open {
+                //if save menu is open, close save menu instead of inventory on tab press
                 self.save_menu_open = false;
                 *pause = false; //unpause game when closing save menu
             }
-           self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
-           match pause {
+            self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
+            match pause {
                 true => *pause = false, //unpause game when closing inventory
                 false => *pause = true, //pause game when opening inventory
             }
         }
         if is_key_pressed(KeyCode::Escape) {
-            if self.inventoryopen { //if inventory is open, close inventory instead of save menu on escape press
+            if self.inventoryopen {
+                //if inventory is open, close inventory instead of save menu on escape press
                 self.inventoryopen = false;
                 *pause = false; //unpause game when closing inventory
             }
             self.save_menu_open = !self.save_menu_open; //open/close save menu on escape press (draw vs not draw)
-             match pause {
+            match pause {
                 true => *pause = false, //unpause game when closing save menu
                 false => *pause = true, //pause game when opening save menu
             }
@@ -241,18 +253,18 @@ impl Player {
             }
         }
     }
-#[allow(unused)]
+    #[allow(unused)]
     pub fn interact(&mut self, interactable: &StillImage) -> bool {
         let mut interact = false;
         //handle interaction with interactable objects
         if is_key_pressed(KeyCode::F) {
             if check_collision(self.view_player(), interactable, 1) {
                 interact = true;
-            }   
+            }
         }
         interact
     }
-    
+
     pub fn handle_image(&mut self) {
         // change image based on direction of movement (8 directions)
         // Determine the desired preload index, then only set it if different from current
@@ -283,11 +295,13 @@ impl Player {
         } else {
             None
         };
-        if let Some(idx) = desired_index { //create an index var from desired_index
+        if let Some(idx) = desired_index {
+            //create an index var from desired_index
             let desired_fname = &self.preloads[idx].2; //get filename of desired preload
-            if self.view.get_filename() != *desired_fname { //if and ONLY if the filename differs
+            if self.view.get_filename() != *desired_fname {
+                //if and ONLY if the filename differs
                 self.view.set_preload(self.preloads[idx].clone()); //Changes filename
-            } 
+            }
         }
     }
 
@@ -341,7 +355,7 @@ impl Player {
             for img in collides {
                 if self.check_x_collision(img) {
                     self.set_position(old_pos.x, self.get_y()); //move player back to old x position but keep new y position for smoother movement when colliding with objects
-                    break
+                    break;
                 }
             }
         }
@@ -363,11 +377,10 @@ impl Player {
             for img in collides {
                 if self.check_y_collision(img) {
                     self.set_position(self.get_x(), old_pos.y);
-                    break
+                    break;
                 }
             }
         }
-
     }
 
     pub fn get_playerhitbox(&self) -> StillImage {
@@ -420,7 +433,7 @@ impl Player {
     pub fn set_position(&mut self, x: f32, y: f32) {
         self.view.set_x(x);
         self.view.set_y(y);
-        self.playerui.2[0].set_x(x - 15.0);  //must be set manually as each label is distinctly spaced and positioned
+        self.playerui.2[0].set_x(x - 15.0); //must be set manually as each label is distinctly spaced and positioned
         self.playerui.2[0].set_y(y - 30.0);
         self.playerui.2[1].set_x(x + 40.0);
         self.playerui.2[1].set_y(y - 30.0);
@@ -448,7 +461,7 @@ impl Player {
         &self.view
     }
 
-#[allow(unused)]
+    #[allow(unused)]
     pub fn get_movespeed(&self) -> f32 {
         self.move_speed * self.movespeedmult
     }
@@ -462,11 +475,11 @@ impl Player {
     }
 
     //PLAYER STATS AND MOVEMENTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-#[allow(unused)]
+    #[allow(unused)]
     pub fn dash_start(&mut self) {
         self.move_speed *= 5.0;
     }
-#[allow(unused)]
+    #[allow(unused)]
     pub fn dash_end(&mut self) {
         self.move_speed /= 5.0;
     }
@@ -505,7 +518,7 @@ impl Player {
         self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
         self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
     }
-#[allow(unused)]
+    #[allow(unused)]
     pub fn healplayer(&mut self, heal: f32) {
         self.health += heal;
         if self.health > self.maxhealth {
@@ -571,10 +584,14 @@ impl Player {
 
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
     #[allow(unused)]
-    pub async fn create_player_ui(x: f32, y: f32, preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>, tm: &TextureManager) -> (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>) {
+    pub async fn create_player_ui(
+        x: f32,
+        y: f32,
+        preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>,
+        tm: &TextureManager,
+    ) -> (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>) {
         let mut img_heart = StillImage::new(
-            "",
-            100.0, // width
+            "", 100.0, // width
             50.0,  // height
             -25.0, // x position //offset as drawn from center
             0.0,   // y position
@@ -593,8 +610,7 @@ impl Player {
         lbl_healthbarbg.with_border(BLACK, 2.0);
         let mut lbl_healthnum = Label::new("100", 6.0, 28.0, 30);
         let mut img_arrow = StillImage::new(
-            "",
-            40.0,  // width
+            "", 40.0,  // width
             40.0,  // height
             420.0, // x position
             5.0,   // y position
@@ -603,13 +619,12 @@ impl Player {
         )
         .await;
         let mut img_musicoin = StillImage::new(
-            "",
-            80.0,  // width
-            80.0,  // height
-            0.0, // x position
-            40.0,   // y position
-            true,  // Enable stretching
-            1.0,   // Normal zoom (100%)
+            "", 80.0, // width
+            80.0, // height
+            0.0,  // x position
+            40.0, // y position
+            true, // Enable stretching
+            1.0,  // Normal zoom (100%)
         )
         .await;
         img_musicoin.set_preload(tm.get_preload("assets/item_files/musicoin.png").unwrap().clone());
@@ -617,8 +632,7 @@ impl Player {
         let mut lbl_arrownum = Label::new("", 427.0, 32.0, 30);
         lbl_arrownum.with_colors(BLACK, None);
         let mut img_disc1 = StillImage::new(
-            "",
-            40.0,  // width
+            "", 40.0,  // width
             40.0,  // height
             465.0, // x position
             5.0,   // y position
@@ -630,8 +644,7 @@ impl Player {
         let mut lbl_disc1num = Label::new("", 472.0, 32.0, 30);
         lbl_disc1num.with_colors(WHITE, None);
         let mut img_disc2 = StillImage::new(
-            "",
-            40.0,  // width
+            "", 40.0,  // width
             40.0,  // height
             510.0, // x position
             5.0,   // y position
@@ -643,8 +656,7 @@ impl Player {
         let mut lbl_disc2num = Label::new("", 517.0, 32.0, 30);
         lbl_disc2num.with_colors(WHITE, None);
         let mut img_disc3 = StillImage::new(
-            "",
-            40.0,  // width
+            "", 40.0,  // width
             40.0,  // height
             555.0, // x position
             5.0,   // y position
@@ -669,17 +681,12 @@ impl Player {
         //     1.0,
         // )
         // .await;
-    let mut img_slash_t = AnimatedImage::from_gif(
-        "", 
-        player_x -15.0, player_y - 30.0,           
-        70.0, 30.0,          
-        true                   
-    ).await;
-       // img_slash_t.set_preload(preloads[11].clone());
+        let mut img_slash_t = AnimatedImage::from_gif("", player_x - 15.0, player_y - 30.0, 70.0, 30.0, true).await;
+        // img_slash_t.set_preload(preloads[11].clone());
 
-          if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_t.set_preloaded_gif(preloaded, false);
-    }
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+            img_slash_t.set_preloaded_gif(preloaded, false);
+        }
         // let mut img_slash_tr = StillImage::new(
         //     "",
         //     60.0, // width
@@ -692,17 +699,11 @@ impl Player {
         // .await;
         // img_slash_tr.set_preload(preloads[11].clone());
 
-let mut img_slash_tr = AnimatedImage::from_gif(
-        "", 
-        player_x +40.0, player_y - 30.0,           
-        70.0, 30.0,          
-        true                   
-    ).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_tr.set_preloaded_gif(preloaded, false);
-    }
+        let mut img_slash_tr = AnimatedImage::from_gif("", player_x + 40.0, player_y - 30.0, 70.0, 30.0, true).await;
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+            img_slash_tr.set_preloaded_gif(preloaded, false);
+        }
         img_slash_tr.set_angle(PI / 2.0);
-
 
         // let mut img_slash_r = StillImage::new(
         //     "",
@@ -716,17 +717,11 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         // .await;
         // img_slash_r.set_preload(preloads[11].clone());
 
-        let mut img_slash_r = AnimatedImage::from_gif(
-        "", 
-        player_x +45.0, player_y - 10.0,           
-        70.0, 30.0,          
-        true                   
-    ).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_r.set_preloaded_gif(preloaded, false);
-    }
+        let mut img_slash_r = AnimatedImage::from_gif("", player_x + 45.0, player_y - 10.0, 70.0, 30.0, true).await;
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+            img_slash_r.set_preloaded_gif(preloaded, false);
+        }
         img_slash_r.set_angle(PI);
-
 
         // let mut img_slash_br = StillImage::new(
         //     "",
@@ -740,15 +735,10 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         // .await;
         // img_slash_br.set_preload(preloads[11].clone());
 
-         let mut img_slash_br = AnimatedImage::from_gif(
-        "", 
-        player_x +40.0, player_y + 60.0,           
-        70.0, 30.0,          
-        true                   
-    ).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_br.set_preloaded_gif(preloaded, false);
-    }
+        let mut img_slash_br = AnimatedImage::from_gif("", player_x + 40.0, player_y + 60.0, 70.0, 30.0, true).await;
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+            img_slash_br.set_preloaded_gif(preloaded, false);
+        }
         // let mut img_slash_b = StillImage::new(
         //     "",
         //     70.0, // width
@@ -761,15 +751,10 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         // .await;
         // img_slash_b.set_preload(preloads[11].clone());
 
-         let mut img_slash_b = AnimatedImage::from_gif(
-        "", 
-        player_x -10.0, player_y + 65.0,           
-        70.0, 30.0,          
-        true                   
-    ).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_b.set_preloaded_gif(preloaded, false);
-    }
+        let mut img_slash_b = AnimatedImage::from_gif("", player_x - 10.0, player_y + 65.0, 70.0, 30.0, true).await;
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+            img_slash_b.set_preloaded_gif(preloaded, false);
+        }
         // let mut img_slash_bl = StillImage::new(
         //     "",
         //     60.0, // width
@@ -782,15 +767,10 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         // .await;
         // img_slash_bl.set_preload(preloads[11].clone());
 
-         let mut img_slash_bl = AnimatedImage::from_gif(
-        "", 
-        player_x -60.0, player_y + 50.0,           
-        70.0, 30.0,          
-        true                   
-    ).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_bl.set_preloaded_gif(preloaded, false);
-    }
+        let mut img_slash_bl = AnimatedImage::from_gif("", player_x - 60.0, player_y + 50.0, 70.0, 30.0, true).await;
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+            img_slash_bl.set_preloaded_gif(preloaded, false);
+        }
         img_slash_bl.set_angle(PI / 2.0);
         // let mut img_slash_l = StillImage::new(
         //     "",
@@ -803,15 +783,10 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         // )
         // .await;
         // img_slash_l.set_preload(preloads[11].clone());
-         let mut img_slash_l = AnimatedImage::from_gif(
-        "", 
-        player_x -35.0, player_y - 10.0,           
-        70.0, 30.0,          
-        true                   
-    ).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_l.set_preloaded_gif(preloaded, false);
-    }
+        let mut img_slash_l = AnimatedImage::from_gif("", player_x - 35.0, player_y - 10.0, 70.0, 30.0, true).await;
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+            img_slash_l.set_preloaded_gif(preloaded, false);
+        }
         // let mut img_slash_tl = StillImage::new(
         //     "",
         //     60.0, // width
@@ -824,35 +799,19 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         // .await;
         // img_slash_tl.set_preload(preloads[11].clone());
 
-         let mut img_slash_tl = AnimatedImage::from_gif(
-        "", 
-        player_x -60.0, player_y - 50.0,           
-        70.0, 30.0,          
-        true                   
-    ).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
-        img_slash_tl.set_preloaded_gif(preloaded, false);
-    }
+        let mut img_slash_tl = AnimatedImage::from_gif("", player_x - 60.0, player_y - 50.0, 70.0, 30.0, true).await;
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
+            img_slash_tl.set_preloaded_gif(preloaded, false);
+        }
         let mut player_hitbox = StillImage::new(
-            "",
-            40.0, // width
+            "", 40.0, // width
             60.0, // height
-            player_x,
-            player_y,
-            true,
-            1.0,
+            player_x, player_y, true, 1.0,
         )
         .await;
         player_hitbox.set_preload(preloads[11].clone());
         (
-            vec![
-                img_heart,
-                img_arrow,
-                img_disc1,
-                img_disc2,
-                img_disc3,
-                img_musicoin,
-            ],
+            vec![img_heart, img_arrow, img_disc1, img_disc2, img_disc3, img_musicoin],
             vec![
                 lbl_healthbarbg,
                 lbl_healthbar,
@@ -872,9 +831,7 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                 img_slash_l,
                 img_slash_tl,
             ],
-            vec![
-                player_hitbox,
-            ]
+            vec![player_hitbox],
         )
     }
 
@@ -893,87 +850,87 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         for label in self.playerui.1.iter_mut() {
             label.draw();
         }
-        self.inventory.2[2].draw();//draw gold label
+        self.inventory.2[2].draw(); //draw gold label
         self.playerui.1[0].draw();
         self.playerui.1[1].draw(); //label must be redrawn very specifically so for loops cant be used  
         self.playerui.0[0].draw();
         self.playerui.1[2].draw();
-        for i  in 0..self.playerui.0.len() {
+        for i in 0..self.playerui.0.len() {
             let img = &self.playerui.0[i];
             match img.get_filename() {
                 "assets/musicdisc_files/covers/backinblack.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", times[0]));
-                        if times[0] <= 0.0 {
-                            self.playerui.1[i+2].set_text("".to_string());
-                        }
-                },
+                    self.playerui.1[i + 2].set_text(format!("{:.0}", times[0]));
+                    if times[0] <= 0.0 {
+                        self.playerui.1[i + 2].set_text("".to_string());
+                    }
+                }
                 "assets/musicdisc_files/covers/thickofit.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", times[1]));
-                        if times[1] <= 0.0 {
-                            self.playerui.1[i+2].set_text("".to_string());
-                        }
-                },
+                    self.playerui.1[i + 2].set_text(format!("{:.0}", times[1]));
+                    if times[1] <= 0.0 {
+                        self.playerui.1[i + 2].set_text("".to_string());
+                    }
+                }
                 "assets/musicdisc_files/covers/howitsdone.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", times[2]));
-                        if times[2] <= 0.0 {
-                            self.playerui.1[i+2].set_text("".to_string());
-                        }
-                },
+                    self.playerui.1[i + 2].set_text(format!("{:.0}", times[2]));
+                    if times[2] <= 0.0 {
+                        self.playerui.1[i + 2].set_text("".to_string());
+                    }
+                }
                 "assets/musicdisc_files/covers/imstillstanding.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", times[3]));
-                        if times[3] <= 0.0 {
-                            self.playerui.1[i+2].set_text("".to_string());
-                        }
-                },
+                    self.playerui.1[i + 2].set_text(format!("{:.0}", times[3]));
+                    if times[3] <= 0.0 {
+                        self.playerui.1[i + 2].set_text("".to_string());
+                    }
+                }
                 "assets/musicdisc_files/covers/pandemonium.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", times[4]));
-                        if times[4] <= 0.0 {
-                            self.playerui.1[i+2].set_text("".to_string());
-                        }
-                },
+                    self.playerui.1[i + 2].set_text(format!("{:.0}", times[4]));
+                    if times[4] <= 0.0 {
+                        self.playerui.1[i + 2].set_text("".to_string());
+                    }
+                }
                 "assets/musicdisc_files/covers/sixhundredstrike.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", times[5]));
-                        if times[5] <= 0.0 {
-                            self.playerui.1[i+2].set_text("".to_string());
-                        }
-                },
+                    self.playerui.1[i + 2].set_text(format!("{:.0}", times[5]));
+                    if times[5] <= 0.0 {
+                        self.playerui.1[i + 2].set_text("".to_string());
+                    }
+                }
                 "assets/musicdisc_files/covers/sodapop.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", times[6]));
-                        if times[6] <= 0.0 {
-                            self.playerui.1[i+2].set_text("".to_string());
-                        }
-                },
+                    self.playerui.1[i + 2].set_text(format!("{:.0}", times[6]));
+                    if times[6] <= 0.0 {
+                        self.playerui.1[i + 2].set_text("".to_string());
+                    }
+                }
                 "assets/musicdisc_files/covers/greatestshow.png" => {
                     let times = musicdiscs.get_musicdisc_cooldowns();
-                    self.playerui.1[i+2].set_text(format!("{:.0}", times[7]));
-                        if times[7] <= 0.0 {
-                            self.playerui.1[i+2].set_text("".to_string());
-                        }
-                },
+                    self.playerui.1[i + 2].set_text(format!("{:.0}", times[7]));
+                    if times[7] <= 0.0 {
+                        self.playerui.1[i + 2].set_text("".to_string());
+                    }
+                }
                 _ => {}
             }
         }
-            /* 
-                if self.items[*item].get_itemtype() == "disc".to_string() {
-                    let title = self.items[*item].get_itemtitle();
-                    let times = self.musicdiscfunctions.get_musicdisc_cooldowns();
-                    if title == "Back In Black" {
-                        self.playerui.1[4].set_text(format!("{}", times.0));
-                        println!("{} cooldown: {}", title, times.0);
-                        if times.0 <= 0.0 {
-                            self.playerui.1[4].set_text("".to_string());
-                        }
+        /*
+            if self.items[*item].get_itemtype() == "disc".to_string() {
+                let title = self.items[*item].get_itemtitle();
+                let times = self.musicdiscfunctions.get_musicdisc_cooldowns();
+                if title == "Back In Black" {
+                    self.playerui.1[4].set_text(format!("{}", times.0));
+                    println!("{} cooldown: {}", title, times.0);
+                    if times.0 <= 0.0 {
+                        self.playerui.1[4].set_text("".to_string());
                     }
                 }
             }
-            */
+        }
+        */
         if self.attack {
             if self.mlevalid == true {
                 (index, mlehit) = self.create_melee_attack(enemies, index, mlehit);
@@ -982,7 +939,8 @@ let mut img_slash_tr = AnimatedImage::from_gif(
             if mletimepassed > 0.1 && mletimepassed < 1.0 {
                 self.attackimg.draw();
             }
-            if mletimepassed > 1.0 { //attack label only appears for 0.6 seconds after attack
+            if mletimepassed > 1.0 {
+                //attack label only appears for 0.6 seconds after attack
                 self.attack = false;
                 self.mlevalid = true;
                 self.attackimgfound = false;
@@ -994,49 +952,57 @@ let mut img_slash_tr = AnimatedImage::from_gif(
             if rngtimepassed > 0.5 && rngtimepassed < 3.0 {
                 let cooldown = 3.0 - rngtimepassed + 1.0; //+1 to not show 0 when cooldown is ready
                 self.playerui.1[3].set_text(format!("{:.0}", cooldown));
-            }
-            else if rngtimepassed >= 3.0 {
+            } else if rngtimepassed >= 3.0 {
                 self.playerui.1[3].set_text("".to_string());
             }
-            if rngtimepassed > 3.0 { 
+            if rngtimepassed > 3.0 {
                 self.rangedattack = false;
                 self.rangedattackimgcreated = false;
             }
         }
         let mut rac = 0; //ranged attack counter so that only one enemy is damaged per arrow
         for i in 0..self.arrows.len() {
-                let idx = i - rac;
-                let y = self.arrows[idx].get_y();
-                let x = self.arrows[idx].get_x();
-                let movement = vec2(self.ranged_movespeeds[idx].x * get_frame_time(), self.ranged_movespeeds[idx].y * get_frame_time());
-                if movement.x > 0.0 && movement.y > 0.0 { //if diagonal movement, normalize to prevent faster diagonal movement
-                    self.movement = self.movement.normalize(); //normalize diagonal movement to prevent faster movement when moving diagonally
-                }
-                self.arrows[idx].set_x(x + movement.x);
-                self.arrows[idx].set_y(y + movement.y);
-                self.arrows[idx].draw();
-                if self.arrows[idx].get_y() < 0.0 || self.arrows[idx].get_y() > 800.0 || self.arrows[idx].get_x() < 0.0 || self.arrows[idx].get_x() > 1200.0 {
+            let idx = i - rac;
+            let y = self.arrows[idx].get_y();
+            let x = self.arrows[idx].get_x();
+            let movement = vec2(
+                self.ranged_movespeeds[idx].x * get_frame_time(),
+                self.ranged_movespeeds[idx].y * get_frame_time(),
+            );
+            if movement.x > 0.0 && movement.y > 0.0 {
+                //if diagonal movement, normalize to prevent faster diagonal movement
+                self.movement = self.movement.normalize(); //normalize diagonal movement to prevent faster movement when moving diagonally
+            }
+            self.arrows[idx].set_x(x + movement.x);
+            self.arrows[idx].set_y(y + movement.y);
+            self.arrows[idx].draw();
+            if self.arrows[idx].get_y() < 0.0
+                || self.arrows[idx].get_y() > 800.0
+                || self.arrows[idx].get_x() < 0.0
+                || self.arrows[idx].get_x() > 1200.0
+            {
+                self.arrows.remove(idx);
+                self.ranged_movespeeds.remove(idx);
+                rac += 1;
+                continue; //skip collision check if arrow is removed for being out of bounds
+            }
+            for j in 0..enemies.len() {
+                if check_collision(&self.arrows[idx], enemies[j].view_enemy(), 1) {
+                    //ENEMY DAMAGE: mark hit and remove arrow
+                    rnghit = true;
                     self.arrows.remove(idx);
                     self.ranged_movespeeds.remove(idx);
-                    rac += 1;
-                    continue; //skip collision check if arrow is removed for being out of bounds
+                    break; //break to prevent multiple enemies being damaged by one arrow
                 }
-                for j in 0..enemies.len() {
-                    if check_collision(&self.arrows[idx], enemies[j].view_enemy(), 1) {
-                        //ENEMY DAMAGE: mark hit and remove arrow
-                        rnghit = true;
-                        self.arrows.remove(idx);
-                        self.ranged_movespeeds.remove(idx);
-                        break; //break to prevent multiple enemies being damaged by one arrow
-                    }
-                }
+            }
         }
         (mlehit, rnghit, index)
     }
 
     pub fn create_melee_attack(&mut self, enemies: &mut Vec<Enemy>, mut index: usize, mut mlehit: bool) -> (usize, bool) {
-        if self.attackimgfound == false {  //attackimgbool and match must be kept in player to be used outside of if statements
-                self.attackimg = match self.player_direction.as_str() {
+        if self.attackimgfound == false {
+            //attackimgbool and match must be kept in player to be used outside of if statements
+            self.attackimg = match self.player_direction.as_str() {
                 "t" => self.playerui.2[0].clone(),
                 "tr" => self.playerui.2[1].clone(),
                 "r" => self.playerui.2[2].clone(),
@@ -1044,19 +1010,19 @@ let mut img_slash_tr = AnimatedImage::from_gif(
                 "b" => self.playerui.2[4].clone(),
                 "bl" => self.playerui.2[5].clone(),
                 "l" => self.playerui.2[6].clone(),
-                "tl" => self.playerui.2[7].clone(), 
+                "tl" => self.playerui.2[7].clone(),
                 _ => self.playerui.2[0].clone(),
-                };
+            };
 
-                self.attackimg.reset();                
-                self.attackimgfound = true;
-                for i in 0..enemies.len() {
-                    if check_collision(&self.attackimg, enemies[i].view_enemy(), 1) {
-                        mlehit = true;
-                        index = i;
-                    }
+            self.attackimg.reset();
+            self.attackimgfound = true;
+            for i in 0..enemies.len() {
+                if check_collision(&self.attackimg, enemies[i].view_enemy(), 1) {
+                    mlehit = true;
+                    index = i;
                 }
             }
+        }
         (index, mlehit)
     }
 
@@ -1074,27 +1040,27 @@ let mut img_slash_tr = AnimatedImage::from_gif(
             let player_x = self.view.get_x();
             let player_y = self.view.get_y();
             let (coords, angle, movespeed) = match self.player_direction.as_str() {
-            "t" => (vec2(player_x+20.0, player_y-15.0), -PI/2.0, vec2(0.0, -600.0)),
-            "tr" => (vec2(player_x+50.0, player_y-15.0), -PI/4.0, vec2(600.0, -600.0)),
-            "r" => (vec2(player_x+15.0, player_y+30.0), 0.0, vec2(600.0, 0.0)),
-            "br" => (vec2(player_x+50.0, player_y+75.0), PI/4.0, vec2(600.0, 600.0)),
-            "b" => (vec2(player_x+20.0, player_y+75.0), PI/2.0, vec2(0.0, 600.0)),
-            "bl" => (vec2(player_x-15.0, player_y+75.0), 3.0*PI/4.0, vec2(-600.0, 600.0)),
-            "l" => (vec2(player_x-15.0, player_y+30.0), PI, vec2(-600.0, 0.0)),
-            "tl" => (vec2(player_x-15.0, player_y-15.0), -3.0*PI/4.0, vec2(-600.0, -600.0)), 
-            _ => (vec2(0.0, 0.0), 0.0, vec2(0.0, 0.0)),
+                "t" => (vec2(player_x + 20.0, player_y - 15.0), -PI / 2.0, vec2(0.0, -600.0)),
+                "tr" => (vec2(player_x + 50.0, player_y - 15.0), -PI / 4.0, vec2(600.0, -600.0)),
+                "r" => (vec2(player_x + 15.0, player_y + 30.0), 0.0, vec2(600.0, 0.0)),
+                "br" => (vec2(player_x + 50.0, player_y + 75.0), PI / 4.0, vec2(600.0, 600.0)),
+                "b" => (vec2(player_x + 20.0, player_y + 75.0), PI / 2.0, vec2(0.0, 600.0)),
+                "bl" => (vec2(player_x - 15.0, player_y + 75.0), 3.0 * PI / 4.0, vec2(-600.0, 600.0)),
+                "l" => (vec2(player_x - 15.0, player_y + 30.0), PI, vec2(-600.0, 0.0)),
+                "tl" => (vec2(player_x - 15.0, player_y - 15.0), -3.0 * PI / 4.0, vec2(-600.0, -600.0)),
+                _ => (vec2(0.0, 0.0), 0.0, vec2(0.0, 0.0)),
             };
             // keep per-arrow movespeeds in sync with self.arrows
             self.ranged_movespeeds.push(movespeed);
             let mut rng_attack_img = StillImage::new(
-                "",
-                30.0,  // width
-                30.0,  // height
+                "", 30.0,     // width
+                30.0,     // height
                 coords.x, // x position
                 coords.y, // y position
-                true,  // Enable stretching
-                1.0,   // Normal zoom (100%)
-            ).await;
+                true,     // Enable stretching
+                1.0,      // Normal zoom (100%)
+            )
+            .await;
             rng_attack_img.set_preload(self.preloads[12].clone());
             rng_attack_img.set_angle(angle);
             self.arrows.push(rng_attack_img);
@@ -1104,37 +1070,71 @@ let mut img_slash_tr = AnimatedImage::from_gif(
     }
     //SAVE MENUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU:)
     async fn create_save_menu(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
-        let mut shadow = StillImage::new("", 1200.0, 800.0, 0.0, 0.0, true, 1.0).await;
-        shadow.set_preload(preloads[2].clone());
-        let mut lbl_paused = Label::new("Paused", 500.0, 200.0, 60);
-        lbl_paused.with_colors(WHITE, Some(BROWN));
-        let mut btn_save = TextButton::new(500.0, 300.0, 200.0, 75.0, "Save", BLACK, GREEN, 30);
+        let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
+        shadow.set_preload(preloads[14].clone());
+        shadow.set_opacity(0.7);
+        let mut lbl_paused = Label::new("Paused", VIRTUAL_WIDTH / 2.0 -90.0, VIRTUAL_HEIGHT / 2.0-50.0, 60);
+        lbl_paused.with_colors(WHITE, Some(BLACK));
+        let mut btn_save = TextButton::new(VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 , 200.0, 75.0, "Save", BLACK, GREEN, 30);
         btn_save.with_text_color(WHITE);
-        let mut btn_exit = TextButton::new(500.0, 400.0, 200.0, 75.0, "Exit to Menu", BLACK, RED, 30);
+        let mut btn_exit = TextButton::new(VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 + 200.0, 200.0, 75.0, "Exit to Menu", BLACK, RED, 30);
         btn_exit.with_text_color(WHITE);
         (vec![shadow], vec![lbl_paused], vec![btn_save, btn_exit])
     }
 
-    pub async fn handle_save_menu(&mut self, )  {
-        if self.save_menu_open==true{
-        //draw menu
-        for image in self.savemenu.0.iter_mut() {
-            image.draw();
-        }
-        for label in self.savemenu.1.iter_mut() {
-            label.draw();
-        }
-        //handle button interactions
-        
+    
+    pub async fn handle_save_menu(&mut self) {
+        if self.save_menu_open == true {
+            //draw menu
+            for image in self.savemenu.0.iter_mut() {
+                image.draw();
+            }
+            for label in self.savemenu.1.iter_mut() {
+                label.draw();
+            }
+            //handle button interactions
+
             if self.savemenu.2[0].click() { //save button
+            } else if self.savemenu.2[1].click() { //exit to menu button
+            }
+        }
+    }
+
+    async fn create_death_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
+        let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
+        shadow.set_preload(preloads[14].clone());
+        shadow.set_opacity(0.7);
+        let mut lbl_death = Label::new("You Died", VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 - 50.0, 60);
+        lbl_death.with_colors(WHITE, Some(BLACK));
+        let mut btn_retry = TextButton::new(VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 , 200.0, 75.0, "Retry", BLACK, GREEN, 30);
+        btn_retry.with_text_color(WHITE);
+        let mut btn_exit = TextButton::new(VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 + 200.0, 200.0, 75.0, "Exit to Menu", BLACK, RED, 30);
+        btn_exit.with_text_color(WHITE);
+        (vec![shadow], vec![lbl_death], vec![btn_retry, btn_exit])
+    }
+
+    pub async fn handle_death_screen(&mut self) {
+        if self.death_screen_open == true {
+            //draw menu
+            for image in self.death_screen.0.iter_mut() {
+                image.draw();
+            }
+            for label in self.death_screen.1.iter_mut() {
+                label.draw();
+            }
+            //handle button interactions
+
+            if self.death_screen.2[0].click() { //retry button
+            } else if self.death_screen.2[1].click() { //exit to menu button
                 
             }
-            else if self.savemenu.2[1].click() { //exit to menu button
-              
-            }
         }
-        
     }
+
+    pub async fn death_screen_open(&self) -> bool {
+        self.death_screen_open
+    }
+
     //INVENTORYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
     async fn create_inventory(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
         //creating all inventory UI elements
@@ -1401,8 +1401,8 @@ let mut img_slash_tr = AnimatedImage::from_gif(
         self.armor = armor;
     }
 
-
-    fn refresh_disc_display(&mut self) {               //just an index, like a vec2 or a 2d list, check slot7 hud2, slot8 hud3, slot9 hud4, if disc in inventory slot, set preload to disc img, else set to invslot preload
+    fn refresh_disc_display(&mut self) {
+        //just an index, like a vec2 or a 2d list, check slot7 hud2, slot8 hud3, slot9 hud4, if disc in inventory slot, set preload to disc img, else set to invslot preload
         let disc_slots = [(7usize, 2usize), (8usize, 3usize), (9usize, 4usize)];
 
         for (inventory_slot, hud_slot) in disc_slots {
@@ -1496,4 +1496,52 @@ let mut img_slash_tr = AnimatedImage::from_gif(
             }
         }
     }
-}
+
+    pub fn set_usernamepassword(&mut self, name: String, password: String) {
+        self.name = name;
+        self.password = password;
+    }
+
+    pub fn set_health(&mut self, health: f32) {
+        self.health = health;
+    }
+
+    pub fn set_save_data(&mut self, records: Vec<DatabaseTable> ) {
+        for record in &records {
+            if record.user_name == self.name && record.user_password == self.password {
+                self.cleared = record.player_clearedvar;
+                self.set_x(record.player_x as f32);
+                self.set_y(record.player_y as f32);
+                self.addcoins(record.musicoins as i32);
+                self.set_health(record.currenthealth as f32);
+                let mut tempinventory = vec![];
+                tempinventory.push(record.inv_1);
+                tempinventory.push(record.inv_2);
+                tempinventory.push(record.inv_3);
+                tempinventory.push(record.inv_4);
+                tempinventory.push(record.inv_5);
+                tempinventory.push(record.inv_6);
+                tempinventory.push(record.inv_7);
+                tempinventory.push(record.inv_8);
+                tempinventory.push(record.inv_9);
+                tempinventory.push(record.inv_10);
+                tempinventory.push(record.inv_11);
+                tempinventory.push(record.inv_12);
+                tempinventory.push(record.inv_13);
+                tempinventory.push(record.inv_14);
+                tempinventory.push(record.inv_15);
+                tempinventory.push(record.inv_16);
+                tempinventory.push(record.inv_17);
+                tempinventory.push(record.inv_18);
+                tempinventory.push(record.inv_19);
+                tempinventory.push(record.inv_20);
+                for iteminteger in  tempinventory {
+                    if iteminteger != 0 {
+                        // Handle the item integer
+                    }
+                }
+            }
+        }
+    }
+    }
+

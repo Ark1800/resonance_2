@@ -146,12 +146,21 @@ pub async fn run(
                         enemies.push(slime2);
                     }
                 }
+                enemies[index].add_gold(player);
                 enemies.remove(index);
             }
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
             if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
                 enemies.remove(index);
             }
         }

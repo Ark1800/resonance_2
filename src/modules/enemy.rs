@@ -184,7 +184,7 @@ for mage in 0..mage_list.len() {
         }
 */
 use crate::modules::collision::check_collision;
-use crate::modules::{enemy, map};
+use crate::modules::map;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::progressbar::ProgressBar;
@@ -717,19 +717,19 @@ impl Enemy {
         if !((self.get_x() - player.get_x()).abs() < 150.0) || !((self.get_y() - player.get_y()).abs() < 150.0) {
             self.moveing(player.get_x(), player.get_y());
         }
-            if (get_time() - self.cooldown).abs() > self.cooldown2 {
-                self.cooldown = get_time();
-                let attack_choice = rand::gen_range(0, 2);
-                if attack_choice >= 0 {
-                    println!("Cyric used Meteors!");
-                    self.meteors(&tm).await;
-                    self.cooldown2 = get_time() + 2.0;
-                } else {
-                    println!("Cyric used Chromatic Orb!");
-                    self.shoot(player, 80.0, 80.0).await;
-                    self.cooldown2 = get_time() + 2.0;
-                }
+        if (get_time() - self.cooldown).abs() > self.cooldown2 {
+            self.cooldown = get_time();
+            let attack_choice = rand::gen_range(0, 2);
+            if attack_choice >= 0 {
+                println!("Cyric used Meteors!");
+                self.meteors(&tm).await;
+                self.cooldown2 = get_time() + 2.0;
+            } else {
+                println!("Cyric used Chromatic Orb!");
+                self.shoot(player, 80.0, 80.0).await;
+                self.cooldown2 = get_time() + 2.0;
             }
+        }
         let mut healthbar = self.set_healthbar();
         healthbar.draw();
     }
@@ -777,7 +777,7 @@ impl Enemy {
     }
 
     pub fn reversereverse(&mut self, player_x: f32, player_y: f32, map: &map::Map, enemy_old_pos: Vec2) {
-         // Direction to move in
+        // Direction to move in
         let mut move_dir = vec2(0.0, 0.0);
 
         self.movement = move_dir * self.move_speed * get_frame_time();
@@ -825,7 +825,7 @@ impl Enemy {
     }
 
     pub fn pandemonium(&mut self, highesthealthenemypos: Vec2, enemy_old_pos: Vec2) {
-         // Direction to move in
+        // Direction to move in
         let mut move_dir = vec2(0.0, 0.0);
 
         self.movement = move_dir * self.move_speed * get_frame_time();
@@ -837,14 +837,14 @@ impl Enemy {
         }
         if self.view.get_y() < highesthealthenemypos.y {
             move_dir.y += 1.0; // Move down
-        } else if self.view.get_y() >  highesthealthenemypos.y {
+        } else if self.view.get_y() > highesthealthenemypos.y {
             move_dir.y -= 1.0; // Move up
         }
         // Normalize the movement to prevent faster diagonal movement
         if move_dir.length() > 0.0 {
             move_dir = move_dir.normalize();
         }
-        
+
         self.set_x(enemy_old_pos.x + move_dir.x / 2.0);
         self.set_y(enemy_old_pos.y + move_dir.y / 2.0);
     }
@@ -884,7 +884,7 @@ impl Enemy {
         }
     }
 
-     pub fn sodapop(&mut self, first_pos: Vec2, map: &map::Map) {
+    pub fn sodapop(&mut self, first_pos: Vec2, map: &map::Map) {
         let min_y = first_pos.y - 20.0;
         let max_y = first_pos.y + 20.0;
 
@@ -904,6 +904,11 @@ impl Enemy {
         if map.map_collision(self.view_enemy()).0 {
             self.set_y(first_pos.y);
         }
+    }
+
+    pub fn add_gold(&self, player: &mut Player,) {
+        let amount = (self.get_maxhealth()/10.0).round() as i32;
+        player.addcoins(amount);
     }
 }
 
@@ -930,4 +935,3 @@ impl Enemy {
 //         answer
 //     }
 // }
-

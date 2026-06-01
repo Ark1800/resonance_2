@@ -74,44 +74,45 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-        player.handle_inventory();      
+        player.handle_inventory();
         player.handle_save_menu().await;
         map.draw_map(&tm).await;
         if *pause == false {
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
-             if player.get_cleared() == 6 {
-            for i in 0..enemies.len() {
-                //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                match enemies[i].get_enemy_type() {
-                    "archer" => {
-                        enemies[i].archer_action(tm, player).await;
-                        enemies[i].draw_bullet(player);
-                    }
-                    "slime" => {
-                        enemies[i].slime_action(player);
-                    }
-                    "summoner" => {
-                        let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
-                        if summoned {
-                            enemies.push(slime1);
-                            enemies.push(slime2);
-                            enemies.push(slime3);
+            if player.get_cleared() == 6 {
+                for i in 0..enemies.len() {
+                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                    match enemies[i].get_enemy_type() {
+                        "archer" => {
+                            enemies[i].archer_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
                         }
+                        "slime" => {
+                            enemies[i].slime_action(player);
+                        }
+                        "summoner" => {
+                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                            if summoned {
+                                enemies.push(slime1);
+                                enemies.push(slime2);
+                                enemies.push(slime3);
+                            }
+                        }
+                        "mage" => {
+                            enemies[i].mage_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "large_slime" => {
+                            enemies[i].large_slime_action(tm, player).await;
+                        }
+                        _ => {}
                     }
-                    "mage" => {
-                        enemies[i].mage_action(tm, player).await;
-                        enemies[i].draw_bullet(player);
-                    }
-                    "large_slime" => {
-                        enemies[i].large_slime_action(tm, player).await;
-                    }
-                    _ => {}
+                    enemies[i].draw();
                 }
-                enemies[i].draw();
             }
-        }}
+        }
         player.draw();
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
@@ -126,12 +127,21 @@ pub async fn run(
                         enemies.push(slime2);
                     }
                 }
+                enemies[index].add_gold(player);
                 enemies.remove(index);
             }
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
             if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
                 enemies.remove(index);
             }
         }
@@ -139,7 +149,6 @@ pub async fn run(
         if enemies.is_empty() && player.get_cleared() == 5 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
-            
         }
 
         if player.get_x() > virtual_width - 10.0 {

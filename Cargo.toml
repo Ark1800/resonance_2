@@ -18,6 +18,7 @@ native = ["rayon"]    # The "native" feature enables Rayon
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rayon = "1.7"  # Rayon is only included for native builds
+ureq = { version = "2.9", features = ["json"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
    wasm-bindgen = "0.2"

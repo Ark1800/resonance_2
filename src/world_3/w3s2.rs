@@ -76,14 +76,14 @@ pub async fn run(
     for i in 0..3 {
         let mut large_slime = Enemy::new(
             "",
-            75.0, //hieght
-            75.0, //width
-            300.0, //x
+            75.0,                        //hieght
+            75.0,                        //width
+            300.0,                       //x
             slimey * (i as f32 * 100.0), //y
-            true, //stretching
-            1.0,  //zoom level
-            20.0,   //health
-            8.0,    //damage
+            true,                        //stretching
+            1.0,                         //zoom level
+            20.0,                        //health
+            8.0,                         //damage
             "",
             "large_slime",
         )
@@ -146,16 +146,25 @@ pub async fn run(
                         enemies.push(slime2);
                     }
                 }
+                enemies[index].add_gold(player);
                 enemies.remove(index);
             }
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
             if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
                 enemies.remove(index);
             }
         }
-        player.handle_inventory();      
+        player.handle_inventory();
         player.handle_save_menu().await;
         if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();

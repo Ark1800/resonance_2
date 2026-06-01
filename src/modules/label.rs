@@ -6,12 +6,12 @@ Adds a label object
 
 In your mod.rs file located in the modules folder add the following to the end of the file
         pub mod label;
-    
+
 
 Add with the other use statements
     use crate::modules::label::Label;
 
-Then to use this you would put the following above the loop: 
+Then to use this you would put the following above the loop:
     let lbl_out = Label::new("Hello\nWorld", 50.0, 100.0, 30);
 Where the numbers are x, y, font size
 You can also set the colors of the text box by using:
@@ -64,7 +64,7 @@ You can also set visibility during creation with:
 Example:
      // Load font once at the beginning of your program
      let font = load_ttf_font("assets/love.ttf").await.unwrap();
-     
+
      // Create label and apply custom font
      let mut lbl_out = Label::new("Hello\nWorld", 50.0, 100.0, 30);
      lbl_out.with_colors(WHITE, Some(DARKGRAY))
@@ -88,23 +88,23 @@ pub struct Label {
     foreground: Color,
     background: Option<Color>,
     line_spacing: f32,
-    font: Option<Font>, // Store the font directly since Font is Clone
-    corner_radius: f32, // For rounded corners
-    border: bool,       // Whether to draw a border
-    border_color: Color, // Color of the border
+    font: Option<Font>,    // Store the font directly since Font is Clone
+    corner_radius: f32,    // For rounded corners
+    border: bool,          // Whether to draw a border
+    border_color: Color,   // Color of the border
     border_thickness: f32, // Thickness of the border
-    visible: bool,      // Whether the label should be drawn
+    visible: bool,         // Whether the label should be drawn
     scroll: bool,          // Whether to scroll the text
     scroll_speed: f64,     // Scroll speed
     scroll_timer: f64,     // Timer for scrolling
     scroll_text: Vec<String>,
     scroll_letter: i32,
-    
+
     // Fixed size properties
     fixed_width: Option<f32>,
     fixed_height: Option<f32>,
     text_align: TextAlign,
-    
+
     // Cached values for performance
     cached_lines: Vec<String>,
     cached_line_dimensions: Vec<TextDimensions>,
@@ -195,26 +195,31 @@ impl Label {
     pub fn set_scrolling_text(&mut self, sentence: String) {
         if self.scroll {
             self.scroll_text.clear();
-        for i in 0..sentence.len() {
-            self.scroll_text.push(sentence[i..i + 1].to_string());
-        }
-        self.scroll_letter = 1;
+            for i in 0..sentence.len() {
+                self.scroll_text.push(sentence[i..i + 1].to_string());
+            }
+            self.scroll_letter = 1;
         }
     }
 
     #[allow(unused)]
     pub fn scrolling_text_draw(&mut self) -> bool {
         let mut pass = true;
-        if self.scroll_letter == 0 || (get_time() - self.scroll_timer < self.scroll_speed) || !self.scroll || self.scroll_text.is_empty() || self.scroll_letter >= self.scroll_text.len() as i32 {
+        if self.scroll_letter == 0
+            || (get_time() - self.scroll_timer < self.scroll_speed)
+            || !self.scroll
+            || self.scroll_text.is_empty()
+            || self.scroll_letter >= self.scroll_text.len() as i32
+        {
             pass = false;
         } else {
-        self.scroll_timer = get_time();
-        let mut scrolled_text = "".to_string();
-        for i in 0..self.scroll_letter {
-            scrolled_text = scrolled_text + &self.scroll_text[i as usize].clone();
-        }
-        self.scroll_letter += 1;
-        self.set_text(scrolled_text);
+            self.scroll_timer = get_time();
+            let mut scrolled_text = "".to_string();
+            for i in 0..self.scroll_letter {
+                scrolled_text = scrolled_text + &self.scroll_text[i as usize].clone();
+            }
+            self.scroll_letter += 1;
+            self.set_text(scrolled_text);
         }
         self.draw();
         pass
@@ -222,7 +227,7 @@ impl Label {
     // Calculate and cache text dimensions
     fn calculate_text_dimensions(&mut self) {
         let line_height = self.font_size as f32 * self.line_spacing;
-        
+
         // Clear previous cached values
         self.cached_lines.clear();
         self.cached_line_dimensions.clear();
@@ -246,7 +251,7 @@ impl Label {
                 self.cached_max_width = self.cached_max_width.max(dimensions.width);
             }
         }
-        
+
         // Calculate total height (only if we don't have fixed height)
         if self.fixed_height.is_none() {
             self.cached_total_height = self.cached_lines.len() as f32 * line_height;
@@ -390,10 +395,10 @@ impl Label {
 
         // Recalculate because fixed width changes wrapping.
         self.calculate_text_dimensions();
-        
+
         self
     }
-    
+
     // Method to set text alignment (only applies when using fixed width)
     #[allow(unused)]
     pub fn with_alignment(&mut self, alignment: TextAlign) -> &mut Self {
@@ -405,68 +410,68 @@ impl Label {
     #[allow(unused)]
     pub fn set_text<T: Into<String>>(&mut self, new_text: T) -> &mut Self {
         self.text = new_text.into();
-        
+
         // Only recalculate if we need to (when not using fixed dimensions)
         // Even with fixed dimensions, we still need to recalculate line dimensions
         // for proper text alignment
         self.calculate_text_dimensions();
-        
+
         self
     }
-     // Getter for width (fixed width or max content width)
+    // Getter for width (fixed width or max content width)
     #[allow(unused)]
     pub fn get_width(&self) -> Option<f32> {
         match self.fixed_width {
             Some(width) => Some(width),
-            None => Some(self.cached_max_width + 10.0) // Same padding as in draw method
+            None => Some(self.cached_max_width + 10.0), // Same padding as in draw method
         }
     }
-    
+
     // Getter for height (fixed height or calculated content height)
     #[allow(unused)]
     pub fn get_height(&self) -> Option<f32> {
         match self.fixed_height {
             Some(height) => Some(height),
-            None => Some(self.cached_total_height)
+            None => Some(self.cached_total_height),
         }
     }
-    
+
     // Getter for font size
     #[allow(unused)]
     pub fn get_font_size(&self) -> u16 {
         self.font_size
     }
-    
+
     // Getter for the label's text content
     #[allow(unused)]
     pub fn get_text(&self) -> &str {
         &self.text
     }
-    
+
     // Getter for x position
     #[allow(unused)]
     pub fn get_x(&self) -> f32 {
         self.x
     }
-    
+
     // Getter for y position
     #[allow(unused)]
     pub fn get_y(&self) -> f32 {
         self.y
     }
-    
+
     // Getter for position as Vec2
     #[allow(unused)]
     pub fn get_position(&self) -> Vec2 {
         Vec2::new(self.x, self.y)
     }
-    
+
     // Getter for visibility
     #[allow(unused)]
     pub fn is_visible(&self) -> bool {
         self.visible
     }
-    
+
     // Setter for position
     #[allow(unused)]
     pub fn set_position(&mut self, x: f32, y: f32) -> &mut Self {
@@ -474,15 +479,15 @@ impl Label {
         self.y = y;
         self
     }
-    
+
     // Setter for font size
     #[allow(unused)]
     pub fn set_font_size(&mut self, font_size: u16) -> &mut Self {
         self.font_size = font_size;
-        
+
         // Recalculate text dimensions since font size affects text measurements
         self.calculate_text_dimensions();
-        
+
         self
     }
 
@@ -492,57 +497,53 @@ impl Label {
         self.visible = visible;
         self
     }
-    
+
     // Method to toggle visibility (returns the new visibility state)
     #[allow(unused)]
     pub fn toggle_visibility(&mut self) -> bool {
         self.visible = !self.visible;
         self.visible
     }
-    
+
     // Method to draw the label
     pub fn draw(&self) {
         // Only draw if the label is visible
         if !self.visible {
             return;
         }
-        
+
         let line_height = self.font_size as f32 * self.line_spacing;
-        
+
         // Determine width and height (using fixed values if set, otherwise use content size)
         let width = self.fixed_width.unwrap_or(self.cached_max_width + 10.0);
         let height = self.fixed_height.unwrap_or(self.cached_total_height);
-        
+
         // Calculate positions for all elements
         let bg_x = self.x - 5.0;
         let bg_y = self.y - self.font_size as f32;
-        
+
         // Draw background first
         if let Some(bg) = self.background {
             // Draw a single background for all lines
             if self.corner_radius > 0.0 {
-                draw_round_rect(
-                    bg_x, bg_y, width, height,
-                    self.corner_radius,
-                    bg,
-                );
+                draw_round_rect(bg_x, bg_y, width, height, self.corner_radius, bg);
             } else {
-                draw_rectangle(
-                    bg_x, bg_y, width, height,
-                    bg,
-                );
+                draw_rectangle(bg_x, bg_y, width, height, bg);
             }
         }
-        
+
         // Draw border if enabled
         if self.border {
             // Get background color for the inner part of the border
             let bg_color = self.background.unwrap_or(GRAY);
-            
+
             if self.corner_radius > 0.0 {
                 // Draw rounded border with the correct background color
                 draw_round_rect_border(
-                    bg_x, bg_y, width, height,
+                    bg_x,
+                    bg_y,
+                    width,
+                    height,
                     self.corner_radius,
                     self.border_thickness,
                     self.border_color,
@@ -550,11 +551,7 @@ impl Label {
                 );
             } else {
                 // Draw regular rectangular border
-                draw_rectangle_border(
-                    bg_x, bg_y, width, height,
-                    self.border_thickness,
-                    self.border_color,
-                );
+                draw_rectangle_border(bg_x, bg_y, width, height, self.border_thickness, self.border_color);
             }
         }
 
@@ -565,7 +562,7 @@ impl Label {
             if self.fixed_height.is_some() && y > bg_y + height {
                 break;
             }
-            
+
             // Calculate x position based on alignment (if fixed width is set)
             let x = if let Some(fixed_width) = self.fixed_width {
                 let text_area_width = (fixed_width - 10.0).max(0.0);
@@ -577,7 +574,7 @@ impl Label {
             } else {
                 self.x
             };
-            
+
             // Draw the text - use draw_text_ex if we have a custom font
             match &self.font {
                 Some(font) => {
@@ -592,7 +589,7 @@ impl Label {
                             ..Default::default()
                         },
                     );
-                },
+                }
                 None => {
                     // Use the default draw_text function
                     draw_text(line, x, y, self.font_size as f32, self.foreground);
@@ -610,18 +607,18 @@ fn draw_round_rect(x: f32, y: f32, w: f32, h: f32, radius: f32, color: Color) {
     let top_right = Vec2::new(x + w - radius, y + radius);
     let bottom_left = Vec2::new(x + radius, y + h - radius);
     let bottom_right = Vec2::new(x + w - radius, y + h - radius);
-    
+
     // Draw center rectangle
     draw_rectangle(x + radius, y, w - 2.0 * radius, h, color);
-    
+
     // Draw the side rectangles
     draw_rectangle(x, y + radius, radius, h - 2.0 * radius, color);
     draw_rectangle(x + w - radius, y + radius, radius, h - 2.0 * radius, color);
-    
+
     // Draw the four corner circles (could be batched in a real engine)
-    draw_circle(top_left.x, top_left.y, radius, color);     // Top-left
-    draw_circle(top_right.x, top_right.y, radius, color);   // Top-right
-    draw_circle(bottom_left.x, bottom_left.y, radius, color);  // Bottom-left
+    draw_circle(top_left.x, top_left.y, radius, color); // Top-left
+    draw_circle(top_right.x, top_right.y, radius, color); // Top-right
+    draw_circle(bottom_left.x, bottom_left.y, radius, color); // Bottom-left
     draw_circle(bottom_right.x, bottom_right.y, radius, color); // Bottom-right
 }
 
@@ -647,16 +644,16 @@ fn draw_round_rect_border(x: f32, y: f32, w: f32, h: f32, radius: f32, thickness
         draw_rectangle_border(x, y, w, h, thickness, color);
         return;
     }
-    
+
     // Draw outer rounded rectangle
     draw_round_rect(x, y, w, h, radius, color);
-    
+
     // Draw inner rounded rectangle with background color
     let inner_x = x + thickness;
     let inner_y = y + thickness;
     let inner_w = w - (thickness * 2.0);
     let inner_h = h - (thickness * 2.0);
     let inner_radius = (radius - thickness).max(0.0);
-    
+
     draw_round_rect(inner_x, inner_y, inner_w, inner_h, inner_radius, bg_color);
 }

@@ -1,15 +1,15 @@
-use macroquad::prelude::*;
-use macroquad::audio::{play_sound, PlaySoundParams, Sound};
-use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
 use crate::modules::collision::check_collision;
-use crate::modules::player::Player;
-use crate::modules::still_image::StillImage;
-use crate::modules::preload_image::TextureManager;
 use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
+use crate::modules::player::Player;
+use crate::modules::preload_image::TextureManager;
+use crate::modules::still_image::StillImage;
+use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
+use macroquad::audio::{PlaySoundParams, Sound, play_sound};
+use macroquad::prelude::*;
 
-/* 
-run through player 
+/*
+run through player
 
 outside the loop...
 musicdisc::get_musicdisc_time();
@@ -88,7 +88,16 @@ pub struct Musicdisc {
 
 impl Musicdisc {
     pub async fn new(tm: &TextureManager) -> Self {
-        let musicpaths = vec!["assets/musicdisc_files/music/backinblack.ogg".to_string(), "assets/musicdisc_files/music/thickofit.ogg".to_string(), "assets/musicdisc_files/music/howitsdone.ogg".to_string(), "assets/musicdisc_files/music/imstillstanding.ogg".to_string(), "assets/musicdisc_files/music/pandemonium.ogg".to_string(), "assets/musicdisc_files/music/sixhundredstrike.ogg".to_string(), "assets/musicdisc_files/music/sodapop.ogg".to_string(), "assets/musicdisc_files/music/thegreatestshow.ogg".to_string()];
+        let musicpaths = vec![
+            "assets/musicdisc_files/music/backinblack.ogg".to_string(),
+            "assets/musicdisc_files/music/thickofit.ogg".to_string(),
+            "assets/musicdisc_files/music/howitsdone.ogg".to_string(),
+            "assets/musicdisc_files/music/imstillstanding.ogg".to_string(),
+            "assets/musicdisc_files/music/pandemonium.ogg".to_string(),
+            "assets/musicdisc_files/music/sixhundredstrike.ogg".to_string(),
+            "assets/musicdisc_files/music/sodapop.ogg".to_string(),
+            "assets/musicdisc_files/music/thegreatestshow.ogg".to_string(),
+        ];
         tm.preload_sound(musicpaths[0].as_str()).await;
         let backinblack_sound = tm.get_preloaded_sound(musicpaths[0].as_str()).unwrap();
         tm.preload_sound(musicpaths[1].as_str()).await;
@@ -107,7 +116,16 @@ impl Musicdisc {
         let greatestshow_sound = tm.get_preloaded_sound(musicpaths[7].as_str()).unwrap();
         Musicdisc {
             musicpaths,
-            sounds: vec![backinblack_sound, thickofit_sound, howitsdone_sound, imstillstanding_sound, pandemonium_sound, sixhundredstrike_sound, sodapop_sound, greatestshow_sound],
+            sounds: vec![
+                backinblack_sound,
+                thickofit_sound,
+                howitsdone_sound,
+                imstillstanding_sound,
+                pandemonium_sound,
+                sixhundredstrike_sound,
+                sodapop_sound,
+                greatestshow_sound,
+            ],
             disc_elements: Musicdisc::create_disc_elements(&tm).await,
             backinblack_starttime: 0.0,
             backinblack_valid: true,
@@ -140,12 +158,12 @@ impl Musicdisc {
             sixhundredstrike_valid: true,
             sixhundredstrike_hit: false,
             sixhundredstrike_last_cycle: -1,
-            sixhundredstrike_cooldown: 0.0, 
+            sixhundredstrike_cooldown: 0.0,
             sixhundredstrike_cct: 0.0,
             sixhundredstrike_imagetime: 0.0,
             sodapop_starttime: 0.0,
             sodapop_valid: true,
-            sodapop_hit: false, 
+            sodapop_hit: false,
             sodapop_cooldown: 0.0,
             sodapop_cct: 0.0,
             sodapop: false,
@@ -160,16 +178,13 @@ impl Musicdisc {
             greatestshow_timevalid: true,
             greatestshow_currentime: 0.0,
         }
-
     }
-
 
     #[allow(unused)]
     pub async fn test_musicdisc(&self) {
         println!("Playing music disc: {}", self.musicpaths[0]);
-        play_sound(&self.sounds[0], PlaySoundParams {looped: false, volume: 1.0 });
+        play_sound(&self.sounds[0], PlaySoundParams { looped: false, volume: 1.0 });
     }
-
 
     pub fn start_musicdisc_time(&mut self, disc_title: &str) {
         match disc_title {
@@ -207,16 +222,34 @@ impl Musicdisc {
         let thickofit_remaining = (60.0 - (get_time() - self.thickofitcooldown)).max(0.0);
         let howitsdone_remaining = (70.0 - (get_time() - self.howitsdone_cooldown)).max(0.0);
         let imstillstanding_remaining = (120.0 - (get_time() - self.imstillstanding_cooldown)).max(0.0);
-        let pandemonium_remaining = (100.0 - (get_time() - self.pandemonium_cooldown)).max(0.0);
+        let pandemonium_remaining = (1.0 - (get_time() - self.pandemonium_cooldown)).max(0.0);
         let sixhundredstrike_remaining = (70.0 - (get_time() - self.sixhundredstrike_cooldown)).max(0.0);
         let sodapop_remaining = (70.0 - (get_time() - self.sodapop_cooldown)).max(0.0);
         let greatestshow_remaining = (80.0 - (get_time() - self.greatestshow_cooldown)).max(0.0);
 
-        vec![backinblack_remaining, thickofit_remaining, howitsdone_remaining, imstillstanding_remaining, pandemonium_remaining, sixhundredstrike_remaining, sodapop_remaining, greatestshow_remaining]
+        vec![
+            backinblack_remaining,
+            thickofit_remaining,
+            howitsdone_remaining,
+            imstillstanding_remaining,
+            pandemonium_remaining,
+            sixhundredstrike_remaining,
+            sodapop_remaining,
+            greatestshow_remaining,
+        ]
     }
 
     pub fn get_musicdisc_validity(&self) -> Vec<bool> {
-        vec![self.backinblack_valid, self.thickofitvalid, self.howitsdone_valid, self.imstillstanding_valid, self.pandemonium_valid, self.sixhundredstrike_valid, self.sodapop_valid, self.greatestshow_valid]
+        vec![
+            self.backinblack_valid,
+            self.thickofitvalid,
+            self.howitsdone_valid,
+            self.imstillstanding_valid,
+            self.pandemonium_valid,
+            self.sixhundredstrike_valid,
+            self.sodapop_valid,
+            self.greatestshow_valid,
+        ]
     }
 
     pub fn get_thickofit_active(&self) -> bool {
@@ -296,11 +329,19 @@ impl Musicdisc {
         }
     }
 
-    pub fn handle_musicdiscs(&mut self, activedisc: String, enemies: &mut Vec<Enemy>, player: &mut Player, map: &mut Map, tm: &TextureManager) -> String {
+    pub fn handle_musicdiscs(
+        &mut self,
+        activedisc: String,
+        enemies: &mut Vec<Enemy>,
+        player: &mut Player,
+        map: &mut Map,
+        tm: &TextureManager,
+    ) -> String {
         self.update_musicdisc_cooldowns();
         let mut discmatch = activedisc.as_str();
         match discmatch {
-            "Back In Black" => { //fireball hit 8 times in 15 seconds
+            "Back In Black" => {
+                //fireball hit 8 times in 15 seconds
                 if self.backinblack_valid == true {
                     let time = get_time() - self.backinblack_starttime;
                     if time >= 15.0 {
@@ -326,7 +367,7 @@ impl Musicdisc {
                                     }
                                 }
                                 if time <= 1.0 {
-                                    play_sound(&self.sounds[0], PlaySoundParams {looped: false, volume: 1.0 });
+                                    play_sound(&self.sounds[0], PlaySoundParams { looped: false, volume: 1.0 });
                                 }
 
                                 self.backinblack_hit = true;
@@ -335,17 +376,16 @@ impl Musicdisc {
                             self.backinblack_hit = false;
                         }
                     }
-                     
                 }
             }
             "Thick Of It" => {
                 if self.thickofitvalid == true {
                     if self.thickofit_hit == false {
-                        play_sound(&self.sounds[1], PlaySoundParams {looped: false, volume: 1.0 });
+                        play_sound(&self.sounds[1], PlaySoundParams { looped: false, volume: 1.0 });
                         self.thickofit_hit = true;
                     }
                     let time = get_time() - self.thickofit_starttime;
-                    self.thickofit=true;
+                    self.thickofit = true;
                     if time < 30.0 {
                         for i in 0..enemies.len() {
                             enemies[i].draw();
@@ -366,7 +406,7 @@ impl Musicdisc {
                 if self.howitsdone_valid == true {
                     let time = get_time() - self.howitsdone_starttime;
                     if self.howitsdone_hit == false {
-                        play_sound(&self.sounds[2], PlaySoundParams {looped: false, volume: 1.0 });
+                        play_sound(&self.sounds[2], PlaySoundParams { looped: false, volume: 1.0 });
                         let mledmg = player.get_meleedmg() * 3.0;
                         let rngdmg = player.get_rngdmg() * 3.0;
                         let movespeedmult = player.get_movespeedmult() * 1.5;
@@ -385,38 +425,35 @@ impl Musicdisc {
                     }
                 }
             }
-            "I'm Still Standing" => {
-
-            }
+            "I'm Still Standing" => {}
             "Pandemonium" => {
                 if self.pandemonium_valid == true {
                     if self.pandemonium_hit == false {
-                        play_sound(&self.sounds[4], PlaySoundParams {looped: false, volume: 1.0 });
+                        play_sound(&self.sounds[4], PlaySoundParams { looped: false, volume: 1.0 });
                         self.pandemonium_hit = true;
                     }
                     let time = get_time() - self.pandemonium_starttime;
-                    self.pandemonium=true;
+                    self.pandemonium = true;
                     if time < 15.0 {
                         for i in 0..enemies.len() {
                             enemies[i].draw();
-                        let mut enemy_healthlist: Vec<i32> = vec![];
-                        for j in 0..enemies.len() {
-                            let health = enemies[j].get_health();
-                            enemy_healthlist.push(health as i32);
-                        }
-                        let highesthealthenemy = enemy_healthlist.iter().max().unwrap();
-                        let highesthealthenemyindex = enemy_healthlist.iter().position(|&x| x == *highesthealthenemy).unwrap(); // find index with same value
-                        let highesthealthenemypos = enemies[highesthealthenemyindex].get_pos();
-                        if i == highesthealthenemyindex {
-                        }
-                        else {
-                            let enemy_old_pos = enemies[i].get_pos();
-                            enemies[i].pandemonium(highesthealthenemypos, enemy_old_pos);
-                            if enemies[i].check_collision(enemies[highesthealthenemyindex].view_enemy()) {
-                                enemies[highesthealthenemyindex].dmg_enemy(1.0);
-                                enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
+                            let mut enemy_healthlist: Vec<i32> = vec![];
+                            for j in 0..enemies.len() {
+                                let health = enemies[j].get_health();
+                                enemy_healthlist.push(health as i32);
                             }
-                        }
+                            let highesthealthenemy = enemy_healthlist.iter().max().unwrap();
+                            let highesthealthenemyindex = enemy_healthlist.iter().position(|&x| x == *highesthealthenemy).unwrap(); // find index with same value
+                            let highesthealthenemypos = enemies[highesthealthenemyindex].get_pos();
+                            if i == highesthealthenemyindex {
+                            } else {
+                                let enemy_old_pos = enemies[i].get_pos();
+                                enemies[i].pandemonium(highesthealthenemypos, enemy_old_pos);
+                                if enemies[i].check_collision(enemies[highesthealthenemyindex].view_enemy()) {
+                                    enemies[highesthealthenemyindex].dmg_enemy(1.0);
+                                    enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
+                                }
+                            }
                         }
                     }
                     if time >= 15.0 {
@@ -461,7 +498,7 @@ impl Musicdisc {
                             }
                             if self.sixhundredstrike_hit == false {
                                 if time <= 1.0 {
-                                    play_sound(&self.sounds[5], PlaySoundParams {looped: false, volume: 1.0 });
+                                    play_sound(&self.sounds[5], PlaySoundParams { looped: false, volume: 1.0 });
                                 }
                                 println!("Hit enemy with Six Hundred Strike for 60 damage!");
                                 enemies[highesthealthenemyindex].dmg_enemy(60.0);
@@ -474,14 +511,14 @@ impl Musicdisc {
             "Soda Pop" => {
                 if self.sodapop_valid == true {
                     if self.sodapop_hit == false {
-                        play_sound(&self.sounds[6], PlaySoundParams {looped: false, volume: 1.0 });
+                        play_sound(&self.sounds[6], PlaySoundParams { looped: false, volume: 1.0 });
                         for i in 0..enemies.len() {
                             self.sodapopposlist.push(enemies[i].get_pos());
                         }
                         self.sodapop_hit = true;
                     }
                     let time = get_time() - self.sodapop_starttime;
-                    self.sodapop=true;
+                    self.sodapop = true;
                     if time < 20.0 {
                         for i in 0..enemies.len() {
                             enemies[i].draw();
@@ -500,16 +537,19 @@ impl Musicdisc {
             "The Greatest Show" => {
                 if self.greatestshow_valid == true {
                     if self.greatestshow_hit == false {
-                        play_sound(&self.sounds[7], PlaySoundParams {looped: false, volume: 1.0 });
+                        play_sound(&self.sounds[7], PlaySoundParams { looped: false, volume: 1.0 });
                         self.greatestshow_hit = true;
                         self.greatestshow_playerhealth = player.get_health() as f64;
                     }
                     let time = get_time() - self.greatestshow_starttime;
-                    if time < 60.0{
+                    if time < 60.0 {
                         for i in 0..self.disc_elements.2.len() {
                             let width = self.disc_elements.2[i].get_width() + (time * 0.001) as f32; //multiply by 20.0 for even growing time * 20.0) as f32;
                             let height = self.disc_elements.2[i].get_height() + (time * 0.001) as f32;
-                            let new_position = vec2(self.disc_elements.2[i].get_x() - (time * 0.0005) as f32, self.disc_elements.2[i].get_y() - (time * 0.0005) as f32); //multiply by half for even growing
+                            let new_position = vec2(
+                                self.disc_elements.2[i].get_x() - (time * 0.0005) as f32,
+                                self.disc_elements.2[i].get_y() - (time * 0.0005) as f32,
+                            ); //multiply by half for even growing
                             self.disc_elements.2[i].set_size(width, height);
                             self.disc_elements.2[i].set_position(new_position);
                             self.disc_elements.2[i].draw();
@@ -526,8 +566,7 @@ impl Musicdisc {
                             self.greatestshow_cooldown = get_time();
                             self.greatestshow_playerhealth = 0.0;
                             discmatch = "";
-                        }
-                        else if time >= self.greatestshow_currentime && time <= self.greatestshow_currentime + 1.0 {
+                        } else if time >= self.greatestshow_currentime && time <= self.greatestshow_currentime + 1.0 {
                             for i in 0..self.disc_elements.2.len() {
                                 self.disc_elements.2[i].set_preload(tm.get_preload("assets/musicdisc_files/effectimages/meteor.png").unwrap());
                                 self.disc_elements.2[i].draw();
@@ -537,8 +576,7 @@ impl Musicdisc {
                                     enemies[i].dmg_enemy(200.0);
                                 }
                             }
-                        }
-                        else if time > 61.0 {
+                        } else if time > 61.0 {
                             self.greatestshow_complete = true;
                         }
                     }
@@ -552,86 +590,85 @@ impl Musicdisc {
 
     pub async fn create_disc_elements(tm: &TextureManager) -> (Vec<StillImage>, Vec<StillImage>, Vec<StillImage>) {
         let mut bib_img1 = StillImage::new(
-        "",
-        200.0,  // width
-        200.0,  // height
-        100.0,  // x position
-        100.0,   // y position
-        true,   // Enable stretching
-        1.0,    // Normal zoom (100%)
-        ).await;
+            "", 200.0, // width
+            200.0, // height
+            100.0, // x position
+            100.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
         bib_img1.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/bibimg.png").unwrap());
         let mut bib_img2 = StillImage::new(
-            "",
-            200.0,  // width
-            200.0,  // height
-            400.0,  // x position
-            100.0,   // y position
-            true,   // Enable stretching
-            1.0,    // Normal zoom (100%)
-        ).await;
+            "", 200.0, // width
+            200.0, // height
+            400.0, // x position
+            100.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
         bib_img2.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/bibimg.png").unwrap());
         let mut bib_img3 = StillImage::new(
-            "",
-            200.0,  // width
-            200.0,  // height
-            700.0,  // x position
-            100.0,   // y position
-            true,   // Enable stretching
-            1.0,    // Normal zoom (100%)
-        ).await;
+            "", 200.0, // width
+            200.0, // height
+            700.0, // x position
+            100.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
         bib_img3.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/bibimg.png").unwrap());
         let mut bib_img4 = StillImage::new(
-            "",
-            200.0,  // width
-            200.0,  // height
-            100.0,  // x position
-            500.0,   // y position
-            true,   // Enable stretching
-            1.0,    // Normal zoom (100%)
-        ).await;
+            "", 200.0, // width
+            200.0, // height
+            100.0, // x position
+            500.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
         bib_img4.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/bibimg.png").unwrap());
-        let mut bib_img5
-            = StillImage::new(
-                "",
-                200.0,  // width
-                200.0,  // height
-                400.0,  // x position
-                500.0,   // y position
-                true,   // Enable stretching
-                1.0,    // Normal zoom (100%)
-            )
-            .await;
+        let mut bib_img5 = StillImage::new(
+            "", 200.0, // width
+            200.0, // height
+            400.0, // x position
+            500.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
         bib_img5.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/bibimg.png").unwrap());
         let mut bib_img6 = StillImage::new(
-            "",
-            200.0,  // width
-            200.0,  // height
-            700.0,  // x position
-            500.0,   // y position
-            true,   // Enable stretching
-            1.0,    // Normal zoom (100%)
-        ).await;
+            "", 200.0, // width
+            200.0, // height
+            700.0, // x position
+            500.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
         bib_img6.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/bibimg.png").unwrap());
         let mut trident_img = StillImage::new(
-            "",
-            40.0,  // width
+            "", 40.0,  // width
             40.0,  // height
-            700.0,  // x position
-            500.0,   // y position
-            true,   // Enable stretching
-            1.0,    // Normal zoom (100%)
-        ).await;
+            700.0, // x position
+            500.0, // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
         trident_img.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/trident.png").unwrap());
         let mut greatestshow_preimg = StillImage::new(
             "",
-            20.0,  // width
-            20.0,  // height
-            VIRTUAL_WIDTH/2.0,  // x position
-            VIRTUAL_HEIGHT/2.0,   // y position
-            true,   // Enable stretching
-            1.0,    // Normal zoom (100%)
-        ).await;
+            20.0,                 // width
+            20.0,                 // height
+            VIRTUAL_WIDTH / 2.0,  // x position
+            VIRTUAL_HEIGHT / 2.0, // y position
+            true,                 // Enable stretching
+            1.0,                  // Normal zoom (100%)
+        )
+        .await;
         greatestshow_preimg.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/black.png").unwrap());
 
         let bibs = vec![bib_img1, bib_img2, bib_img3, bib_img4, bib_img5, bib_img6];
@@ -640,4 +677,3 @@ impl Musicdisc {
         (bibs, tridents, greatestshow)
     }
 }
-

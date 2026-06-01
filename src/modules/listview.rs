@@ -14,7 +14,7 @@ Date: April 26, 2025
 Create a ListView (before your main loop):
     let items = vec!["Item 1".to_string(), "Item 2".to_string()];
     let mut list_view = ListView::new(&items, x, y, font_size);
-    
+
 Parameters:
     - &items: Reference to a vector of items (can be reused after)
     - x, y: Position on screen
@@ -56,7 +56,7 @@ This will:
         .with_padding(10.0)
         .with_max_visible_items(5)
         .set_width(300.0);
-    
+
     loop {
         // Add items dynamically
         if some_condition {
@@ -64,15 +64,15 @@ This will:
             list_view.clear();
             list_view.add_items(&items);
         }
-        
+
         list_view.draw();
         next_frame().await;
     }
 */
 
-use macroquad::prelude::*;
 #[cfg(feature = "scale")]
 use crate::modules::scale::mouse_position_world as mouse_position;
+use macroquad::prelude::*;
 
 pub struct ListView {
     items: Vec<String>,
@@ -102,8 +102,8 @@ impl ListView {
             x,
             y,
             font_size,
-            foreground: BLACK, // Default text color
-            background: None,  // No background by default
+            foreground: BLACK,              // Default text color
+            background: None,               // No background by default
             selection_color: Some(SKYBLUE), // Default selection color
             selected_index: None,
             item_spacing: 1.2, // Default line spacing
@@ -112,21 +112,21 @@ impl ListView {
             max_visible_items: None, // By default, show all items
             show_scrollbar: true,
             scrollbar_width: 10.0,
-            scrollbar_color: Color::new(0.7, 0.7, 0.7, 0.7), // Light gray, semi-transparent
+            scrollbar_color: Color::new(0.7, 0.7, 0.7, 0.7),        // Light gray, semi-transparent
             scrollbar_handle_color: Color::new(0.5, 0.5, 0.5, 0.8), // Darker gray
             width_override: None,
         }
     }
 
     /// Set a custom width for the ListView box
-     #[allow(unused)]
+    #[allow(unused)]
     pub fn set_width(&mut self, width: f32) -> &mut Self {
         self.width_override = Some(width);
         self
     }
 
     // Method to set foreground, background, and selection colors
-     #[allow(unused)]
+    #[allow(unused)]
     pub fn with_colors(&mut self, foreground: Color, background: Option<Color>, selection_color: Option<Color>) -> &mut Self {
         self.foreground = foreground;
         self.background = background;
@@ -135,21 +135,21 @@ impl ListView {
     }
 
     // Method to set item spacing
-     #[allow(unused)]
+    #[allow(unused)]
     pub fn with_spacing(&mut self, spacing: f32) -> &mut Self {
         self.item_spacing = spacing;
         self
     }
 
     // Method to set item padding
-     #[allow(unused)]
+    #[allow(unused)]
     pub fn with_padding(&mut self, padding: f32) -> &mut Self {
         self.item_padding = padding;
         self
     }
 
     // Method to set max visible items (enables scrolling)
-     #[allow(unused)]
+    #[allow(unused)]
     pub fn with_max_visible_items(&mut self, count: usize) -> &mut Self {
         self.max_visible_items = Some(count);
         self
@@ -201,7 +201,7 @@ impl ListView {
                     self.selected_index = Some(selected - 1);
                 }
             }
-            
+
             // Adjust scroll offset if needed
             if self.scroll_offset > 0 && self.scroll_offset >= self.items.len() {
                 self.scroll_offset = self.items.len().saturating_sub(1);
@@ -210,7 +210,7 @@ impl ListView {
     }
 
     // Method to get the current selected item
-     #[allow(unused)]
+    #[allow(unused)]
     pub fn selected_item(&self) -> Option<&String> {
         self.selected_index.and_then(|index| self.items.get(index))
     }
@@ -220,7 +220,7 @@ impl ListView {
     pub fn select_item(&mut self, index: Option<usize>) {
         if index.is_none() || index.unwrap() < self.items.len() {
             self.selected_index = index;
-            
+
             // Auto-scroll to show selected item if needed
             if let Some(idx) = index {
                 if let Some(max_items) = self.max_visible_items {
@@ -241,7 +241,9 @@ impl ListView {
         let item_height = self.font_size as f32 * self.item_spacing;
 
         // Find the maximum width of any item
-        let content_width = self.items.iter()
+        let content_width = self
+            .items
+            .iter()
             .map(|item| measure_text(item, None, self.font_size, 1.0).width)
             .fold(0.0, f32::max);
 
@@ -268,20 +270,20 @@ impl ListView {
                 // No need to scroll if all items fit
                 return;
             }
-            
+
             let wheel_movement = mouse_wheel().1;
             if wheel_movement != 0.0 {
                 let mouse_pos = mouse_position();
                 let (width, height) = self.calculate_dimensions();
-                
+
                 // Check if mouse is over the list area
                 let list_rect = Rect::new(
-                    self.x - self.item_padding, 
+                    self.x - self.item_padding,
                     self.y - self.font_size as f32 + self.item_padding,
                     width + if self.show_scrollbar { self.scrollbar_width } else { 0.0 },
-                    height
+                    height,
                 );
-                
+
                 if list_rect.contains(Vec2::new(mouse_pos.0, mouse_pos.1)) {
                     // Scroll up or down based on wheel movement
                     if wheel_movement > 0.0 {
@@ -302,29 +304,29 @@ impl ListView {
         if !self.show_scrollbar || self.max_visible_items.is_none() {
             return;
         }
-        
+
         let max_visible = self.max_visible_items.unwrap();
         if self.items.len() <= max_visible {
             return; // No need for scrollbar
         }
-        
+
         if is_mouse_button_down(MouseButton::Left) {
             let mouse_pos = mouse_position();
             let (width, height) = self.calculate_dimensions();
-            
+
             // Scrollbar area
             let scrollbar_rect = Rect::new(
                 self.x + width,
                 self.y - self.font_size as f32 + self.item_padding,
                 self.scrollbar_width,
-                height
+                height,
             );
-            
+
             if scrollbar_rect.contains(Vec2::new(mouse_pos.0, mouse_pos.1)) {
                 // Calculate the relative position on the scrollbar (0.0 to 1.0)
                 let relative_y = (mouse_pos.1 - scrollbar_rect.y) / scrollbar_rect.h;
                 let max_offset = self.items.len().saturating_sub(max_visible);
-                
+
                 // Set scroll offset based on relative position
                 self.scroll_offset = (relative_y * max_offset as f32).round() as usize;
                 self.scroll_offset = self.scroll_offset.min(max_offset);
@@ -336,16 +338,16 @@ impl ListView {
     fn update(&mut self) {
         // Handle scrolling with mouse wheel
         self.handle_scroll();
-        
+
         // Handle scrollbar dragging
         self.handle_scrollbar_interaction();
-        
+
         // Handle item selection
         if is_mouse_button_pressed(MouseButton::Left) {
             let mouse_pos = mouse_position();
             let item_height = self.font_size as f32 * self.item_spacing;
             let (width, _) = self.calculate_dimensions();
-            
+
             // Check if click is within the items area (not on scrollbar)
             let list_rect = Rect::new(
                 self.x - self.item_padding,
@@ -354,14 +356,14 @@ impl ListView {
                 match self.max_visible_items {
                     Some(count) => count as f32 * item_height,
                     None => self.items.len() as f32 * item_height,
-                }
+                },
             );
-            
+
             if list_rect.contains(Vec2::new(mouse_pos.0, mouse_pos.1)) {
                 // Calculate which item was clicked based on y position
                 let relative_y = mouse_pos.1 - (self.y - self.font_size as f32 + self.item_padding);
                 let item_index = (relative_y / item_height).floor() as usize + self.scroll_offset;
-                
+
                 if item_index < self.items.len() {
                     self.selected_index = Some(item_index);
                 }
@@ -373,18 +375,18 @@ impl ListView {
     pub fn draw(&mut self) {
         // Handle all updates first (previously in the update method)
         self.update();
-        
+
         let item_height = self.font_size as f32 * self.item_spacing;
         let (width, height) = self.calculate_dimensions();
-        
+
         // Calculate total width including scrollbar if needed
-        let total_width = width + if self.show_scrollbar && self.max_visible_items.is_some() && 
-                               self.items.len() > self.max_visible_items.unwrap() {
-            self.scrollbar_width
-        } else {
-            0.0
-        };
-        
+        let total_width = width
+            + if self.show_scrollbar && self.max_visible_items.is_some() && self.items.len() > self.max_visible_items.unwrap() {
+                self.scrollbar_width
+            } else {
+                0.0
+            };
+
         // Draw the overall background if specified
         if let Some(bg) = self.background {
             draw_rectangle(
@@ -395,49 +397,37 @@ impl ListView {
                 bg,
             );
         }
-        
+
         // Determine visible range of items
         let visible_count = match self.max_visible_items {
             Some(count) => count.min(self.items.len()),
             None => self.items.len(),
         };
-        
+
         let end_idx = (self.scroll_offset + visible_count).min(self.items.len());
         let visible_items = &self.items[self.scroll_offset..end_idx];
-        
+
         // Draw visible items
         for (i, item) in visible_items.iter().enumerate() {
             let actual_index = i + self.scroll_offset;
             // Position items to align with background start
             let y_pos = self.y - self.font_size as f32 + self.item_padding + i as f32 * item_height;
-            
+
             // Draw selection background if this is the selected item
             if let Some(sel_index) = self.selected_index {
                 if actual_index == sel_index && self.selection_color.is_some() {
-                    draw_rectangle(
-                        self.x - self.item_padding,
-                        y_pos,
-                        width,
-                        item_height,
-                        self.selection_color.unwrap(),
-                    );
+                    draw_rectangle(self.x - self.item_padding, y_pos, width, item_height, self.selection_color.unwrap());
                 }
             }
-            
+
             // Calculate vertical centering for the text
             let text_dims = measure_text(item, None, self.font_size, 1.0);
             let text_baseline = y_pos + (item_height + text_dims.height) / 2.0;
-            
+
             // Draw the item text (vertically centered)
-            draw_text(
-                item, 
-                self.x, 
-                text_baseline, 
-                self.font_size as f32, 
-                self.foreground
-            );
+            draw_text(item, self.x, text_baseline, self.font_size as f32, self.foreground);
         }
-        
+
         // Draw scrollbar if needed
         if self.show_scrollbar && self.max_visible_items.is_some() {
             let max_visible = self.max_visible_items.unwrap();
@@ -450,7 +440,7 @@ impl ListView {
                     height,
                     self.scrollbar_color,
                 );
-                
+
                 // Calculate and draw scrollbar handle
                 let handle_ratio = max_visible as f32 / self.items.len() as f32;
                 let handle_height = height * handle_ratio;
@@ -460,7 +450,7 @@ impl ListView {
                 } else {
                     0.0
                 };
-                
+
                 draw_rectangle(
                     self.x + width,
                     self.y - self.font_size as f32 + self.item_padding + handle_position,

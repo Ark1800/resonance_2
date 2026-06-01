@@ -7,7 +7,7 @@ To import you need:
 
 In your mod.rs file located in the modules folder add the following to the end of the file
     pub mod still_image;
-    
+
 Then add the following with the use commands:
 use crate::modules::still_image::StillImage;
 
@@ -34,7 +34,7 @@ Usage examples:
         true,   // Enable stretching
         1.0,    // Normal zoom (100%)
     ).await;
-    
+
     // Then later, you can set a texture if you use the texture manager:
     img.set_preload(texture_manager.get_preload("assets/image1.png").unwrap());
 
@@ -53,12 +53,12 @@ Usage examples:
     // Since all textures are preloaded, you can directly pass the result of get_preload()
     // to set_preload() without intermediate variables:
     img.set_preload(texture_manager.get_preload("assets/image1.png").unwrap());
-    
+
     // The unwrap() is safe because we know the texture was preloaded
 
 5. Clear an image (set to transparent):
     img.clear();
-    
+
 6. Draw the image in your game loop:
     img.draw();
 
@@ -78,60 +78,52 @@ pub struct StillImage {
     width: f32,
     height: f32,
     pub transparency_mask: Option<Vec<u8>>, // Changed to Option<Vec<u8>> to make it optional
-    stretch_enabled: bool, // Flag to control image stretching
-    zoom_level: f32, // Zoom factor to scale the image
-    pub filename: String, // Store the original filename/path
-    angle: f32, // Angle of rotation
-    opacity: f32, // Opacity/alpha value (0.0 = fully transparent, 1.0 = fully opaque)
+    stretch_enabled: bool,                  // Flag to control image stretching
+    zoom_level: f32,                        // Zoom factor to scale the image
+    pub filename: String,                   // Store the original filename/path
+    angle: f32,                             // Angle of rotation
+    opacity: f32,                           // Opacity/alpha value (0.0 = fully transparent, 1.0 = fully opaque)
 }
 
 impl StillImage {
     // Constructor for ImageStill with asset path and x, y location
-    pub async fn new(
-        asset_path: &str, 
-        width: f32, 
-        height: f32, 
-        x: f32, 
-        y: f32,
-        stretch_enabled: bool,
-        zoom_level: f32
-    ) -> Self {
+    pub async fn new(asset_path: &str, width: f32, height: f32, x: f32, y: f32, stretch_enabled: bool, zoom_level: f32) -> Self {
         // Check if the asset path is empty
         if asset_path.is_empty() {
             // Create an empty/clear image
-           // let empty_texture = Texture2D::from_rgba8(1, 1, &[0, 0, 0, 0]);
+            // let empty_texture = Texture2D::from_rgba8(1, 1, &[0, 0, 0, 0]);
             let empty_texture = Texture2D::from_rgba8(1, 1, &[0u8; 4][..]);
             let empty_mask = Some(vec![0]); // Single transparent pixel
-            
-            return Self { 
-                x, 
-                y, 
-                width, 
-                height, 
-                texture: empty_texture, 
+
+            return Self {
+                x,
+                y,
+                width,
+                height,
+                texture: empty_texture,
                 transparency_mask: empty_mask,
                 stretch_enabled,
-                zoom_level: zoom_level.max(0.1), // Ensure minimum zoom
+                zoom_level: zoom_level.max(0.1),   // Ensure minimum zoom
                 filename: "__empty__".to_string(), // Use a special filename
-                angle: 0.0, // Default angle
-                opacity: 1.0, // Default opacity (fully opaque)
+                angle: 0.0,                        // Default angle
+                opacity: 1.0,                      // Default opacity (fully opaque)
             };
         }
-        
+
         // Normal path for valid asset paths
         let (texture, transparency_mask) = set_texture_main(asset_path).await;
-        Self { 
-            x, 
-            y, 
-            width, 
-            height, 
-            texture, 
+        Self {
+            x,
+            y,
+            width,
+            height,
+            texture,
             transparency_mask,
             stretch_enabled,
-            zoom_level: zoom_level.max(0.1), // Ensure minimum zoom
+            zoom_level: zoom_level.max(0.1),  // Ensure minimum zoom
             filename: asset_path.to_string(), // Store the original filename
-            angle: 0.0, // Default angle
-            opacity: 1.0, // Default opacity (fully opaque)
+            angle: 0.0,                       // Default angle
+            opacity: 1.0,                     // Default opacity (fully opaque)
         }
     }
 
@@ -144,14 +136,14 @@ impl StillImage {
             // Use original texture size when stretch is disabled
             (self.texture.width(), self.texture.height())
         };
-        
+
         // Apply zoom factor
         let final_width = draw_width * self.zoom_level;
         let final_height = draw_height * self.zoom_level;
-        
+
         // Create a color with the opacity applied
         let color = Color::new(1.0, 1.0, 1.0, self.opacity);
-        
+
         draw_texture_ex(
             &self.texture,
             self.x,
@@ -177,7 +169,7 @@ impl StillImage {
         } else {
             (self.texture.width(), self.texture.height())
         };
-        
+
         vec2(width * self.zoom_level, height * self.zoom_level)
     }
     #[allow(unused)]
@@ -254,39 +246,39 @@ impl StillImage {
         self.transparency_mask = transparency_mask;
         self.filename = texture_path.to_string(); // Update the filename when texture changes
     }
-    
+
     // Methods to toggle stretching
     #[allow(unused)]
     pub fn enable_stretch(&mut self) {
         self.stretch_enabled = true;
     }
-    
+
     #[allow(unused)]
     pub fn disable_stretch(&mut self) {
         self.stretch_enabled = false;
     }
-    
+
     #[allow(unused)]
     pub fn toggle_stretch(&mut self) {
         self.stretch_enabled = !self.stretch_enabled;
     }
-    
+
     #[allow(unused)]
     pub fn is_stretch_enabled(&self) -> bool {
         self.stretch_enabled
     }
-    
+
     #[allow(unused)]
     pub fn set_stretch(&mut self, enabled: bool) {
         self.stretch_enabled = enabled;
     }
-    
+
     // Zoom methods
     #[allow(unused)]
     pub fn set_zoom(&mut self, zoom_level: f32) {
         self.zoom_level = zoom_level.max(0.1); // Prevent zoom from going too small
     }
-    
+
     #[allow(unused)]
     pub fn zoom_in(&mut self, amount: f32) {
         self.zoom_level += amount;
@@ -294,7 +286,7 @@ impl StillImage {
             self.zoom_level = 0.1; // Minimum zoom level
         }
     }
-    
+
     #[allow(unused)]
     pub fn zoom_out(&mut self, amount: f32) {
         self.zoom_level -= amount;
@@ -302,57 +294,54 @@ impl StillImage {
             self.zoom_level = 0.1; // Minimum zoom level
         }
     }
-     #[allow(unused)]
+    #[allow(unused)]
     pub fn set_size(&mut self, width: f32, height: f32) {
         self.width = width;
         self.height = height;
-        
     }
     #[allow(unused)]
     pub fn get_zoom_level(&self) -> f32 {
         self.zoom_level
     }
-    
+
     #[allow(unused)]
     pub fn reset_zoom(&mut self) {
         self.zoom_level = 1.0;
     }
-    
+
     // Opacity/Transparency methods
     #[allow(unused)]
     pub fn set_opacity(&mut self, opacity: f32) {
         self.opacity = opacity.clamp(0.0, 1.0); // Clamp between 0.0 and 1.0
     }
-    
+
     #[allow(unused)]
     pub fn get_opacity(&self) -> f32 {
         self.opacity
     }
-    
+
     #[allow(unused)]
     pub fn fade_in(&mut self, amount: f32) {
         self.opacity = (self.opacity + amount).min(1.0);
     }
-    
+
     #[allow(unused)]
     pub fn fade_out(&mut self, amount: f32) {
         self.opacity = (self.opacity - amount).max(0.0);
     }
-    
- 
-    
+
     // Check if the image is currently cleared/empty
     #[allow(unused)]
     pub fn is_empty(&self) -> bool {
         self.texture.width() == 1.0 && self.texture.height() == 1.0
     }
-    
+
     // Check if collision should be performed (not empty)
     #[allow(unused)]
     pub fn is_collidable(&self) -> bool {
         !self.is_empty()
     }
-    
+
     // Public method for setting a preloaded texture that accepts the tuple directly
     #[allow(unused)]
     pub fn set_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
@@ -367,9 +356,9 @@ impl StillImage {
     pub fn clear(&mut self) {
         // Create a 1x1 transparent pixel texture
         let empty_texture = Texture2D::from_rgba8(1, 1, &[0u8; 4][..]);
-       // let empty_texture = Texture2D::from_rgba8(1, 1, &[0, 0, 0, 0]);
+        // let empty_texture = Texture2D::from_rgba8(1, 1, &[0, 0, 0, 0]);
         let empty_mask = Some(vec![0]); // Single transparent pixel
-        
+
         // Update the image object with this empty texture
         self.texture = empty_texture;
         self.transparency_mask = empty_mask;
@@ -387,7 +376,7 @@ impl StillImage {
 async fn generate_mask(texture_path: &str, width: usize, height: usize) -> Option<Vec<u8>> {
     let image = load_image(texture_path).await.unwrap();
     let pixels = image.bytes; // Image pixels in RGBA8 format
-    
+
     // Check if the image format has an alpha channel at all (RGBA)
     // If pixels length isn't divisible by 4, it's not RGBA format
     if pixels.len() != width * height * 4 {
@@ -395,7 +384,6 @@ async fn generate_mask(texture_path: &str, width: usize, height: usize) -> Optio
         return None;
     }
 
-   
     let mut has_transparency = false;
 
     // First, scan to see if the image has any transparency at all
@@ -403,7 +391,7 @@ async fn generate_mask(texture_path: &str, width: usize, height: usize) -> Optio
         for x in 0..width {
             let idx = (y * width + x) * 4; // Each pixel is 4 bytes (RGBA)
             let alpha = pixels[idx + 3]; // Get alpha channel
-            
+
             if alpha < 255 {
                 has_transparency = true;
                 break;
@@ -418,8 +406,8 @@ async fn generate_mask(texture_path: &str, width: usize, height: usize) -> Optio
     if !has_transparency {
         return None;
     }
- // Only create the mask if we know the image has transparency
- let mut mask = vec![0; (width * height + 7) / 8]; // Create a bitmask with enough bytes
+    // Only create the mask if we know the image has transparency
+    let mut mask = vec![0; (width * height + 7) / 8]; // Create a bitmask with enough bytes
     // Otherwise, create the transparency mask
     for y in 0..height {
         for x in 0..width {
@@ -449,4 +437,3 @@ pub async fn set_texture_main(texture_path: &str) -> (Texture2D, Option<Vec<u8>>
     let transparency_mask = generate_mask(texture_path, tex_width, tex_height).await;
     return (texture, transparency_mask);
 }
-

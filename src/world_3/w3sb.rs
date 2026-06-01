@@ -71,7 +71,7 @@ pub async fn run(
     .await;
 
     let mut enemies: Vec<Enemy> = vec![];
-        cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_f.png").unwrap());
+    cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_f.png").unwrap());
     if *game_completed {
         cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
     } else {
@@ -81,7 +81,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
-        player.handle_inventory();      
+        player.handle_inventory();
         player.handle_save_menu().await;
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
@@ -96,7 +96,7 @@ pub async fn run(
         } else {
             enemies[0].cyric_action(player, tm).await;
         }
-            enemies[0].draw_bullet(player);
+        enemies[0].draw_bullet(player);
         enemies[0].draw();
         player.draw();
         map.draw_map(&tm).await;
