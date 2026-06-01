@@ -18,7 +18,6 @@ use crate::modules::musicdisc::Musicdisc;
 /*
 //Bug fixes/extras
 //1. add hitboxes to swords
-//2. add all music disc images
 
 Work
 //1.3 imstillstanding
@@ -44,7 +43,6 @@ Open/Close Inventory - Tab
 Disc 1 - Q
 Disc 2 - E
 Disc 3 - X
-Dash - Shift
 Melee Attack - Up Arrow
 Ranged Attack - Right Arrow
 
