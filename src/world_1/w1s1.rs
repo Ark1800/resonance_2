@@ -49,20 +49,8 @@ pub async fn run(
     }
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
-    let mut summoner = Enemy::new("", 50.0, 50.0, 70.0, 80.0, true, 1.0, 20.0, 10.0, "", "summoner").await;
-    let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20.0, 10.0, "", "large_slime").await;
-    large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
-    summoner.set_preload(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap());
-
-    let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 20.0, 10.0, "", "mage").await;
-
-    mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
-    mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
-    enemies.push(summoner);
-    enemies.push(mage);
-    enemies.push(large_slime);
     let mut archerx = 200.0;
-    for _i in 0..3 {
+    for i in 0..2 {
         let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10.0, 5.0, "", "archer").await;
         archerx += 100.0;
         archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
@@ -89,7 +77,6 @@ pub async fn run(
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
             if player.get_cleared() == 0 {
-                let mut rec = 0;
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false

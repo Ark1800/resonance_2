@@ -52,11 +52,81 @@ pub async fn run(
     map.create_map_array(0, 2, 0, vec![3, 1]).await;
     println!("HAI!");
     let mut enemies: Vec<Enemy> = vec![];
+    let mut mage = Enemy::new(
+        "",
+        50.0, // height
+        50.0, // width
+        70.0, // x
+        80.0, // y
+        true, // stretching
+        1.0,  // zoom level
+        20.0,   // health
+        10.0,   // damage
+        "", // projectile
+        "mage", // enemy type
+    )
+    .await;
+    mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
+    mage.set_preload(tm.get_preload("assets/fireball.png").unwrap());
+    enemies.push(mage);
+    for i in 0..2 {
+        let mut slime = Enemy::new(
+        "",
+        25.0, //hieght
+        25.0, //width
+        70.0, //x
+        80.0, //y
+        true, //stretching
+        1.0, //zoom level
+        10.0, //health
+        2.0, //damage
+        "",
+        "slime"//enemy type
+    ).await;
+        slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        enemies.push(slime);
+    }
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
+         if player.get_cleared() == 1 {
+                for i in 0..enemies.len() {
+                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                    if musicdiscfunctions.get_thickofit_active() == false
+                        && musicdiscfunctions.get_pandemonium_active() == false
+                        && musicdiscfunctions.get_sodapop_active() == false
+                    {
+                                            match enemies[i].get_enemy_type() {
+                        "archer" => {
+                            enemies[i].archer_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "slime" => {
+                            enemies[i].slime_action(player);
+                        }
+                        "summoner" => {
+                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                            if summoned {
+                                enemies.push(slime1);
+                                enemies.push(slime2);
+                                enemies.push(slime3);
+                            }
+                        }
+                        "mage" => {
+                            enemies[i].mage_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "large_slime" => {
+                            enemies[i].large_slime_action(tm, player).await;
+                        }
+                        _ => {}
+                    }
+                    enemies[i].draw();
+                }
+            }
+         }
         player.handle_inventory();
         player.handle_save_menu().await;
         player.handle_playerdamaging(&enemies);

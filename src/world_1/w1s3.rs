@@ -18,7 +18,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
-    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
     let mut background = StillImage::new(
         "",
@@ -51,18 +51,100 @@ pub async fn run(
     }
     map.create_map_array(0, 2, 0, vec![2, 3]).await;
     let mut enemies: Vec<Enemy> = vec![];
+    let mut large_slime = Enemy::new(
+    "",
+    75.0, //hieght
+    75.0, //width
+    70.0, //x
+    80.0, //y
+    true, //stretching
+    1.0, //zoom level
+    20.0, //health
+    8.0, //damage
+    "",
+    "large_slime"//enemy type
+        ).await;
+    large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        let mut summoner = Enemy::new(
+    "",
+    50.0, //hieght
+    50.0, //width
+    70.0, //x
+    80.0, //y
+    true, //stretching
+    1.0, //zoom level
+    20.0, //health
+    10.0, //damage
+    "",
+    "summoner"//enemy type
+    ).await;
+    summoner.set_preload(tm.get_preload("assets/summoner_files/summoner_standL.png").unwrap());
+    let mut mage = Enemy::new(
+    "",
+    50.0, //hieght
+    50.0, //width
+    70.0, //x
+    80.0, //y
+    true, //stretching
+    1.0, //zoom level
+    20.0, //health
+    10.0, //damage
+    "", //projectile
+    "mage"//enemy type
+    ).await;
+    mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
+    mage.set_preload(tm.get_preload("assets/fireball.png").unwrap());
+    enemies.push(large_slime);
+    enemies.push(summoner);
+    enemies.push(mage);
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
+        if player.get_cleared() == 1 {
+                for i in 0..enemies.len() {
+                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                    if musicdiscfunctions.get_thickofit_active() == false
+                        && musicdiscfunctions.get_pandemonium_active() == false
+                        && musicdiscfunctions.get_sodapop_active() == false
+                    {
+                                            match enemies[i].get_enemy_type() {
+                        "archer" => {
+                            enemies[i].archer_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "slime" => {
+                            enemies[i].slime_action(player);
+                        }
+                        "summoner" => {
+                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                            if summoned {
+                                enemies.push(slime1);
+                                enemies.push(slime2);
+                                enemies.push(slime3);
+                            }
+                        }
+                        "mage" => {
+                            enemies[i].mage_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "large_slime" => {
+                            enemies[i].large_slime_action(tm, player).await;
+                        }
+                        _ => {}
+                    }
+                    enemies[i].draw();
+                }
+            }
+         }
         map.draw_map(&tm).await;
-        player.handle_keypresses(pause, _musicdiscfunctions).await;
+        player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.handle_inventory();
         player.handle_save_menu().await;
         player.move_player(&map, old_pos, &vec![]);
-        player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         player.draw();
         if player.get_x() < 10.0 {

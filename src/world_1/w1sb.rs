@@ -18,7 +18,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
-    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
@@ -80,10 +80,46 @@ pub async fn run(
         map.draw_map(&tm).await;
         player.handle_inventory();
         player.handle_save_menu().await;
-        player.handle_keypresses(pause, _musicdiscfunctions).await;
+        player.handle_keypresses(pause, musicdiscfunctions).await;
+        if player.get_cleared() == 1 {
+                for i in 0..enemies.len() {
+                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                    if musicdiscfunctions.get_thickofit_active() == false
+                        && musicdiscfunctions.get_pandemonium_active() == false
+                        && musicdiscfunctions.get_sodapop_active() == false
+                    {
+                                            match enemies[i].get_enemy_type() {
+                        "archer" => {
+                            enemies[i].archer_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "slime" => {
+                            enemies[i].slime_action(player);
+                        }
+                        "summoner" => {
+                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                            if summoned {
+                                enemies.push(slime1);
+                                enemies.push(slime2);
+                                enemies.push(slime3);
+                            }
+                        }
+                        "mage" => {
+                            enemies[i].mage_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "large_slime" => {
+                            enemies[i].large_slime_action(tm, player).await;
+                        }
+                        _ => {}
+                    }
+                    enemies[i].draw();
+                }
+            }
+         }
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         player.draw();
         if player.get_x() > virtual_width - 10.0 {

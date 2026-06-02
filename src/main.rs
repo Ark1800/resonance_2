@@ -87,8 +87,12 @@ async fn main() {
     let fetched_results = client.fetch_table("save_table").await;
     if let Ok(result) = fetched_results {
         records = result;
-        //current_screen = records.player_currentscreenvar.clone();
-        player.set_save_data(records);
+        for record in &records {
+            if record.user_name == player.get_name() && record.user_password == player.get_password() {
+                current_screen = record.player_currentscreenvar.clone();
+                player.set_save_data(record);
+            }
+        }
     } else {
        println!("Error fetching records from database: {} ",fetched_results.err().unwrap());
     }
