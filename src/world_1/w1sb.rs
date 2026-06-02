@@ -10,6 +10,7 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
+use crate::modules::enemy::Enemy;
 
 pub async fn run(
     virtual_width: f32,
@@ -72,6 +73,20 @@ pub async fn run(
     .await;
     map.create_map_array(0, 1, 0, vec![4]).await;
     let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
+    let mut jeff_the_behemoth = Enemy::new(
+    "",
+    75.0, //height
+    75.0, //width
+    70.0, //x
+    80.0, //y
+    true, //stretching
+    1.0, //zoom level
+    200.0, //health
+    10.0, //damage
+    "",
+    "jeff_the_behemoth"//enemy type
+    ).await;
+    
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -119,8 +134,37 @@ pub async fn run(
          }
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
+        if mlehit {
+            enemies[index].dmg_enemy(player.get_meleedmg());
+            if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
+                enemies.remove(index);
+            }
+        }
+        if rnghit {
+            enemies[index].dmg_enemy(player.get_rngdmg());
+            if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
+                enemies.remove(index);
+            }
+        }
         player.draw();
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();

@@ -150,7 +150,7 @@ pub async fn run(
 
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Left".to_string();
-            return "w2s3".to_string();
+            return "w2sp".to_string();
         }
 
         if player.get_x() < 10.0 {

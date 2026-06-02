@@ -11,6 +11,7 @@ use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
+use crate::modules::animated_image::AnimatedImage;
 use macroquad::prelude::*;
 pub async fn run(
     virtual_width: f32,
@@ -51,6 +52,22 @@ pub async fn run(
     .await;
 
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
+let mut boss = Enemy::new(
+    "",
+    64.0,
+    64.0,
+    100.0,
+    120.0,
+    true,
+    1.0,
+    15.0,
+    3.0,
+    "",
+    "boss",
+)
+.await;
+boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idleL.gif").unwrap(), true);
+
     map.create_map_array(0, 1, 0, vec![2]).await;
     if player.get_cleared() == 8 {
         map.create_map_array(0, 2, 0, vec![2, 1]).await;
@@ -67,37 +84,7 @@ pub async fn run(
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
-            if player.get_cleared() == 9 {
-                for i in 0..enemies.len() {
-                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                    match enemies[i].get_enemy_type() {
-                        "archer" => {
-                            enemies[i].archer_action(tm, player).await;
-                            enemies[i].draw_bullet(player);
-                        }
-                        "slime" => {
-                            enemies[i].slime_action(player);
-                        }
-                        "summoner" => {
-                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
-                            if summoned {
-                                enemies.push(slime1);
-                                enemies.push(slime2);
-                                enemies.push(slime3);
-                            }
-                        }
-                        "mage" => {
-                            enemies[i].mage_action(tm, player).await;
-                            enemies[i].draw_bullet(player);
-                        }
-                        "large_slime" => {
-                            enemies[i].large_slime_action(tm, player).await;
-                        }
-                        _ => {}
-                    }
-                    enemies[i].draw();
-                }
-            }
+           boss.draw();
         }
         player.draw();
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame

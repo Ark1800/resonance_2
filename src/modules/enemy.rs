@@ -182,11 +182,48 @@ for mage in 0..mage_list.len() {
             }
 
         }
+
+
+PNG EXAMPLE
+let mut slime = Enemy::new(
+    "assets/slime.png",
+    25.0,
+    25.0,
+    70.0,
+    80.0,
+    true,
+    1.0,
+    10.0,
+    2.0,
+    "",
+    "slime",
+)
+.await;
+GIF EXAMPLE
+let mut flying_blob = Enemy::new(
+    "assets/flying_blob.gif",
+    64.0,
+    64.0,
+    100.0,
+    120.0,
+    true,
+    1.0,
+    15.0,
+    3.0,
+    "",
+    "flying_blob",
+)
+.await;
+
+GIF PRELOAD EXAMPLE
+flying_blob.set_preload_gif(tm.get_preloaded_animated_gif("assets/flying_blob.gif").unwrap(), true);
+
 */
 use crate::modules::collision::check_collision;
 use crate::modules::map;
 use crate::modules::player::Player;
-use crate::modules::preload_image::TextureManager;
+use crate::modules::animated_image::AnimatedImage;
+use crate::modules::preload_image::{PreloadedAnimatedGif, TextureManager};
 use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
@@ -194,8 +231,17 @@ use macroquad::prelude::*;
 use miniquad::date;
 
 #[derive(Clone)]
+// Internal representation for an enemy's visual
+// This allows the enemy to be backed by either a plain still image
+// or by an animated image (like a GIF).
+enum EnemyView {
+    Still(StillImage),
+    Animated(AnimatedImage),
+}
+
+#[derive(Clone)]
 pub struct Enemy {
-    view: StillImage,
+    view: EnemyView,
     projectile_image: StillImage,
     move_speed: f32,
     movement: Vec2,
@@ -209,6 +255,30 @@ pub struct Enemy {
 }
 
 impl Enemy {
+    // Detects whether the provided path points to a GIF file.
+    fn is_gif(path: &str) -> bool {
+        path.to_lowercase().ends_with(".gif")
+    }
+
+    // Create the right kind of internal view depending on asset_path.
+    // - For GIF files, this creates an AnimatedImage directly from the path.
+    // - For all other image paths, it creates a normal StillImage.
+    async fn make_view(
+        asset_path: &str,
+        width: f32,
+        height: f32,
+        x: f32,
+        y: f32,
+        stretch_enabled: bool,
+        zoom_level: f32,
+    ) -> EnemyView {
+        if !asset_path.is_empty() && Enemy::is_gif(asset_path) {
+            EnemyView::Animated(AnimatedImage::from_gif(asset_path, x, y, width, height, true).await)
+        } else {
+            EnemyView::Still(StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await)
+        }
+    }
+
     pub async fn new(
         asset_path: &str,
         width: f32,
@@ -223,7 +293,7 @@ impl Enemy {
         enemy_type: &str,
     ) -> Enemy {
         Enemy {
-            view: StillImage::new(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
+            view: Enemy::make_view(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
             move_speed: 200.0, // Default speed
             movement: Vec2::ZERO,
             health,
@@ -322,14 +392,66 @@ impl Enemy {
         self.projectile_image.transparency_mask = mask;
         self.projectile_image.filename = filename;
     }
-    // Setter for enemy preload
+    // Setter for enemy preload.
+    // This only works for still-image enemies.
+    // Animated enemies do not use this path because they are backed by AnimatedImage.
     #[allow(unused)]
     pub fn set_preload(&mut self, preloaded: (Texture2D, Option<Vec<u8>>, String)) {
-        let (texture, mask, filename) = preloaded;
-        self.view.texture = texture;
-        self.view.transparency_mask = mask;
-        self.view.filename = filename;
+        if let EnemyView::Still(still) = &mut self.view {
+            still.set_preload(preloaded);
+        }
     }
+
+    // Setter for a preloaded animated GIF.
+    // This is the GIF equivalent of set_preload for still images.
+    #[allow(unused)]
+    pub fn set_preload_gif(&mut self, preloaded: PreloadedAnimatedGif, loop_animation: bool) {
+        let x = self.get_x();
+        let y = self.get_y();
+        let width = self.get_width();
+        let height = self.get_height();
+
+        self.view = EnemyView::Animated(
+            AnimatedImage::from_preloaded_gif(preloaded, x, y, width, height, loop_animation),
+        );
+    }
+
+    // Internal getter for the enemy's X position.
+    // This abstracts over the two view types so callers can just use get_x().
+    fn get_view_x(&self) -> f32 {
+        match &self.view {
+            EnemyView::Still(still) => still.get_x(),
+            EnemyView::Animated(animated) => animated.get_x(),
+        }
+    }
+
+    // Internal getter for the enemy's Y position.
+    // This abstracts over the two view types so callers can just use get_y().
+    fn get_view_y(&self) -> f32 {
+        match &self.view {
+            EnemyView::Still(still) => still.get_y(),
+            EnemyView::Animated(animated) => animated.get_y(),
+        }
+    }
+
+    // Internal setter for the enemy's X position.
+    // Updates the correct underlying view type.
+    fn set_view_x(&mut self, x: f32) {
+        match &mut self.view {
+            EnemyView::Still(still) => still.set_x(x),
+            EnemyView::Animated(animated) => animated.set_x(x),
+        }
+    }
+
+    // Internal setter for the enemy's Y position.
+    // Updates the correct underlying view type.
+    fn set_view_y(&mut self, y: f32) {
+        match &mut self.view {
+            EnemyView::Still(still) => still.set_y(y),
+            EnemyView::Animated(animated) => animated.set_y(y),
+        }
+    }
+
     #[allow(unused)]
     pub fn moveing(&mut self, player_x: f32, player_y: f32) {
         // Direction to move in
@@ -337,20 +459,20 @@ impl Enemy {
 
         self.movement = move_dir * self.move_speed * get_frame_time();
 
-        if self.view.get_x() < player_x {
+        if self.get_view_x() < player_x {
             move_dir.x += 1.0; // Move right
-            self.set_x(self.get_x() + 1.0);
-        } else if self.view.get_x() > player_x {
+            self.set_view_x(self.get_view_x() + 1.0);
+        } else if self.get_view_x() > player_x {
             move_dir.x -= 1.0; // Move left
-            self.set_x(self.get_x() - 1.0);
+            self.set_view_x(self.get_view_x() - 1.0);
         }
 
-        if self.view.get_y() < player_y {
+        if self.get_view_y() < player_y {
             move_dir.y += 1.0; // Move down
-            self.set_y(self.get_y() + 1.0);
-        } else if self.view.get_y() > player_y {
+            self.set_view_y(self.get_view_y() + 1.0);
+        } else if self.get_view_y() > player_y {
             move_dir.y -= 1.0; // Move up
-            self.set_y(self.get_y() - 1.0);
+            self.set_view_y(self.get_view_y() - 1.0);
         }
         // Normalize the movement to prevent faster diagonal movement
         if move_dir.length() > 0.0 {
@@ -366,9 +488,16 @@ impl Enemy {
         self
     }
     //changes image
+    // Rebuilds the internal view from the new asset path.
+    // If the new path is a GIF, this will switch the enemy to AnimatedImage.
+    // If the new path is a still image, it remains or becomes StillImage.
     #[allow(unused)]
     pub async fn set_image(&mut self, image_path: &str) {
-        self.view.set_texture(image_path).await;
+        let x = self.get_x();
+        let y = self.get_y();
+        let width = self.get_width();
+        let height = self.get_height();
+        self.view = Enemy::make_view(image_path, width, height, x, y, true, 1.0).await;
     }
     //changes health
     #[allow(unused)]
@@ -382,9 +511,12 @@ impl Enemy {
     }
 
     #[allow(unused)]
-    pub fn draw(&self) {
-        // Only draw if the label is visible
-        self.view.draw();
+    pub fn draw(&mut self) {
+        // Draw the active view type, whether it's still or animated.
+        match &mut self.view {
+            EnemyView::Still(still) => still.draw(),
+            EnemyView::Animated(animated) => animated.draw(),
+        }
     }
 
     #[allow(unused)]
@@ -397,46 +529,83 @@ impl Enemy {
     // Getter for position as Vec2
     #[allow(unused)]
     pub fn get_position(&self) -> Vec2 {
-        Vec2::new(self.view.get_x(), self.view.get_y())
+        Vec2::new(self.get_x(), self.get_y())
     }
 
     // Getter for visibility
     #[allow(unused)]
 
     pub fn view_enemy(&self) -> &StillImage {
-        &self.view
+        match &self.view {
+            EnemyView::Still(still) => still,
+            EnemyView::Animated(_) => panic!("Enemy is animated and has no direct StillImage view"),
+        }
     }
     // Setter for position
     #[allow(unused)]
     pub fn set_position(&mut self, x: f32, y: f32) -> &mut Self {
-        self.view.set_x(x);
-        self.view.set_y(y);
+        match &mut self.view {
+            EnemyView::Still(still) => {
+                still.set_x(x);
+                still.set_y(y);
+            }
+            EnemyView::Animated(animated) => animated.set_position(x, y),
+        }
         self
     }
+
+    // Public getter for the enemy's X coordinate.
+    // Delegates to the current view implementation (still or animated).
     pub fn get_x(&self) -> f32 {
-        self.view.get_x()
+        self.get_view_x()
     }
 
     #[allow(unused)]
+    // Public setter for the enemy's X coordinate.
+    // Updates the underlying view's X position.
     pub fn set_x(&mut self, x: f32) {
-        self.view.set_x(x);
+        self.set_view_x(x);
     }
+
+    pub fn get_width(&self) -> f32 {
+        match &self.view {
+            EnemyView::Still(still) => still.get_width(),
+            EnemyView::Animated(animated) => animated.size().x,
+        }
+    }
+
+    pub fn get_height(&self) -> f32 {
+        match &self.view {
+            EnemyView::Still(still) => still.get_height(),
+            EnemyView::Animated(animated) => animated.size().y,
+        }
+    }
+
+    // Public getter for the enemy's position as a Vec2.
+    // This uses the same X/Y dispatch helpers as the individual accessors.
     pub fn get_pos(&self) -> Vec2 {
-        vec2(self.view.get_x(), self.view.get_y())
+        vec2(self.get_view_x(), self.get_view_y())
     }
-    // Get and set y position
+
+    // Public getter for the enemy's Y coordinate.
+    // Delegates to the current view implementation (still or animated).
     #[allow(unused)]
     pub fn get_y(&self) -> f32 {
-        self.view.get_y()
+        self.get_view_y()
     }
 
     #[allow(unused)]
+    // Public setter for the enemy's Y coordinate.
+    // Updates the underlying view's Y position.
     pub fn set_y(&mut self, y: f32) {
-        self.view.set_y(y);
+        self.set_view_y(y);
     }
+
     #[allow(unused)]
+    // Alias for getting the enemy position as Vec2.
+    // Equivalent to get_pos and uses the same view-based coordinates.
     pub fn pos(&self) -> Vec2 {
-        vec2(self.view.get_x(), self.view.get_y())
+        vec2(self.get_view_x(), self.get_view_y())
     }
 
     // Calculate direction towards player
@@ -758,9 +927,12 @@ impl Enemy {
         self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
     }
 
+    
+
     pub fn get_maxhealth(&self) -> f32 {
         self.max_health
     }
+
     pub fn set_healthbar(&self) -> ProgressBar {
         let maxhealth = self.get_maxhealth();
 
@@ -782,14 +954,14 @@ impl Enemy {
 
         self.movement = move_dir * self.move_speed * get_frame_time();
 
-        if self.view.get_x() < player_x {
+        if self.get_view_x() < player_x {
             move_dir.x -= 1.0; // Move right
-        } else if self.view.get_x() > player_x {
+        } else if self.get_view_x() > player_x {
             move_dir.x += 1.0; // Move left
         }
-        if self.view.get_y() < player_y {
+        if self.get_view_y() < player_y {
             move_dir.y -= 1.0; // Move down
-        } else if self.view.get_y() > player_y {
+        } else if self.get_view_y() > player_y {
             move_dir.y += 1.0; // Move up
         }
         // Normalize the movement to prevent faster diagonal movement
@@ -801,7 +973,7 @@ impl Enemy {
             //collision with map
             self.set_x(enemy_old_pos.x);
         }
-        if self.view.get_x() > 930.0 {
+        if self.get_view_x() > 930.0 {
             self.set_x(enemy_old_pos.x);
         }
         self.set_y(enemy_old_pos.y + move_dir.y);
@@ -830,14 +1002,14 @@ impl Enemy {
 
         self.movement = move_dir * self.move_speed * get_frame_time();
 
-        if self.view.get_x() < highesthealthenemypos.x {
+        if self.get_view_x() < highesthealthenemypos.x {
             move_dir.x += 1.0; // Move right
-        } else if self.view.get_x() > highesthealthenemypos.x {
+        } else if self.get_view_x() > highesthealthenemypos.x {
             move_dir.x -= 1.0; // Move left
         }
-        if self.view.get_y() < highesthealthenemypos.y {
+        if self.get_view_y() < highesthealthenemypos.y {
             move_dir.y += 1.0; // Move down
-        } else if self.view.get_y() > highesthealthenemypos.y {
+        } else if self.get_view_y() > highesthealthenemypos.y {
             move_dir.y -= 1.0; // Move up
         }
         // Normalize the movement to prevent faster diagonal movement
@@ -889,7 +1061,7 @@ impl Enemy {
         let max_y = first_pos.y + 20.0;
 
         self.movement.y = self.move_speed * get_frame_time();
-        let next_y = self.view.get_y() + self.movement.y;
+        let next_y = self.get_view_y() + self.movement.y;
 
         if next_y >= max_y {
             self.set_y(max_y);
@@ -907,7 +1079,8 @@ impl Enemy {
     }
 
     pub fn add_gold(&self, player: &mut Player,) {
-        let amount = (self.get_maxhealth()/10.0).round() as i32;
+        let mut amount = (self.get_maxhealth()/10.0).round() as i32;
+        if amount <=0{amount = 1;}
         player.addcoins(amount);
     }
 }

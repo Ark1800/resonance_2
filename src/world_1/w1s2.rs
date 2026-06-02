@@ -127,15 +127,44 @@ pub async fn run(
                 }
             }
          }
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        player.set_player_activedisc(activedisc);
+        if mlehit {
+            enemies[index].dmg_enemy(player.get_meleedmg());
+            if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
+                enemies.remove(index);
+            }
+        }
+        if rnghit {
+            enemies[index].dmg_enemy(player.get_rngdmg());
+            if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
+                enemies.remove(index);
+            }
+        }
+
         player.handle_inventory();
         player.handle_save_menu().await;
         player.handle_playerdamaging(&enemies);
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
-        player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
-        player.set_player_activedisc(activedisc);
         player.draw();
         if player.get_y() < 10.0 {
             *last_scene = "Up".to_string();

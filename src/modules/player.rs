@@ -19,6 +19,7 @@ use std::f32::consts::PI;
 /*
 //Bug fixes/extras
 //0.5 broken web
+//0.7 can't add new save file
 //1. add hitboxes to swords
 //2. coding logs
 //3. removing printlns

@@ -160,7 +160,7 @@ fn is_zero(num: &i32) -> bool {
     *num == 0
 }
 // Please replace the libsql:// from the URL with https:
-pub const TURSO_URL: &str = "libsql://resonance2savedb-ark1800.aws-us-west-2.turso.io";
+pub const TURSO_URL: &str = "https://resonance2savedb-ark1800.aws-us-west-2.turso.io";
 pub const TURSO_AUTH_TOKEN: &str = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODAzMjQwMDIsImlkIjoiMDE5ZTgzODUtMmUwMS03NzA1LTg2ZWItZDUwMzkxOGJmOGYxIiwicmlkIjoiODkyZjRhMTMtMjk0MC00ZWQxLWFiYWMtYmEzNmEyMTM2N2FhIn0.7xAHDgG9pMSJSLk7dG4TSihwzbl9ACoPU0zrrOQ9rVsdqvetxhLFQGWkdTnGu7MAxIsemULHvMHlYXb0H4etAw";
 
 // ============================================================================
