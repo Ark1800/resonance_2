@@ -21,6 +21,7 @@ pub async fn run(
     last_scene: &mut String,
     musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
+    let mut jeff_valid = false;
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
     } else if last_scene == "Right" {
@@ -47,21 +48,7 @@ pub async fn run(
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/world1/whirlpool.gif") {
         whirlpool.set_preloaded_gif(preloaded, true);
     }
-    let mut collidable_objects: Vec<StillImage> = vec![
-        StillImage::new(
-            "",
-            350.0,                         // width
-            350.0,                         // height
-            (virtual_width / 2.0) - 180.0, // x position
-            (virtual_width / 2.0) - 300.0, // y position
-            true,                          // Enable stretching
-            1.0,                           // Normal zoom (100%)
-        )
-        .await,
-    ];
-    for obj in 0..collidable_objects.len() {
-        collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
-    }
+    let collidable_objects = vec![];
     let mut map = Map::new(
         virtual_width,
         virtual_height,
@@ -73,12 +60,12 @@ pub async fn run(
     .await;
     map.create_map_array(0, 1, 0, vec![4]).await;
     let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
-    let mut jeff_the_behemoth = Enemy::new(
+    let mut jeff = Enemy::new(
     "",
-    75.0, //height
-    75.0, //width
-    70.0, //x
-    80.0, //y
+    200.0, //height
+200.0, //width
+    300.0, //x
+    300.0, //y
     true, //stretching
     1.0, //zoom level
     200.0, //health
@@ -86,45 +73,39 @@ pub async fn run(
     "",
     "jeff_the_behemoth"//enemy type
     ).await;
-    
+    jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idleR.gif").unwrap(), true);
+    let mut jeff_basic_cooldown = get_time();
+    let mut jeff_count = 0;
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-        whirlpool.draw();
+       // whirlpool.draw();
+        jeff.draw();
         map.draw_map(&tm).await;
         player.handle_inventory();
         player.handle_save_menu().await;
         player.handle_keypresses(pause, musicdiscfunctions).await;
-        if player.get_cleared() == 1 {
+        if player.get_cleared() == 4 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
                         && musicdiscfunctions.get_pandemonium_active() == false
                         && musicdiscfunctions.get_sodapop_active() == false
                     {
-                                            match enemies[i].get_enemy_type() {
-                        "archer" => {
-                            enemies[i].archer_action(tm, player).await;
-                            enemies[i].draw_bullet(player);
-                        }
-                        "slime" => {
-                            enemies[i].slime_action(player);
-                        }
-                        "summoner" => {
-                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
-                            if summoned {
-                                enemies.push(slime1);
-                                enemies.push(slime2);
-                                enemies.push(slime3);
+                        match enemies[i].get_enemy_type() {
+                        "jeff" => {
+                            (jeff_valid, jeff_count) = enemies[i].jeff_checkhit(player, jeff_valid, jeff_count);
+                            if jeff_valid && jeff_count == 0 {
+                                jeff_basic_cooldown = get_time();
+                                jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle2.gif").unwrap(), true);
                             }
-                        }
-                        "mage" => {
-                            enemies[i].mage_action(tm, player).await;
-                            enemies[i].draw_bullet(player);
-                        }
-                        "large_slime" => {
-                            enemies[i].large_slime_action(tm, player).await;
+                            if jeff_valid {
+                                if get_time() - jeff_basic_cooldown > 2.0 {
+                                    println!("jeff attack");
+                                    jeff_basic_cooldown = get_time();
+                                }
+                            }
                         }
                         _ => {}
                     }
@@ -138,29 +119,19 @@ pub async fn run(
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         if mlehit {
+            jeff_valid = true;
+            jeff_count += 1;
             enemies[index].dmg_enemy(player.get_meleedmg());
             if enemies[index].get_health() <= 0.0 {
-                if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
-                    if split {
-                        enemies.push(slime1);
-                        enemies.push(slime2);
-                    }
-                }
                 enemies[index].add_gold(player);
                 enemies.remove(index);
             }
         }
         if rnghit {
+            jeff_valid = true;
+            jeff_count += 1;
             enemies[index].dmg_enemy(player.get_rngdmg());
             if enemies[index].get_health() <= 0.0 {
-                if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
-                    if split {
-                        enemies.push(slime1);
-                        enemies.push(slime2);
-                    }
-                }
                 enemies[index].add_gold(player);
                 enemies.remove(index);
             }

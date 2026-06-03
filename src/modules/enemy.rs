@@ -1083,6 +1083,16 @@ impl Enemy {
         if amount <=0{amount = 1;}
         player.addcoins(amount);
     }
+
+    pub fn jeff_checkhit(&self, player: &mut Player, jeff_valid: bool, jeff_count: i32) -> (bool, i32) {
+        let mut hit = jeff_valid;
+        let mut jeff_count = jeff_count;
+        if check_collision(self.view_enemy(), player.view_player(), 1) {
+            hit = true;
+            jeff_count += 1;
+        }
+        (hit, jeff_count)
+    }
 }
 
 //     pub fn move_check_collision_y(&mut self, img_other: &StillImage) -> bool {

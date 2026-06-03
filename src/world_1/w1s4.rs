@@ -89,7 +89,7 @@ pub async fn run(
         map.draw_map(&tm).await;
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
-        if player.get_cleared() == 1 {
+        if player.get_cleared() == 3 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
