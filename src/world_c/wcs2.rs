@@ -21,7 +21,6 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
-    dungeon_completed: &bool,
 ) -> String {
     let mut background = StillImage::new(
         "",
@@ -40,7 +39,7 @@ pub async fn run(
         vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
-    if !dungeon_completed {
+    if player.get_cleared() >= 2 {
         map.create_map_array(0, 1, 0, vec![1]).await;
     } else {
         map.create_map_array(0, 2, 0, vec![1, 3]).await;
@@ -105,7 +104,7 @@ pub async fn run(
         background.draw();
         map.draw_map(&tm).await;
 
-        if !*dungeon_completed && enemies.len() == 0 {
+        if player.get_cleared() < 2 && enemies.len() == 0 {
             map.create_map_array(0, 2, 0, vec![1, 3]).await;
         }
 
@@ -115,7 +114,7 @@ pub async fn run(
                 current_time = get_time();
                 if (current_time - time_dif) > 0.1 {
                     time_dif = current_time;
-                    if !*dungeon_completed {
+                    if player.get_cleared() < 2 {
                         if speech_cooldown > 0.0 {
                             speech_cooldown -= 0.1;
                             if speech_cooldown <= 0.0 {
@@ -137,7 +136,7 @@ pub async fn run(
                     }
                 }
             }
-            if !dungeon_completed {
+            if player.get_cleared() < 2 {
                 if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() {
                     speech_cooldown = 0.5;
                     speech_num += 1;
@@ -206,6 +205,9 @@ pub async fn run(
         player.handle_save_menu().await;
         player.handle_inventory();
         if player.get_y() > virtual_height - 10.0 {
+            if player.get_cleared() == 1 {
+                player.add_cleared();
+        }
             *last_scene = "Up".to_string();
             return "wcs3".to_string();
         }
@@ -218,7 +220,7 @@ pub async fn run(
             return "wcs1".to_string();
         }
         player.draw();
-        if lbl_speech.get_text() != "" && !*dungeon_completed {
+        if lbl_speech.get_text() != "" && player.get_cleared() < 2 {
             speech_box.draw();
             name_box.draw();
         }

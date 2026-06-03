@@ -1,3 +1,5 @@
+use crate::VIRTUAL_HEIGHT;
+use crate::VIRTUAL_WIDTH;
 /*pub mod enemy;
 
 //enemy knockback on hit
@@ -219,10 +221,11 @@ GIF PRELOAD EXAMPLE
 flying_blob.set_preload_gif(tm.get_preloaded_animated_gif("assets/flying_blob.gif").unwrap(), true);
 
 */
+use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
+use crate::modules::label::Label;
 use crate::modules::map;
 use crate::modules::player::Player;
-use crate::modules::animated_image::AnimatedImage;
 use crate::modules::preload_image::{PreloadedAnimatedGif, TextureManager};
 use crate::modules::progressbar::ProgressBar;
 use crate::modules::projectile::Projectile;
@@ -263,15 +266,7 @@ impl Enemy {
     // Create the right kind of internal view depending on asset_path.
     // - For GIF files, this creates an AnimatedImage directly from the path.
     // - For all other image paths, it creates a normal StillImage.
-    async fn make_view(
-        asset_path: &str,
-        width: f32,
-        height: f32,
-        x: f32,
-        y: f32,
-        stretch_enabled: bool,
-        zoom_level: f32,
-    ) -> EnemyView {
+    async fn make_view(asset_path: &str, width: f32, height: f32, x: f32, y: f32, stretch_enabled: bool, zoom_level: f32) -> EnemyView {
         if !asset_path.is_empty() && Enemy::is_gif(asset_path) {
             EnemyView::Animated(AnimatedImage::from_gif(asset_path, x, y, width, height, true).await)
         } else {
@@ -411,9 +406,7 @@ impl Enemy {
         let width = self.get_width();
         let height = self.get_height();
 
-        self.view = EnemyView::Animated(
-            AnimatedImage::from_preloaded_gif(preloaded, x, y, width, height, loop_animation),
-        );
+        self.view = EnemyView::Animated(AnimatedImage::from_preloaded_gif(preloaded, x, y, width, height, loop_animation));
     }
 
     // Internal getter for the enemy's X position.
@@ -646,23 +639,19 @@ impl Enemy {
         let dmg = self.get_dmg();
         for projectile in 0..self.projectiles.len() {
             let collision = check_collision(self.projectiles[projectile].view_player(), player.view_player(), 1);
+            self.projectiles[projectile].move_projectiles(player.get_oldpos());
             if collision {
-                if self.projectiles[projectile].get_atkvalid() {
-                    player.dmgplayer(dmg);
-                    if self.projectiles[projectile].get_freeze() {
-                        self.projectiles[projectile].set_atkvalid(false);
-                    } else {
-                        self.projectiles.remove(projectile);
-                    }
-                }
+                player.dmgplayer(dmg);
+                self.knockback(player, "player");
+
+                self.projectiles.remove(projectile);
+
                 break;
             }
-            if !self.projectiles[projectile].get_freeze() {
-                self.projectiles[projectile].move_projectiles(player.get_oldpos());
-                if self.projectiles[projectile].get_x() > 3000.0 || self.projectiles[projectile].get_y() > 2000.0 {
-                    self.projectiles.remove(projectile);
-                    break;
-                }
+
+            if self.projectiles[projectile].get_x() > 3000.0 || self.projectiles[projectile].get_y() > 2000.0 {
+                self.projectiles.remove(projectile);
+                break;
             }
 
             self.projectiles[projectile].draw();
@@ -892,7 +881,7 @@ impl Enemy {
             if attack_choice >= 0 {
                 println!("Cyric used Meteors!");
                 self.meteors(&tm).await;
-                self.cooldown2 = get_time() + 2.0;
+                self.cooldown2 = get_time() + 1.0;
             } else {
                 println!("Cyric used Chromatic Orb!");
                 self.shoot(player, 80.0, 80.0).await;
@@ -926,8 +915,6 @@ impl Enemy {
         }
         self.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
     }
-
-    
 
     pub fn get_maxhealth(&self) -> f32 {
         self.max_health
@@ -1078,20 +1065,86 @@ impl Enemy {
         }
     }
 
-    pub fn add_gold(&self, player: &mut Player,) {
-        let mut amount = (self.get_maxhealth()/10.0).round() as i32;
-        if amount <=0{amount = 1;}
+    pub fn add_gold(&self, player: &mut Player) {
+        let mut amount = (self.get_maxhealth() / 10.0).round() as i32;
+        if amount <= 0 {
+            amount = 1;
+        }
         player.addcoins(amount);
     }
 
-    pub fn jeff_checkhit(&self, player: &mut Player, jeff_valid: bool, jeff_count: i32) -> (bool, i32) {
+    pub fn jeff_checkhit(&self, player: &mut Player, jeff_valid: bool, jeff_attackvalid: bool) -> (bool, bool) {
         let mut hit = jeff_valid;
-        let mut jeff_count = jeff_count;
+        let mut jeff_attackvalid = jeff_attackvalid;
         if check_collision(self.view_enemy(), player.view_player(), 1) {
             hit = true;
-            jeff_count += 1;
+            jeff_attackvalid == true;
         }
-        (hit, jeff_count)
+        (hit, jeff_attackvalid)
+    }
+
+    pub fn jeff_choose_attack(&mut self) -> i32 {
+        let attack = rand::gen_range(1, 4);
+        attack
+    }
+
+    pub fn jeff_knifeattack1(&mut self) -> (i32, Label) {
+        let mut lbl_warninglabel = Label::new("", 50.0, 100.0, 30);
+        let wallchoice = rand::gen_range(1, 5);
+        let walldistance_ud = rand::gen_range(150.0, VIRTUAL_WIDTH - 150.0);
+        let walldistance_lr = rand::gen_range(150.0, VIRTUAL_HEIGHT - 150.0);
+        match wallchoice {
+            1 | 3 => { //north/south walls
+                lbl_warninglabel.set_position(walldistance_ud, 0.0);
+                lbl_warninglabel.with_fixed_size(150.0, VIRTUAL_HEIGHT + 100.0);
+            }
+            2 | 4 => { //east/west walls
+                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH + 100.0, 150.0);
+                lbl_warninglabel.set_position(0.0, walldistance_lr);
+            }
+            _ => {}
+        }
+        lbl_warninglabel.draw();
+        (wallchoice, lbl_warninglabel)
+    }
+
+    pub fn knockback(&mut self, player: &mut Player, target: &str) {
+        let player_pos = player.get_oldpos();
+        let enemy_pos = self.get_pos();
+        let direction = (enemy_pos - player_pos).normalize();
+        let knockback_distance = 25.0; // Adjust this value as needed
+        let knockback_vector = direction * knockback_distance;
+        if target == "player" {
+            player.set_position((player.get_x() - knockback_vector.x), (player.get_y() - knockback_vector.y));
+            if player.get_x() < 40.0 {
+                player.set_position(50.0, player.get_y());
+            }
+            if player.get_x() > VIRTUAL_WIDTH - 40.0 {
+                player.set_position(VIRTUAL_WIDTH - 50.0, self.get_y());
+            }
+            if player.get_y() < 60.0 {
+                player.set_position(player.get_x(), 70.0);
+            }
+            if player.get_y() > VIRTUAL_HEIGHT - 60.0 {
+                player.set_position(player.get_x(), VIRTUAL_HEIGHT - 70.0);
+            }
+        } else if target == "enemy" {
+            self.set_x(self.get_x() + knockback_vector.x);
+            self.set_y(self.get_y() + knockback_vector.y);
+
+            if self.get_x() < 40.0 {
+                self.set_x(50.0);
+            }
+            if self.get_x() > VIRTUAL_WIDTH - 40.0 {
+                self.set_x(VIRTUAL_WIDTH - 50.0);
+            }
+            if self.get_y() < 60.0 {
+                self.set_y(70.0);
+            }
+            if self.get_y() > VIRTUAL_HEIGHT - 60.0 {
+                self.set_y(VIRTUAL_HEIGHT - 70.0);
+            }
+        }
     }
 }
 

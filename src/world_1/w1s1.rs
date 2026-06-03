@@ -4,6 +4,7 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
 use crate::modules::enemy::Enemy;
 //use crate::modules::item::Item;
 use crate::modules::map::Map;
@@ -42,7 +43,7 @@ pub async fn run(
     )
     .await;
     // If cleared
-    if player.get_cleared() == 0 {
+    if player.get_cleared() == 3 {
         map.create_map_array(0, 1, 0, vec![4]).await;
     } else {
         map.create_map_array(0, 2, 0, vec![1, 4]).await;
@@ -66,6 +67,7 @@ pub async fn run(
     } else if *last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
     }
+    player.set_position(VIRTUAL_WIDTH/2.0, VIRTUAL_HEIGHT/2.0);
     loop {
         player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
@@ -76,7 +78,7 @@ pub async fn run(
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
-            if player.get_cleared() == 0 {
+            if player.get_cleared() == 3 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
@@ -118,6 +120,7 @@ pub async fn run(
         player.set_player_activedisc(activedisc);
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
+            enemies[index].knockback(player, "enemy");
             if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
                     let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
@@ -132,6 +135,7 @@ pub async fn run(
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
+            enemies[index].knockback(player, "enemy");
             if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
                     let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
@@ -147,15 +151,16 @@ pub async fn run(
 
         player.handle_inventory();
         player.handle_save_menu().await;
+        
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();
             return "w1sp".to_string();
         }
-        if enemies.is_empty() && player.get_cleared() == 0 {
+        if enemies.is_empty() && player.get_cleared() == 3 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
         }
-        if player.get_y() < 10.0 && player.get_cleared() >= 1 {
+        if player.get_y() < 10.0 && player.get_cleared() >= 3 {
             *last_scene = "Top".to_string();
             println!("Returning w1s2");
             return "w1s2".to_string
@@ -163,6 +168,12 @@ pub async fn run(
         
         ();
         }
-        next_frame().await;
     }
+    let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            return "w1sp".to_string();
+        } if quit {
+            return "main_screen".to_string();
+        }
+        next_frame().await;
 }}

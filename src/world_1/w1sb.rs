@@ -62,8 +62,8 @@ pub async fn run(
     let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
     let mut jeff = Enemy::new(
     "",
-    200.0, //height
-200.0, //width
+    150.0, //height
+150.0, //width
     300.0, //x
     300.0, //y
     true, //stretching
@@ -74,8 +74,10 @@ pub async fn run(
     "jeff_the_behemoth"//enemy type
     ).await;
     jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idleR.gif").unwrap(), true);
-    let mut jeff_basic_cooldown = get_time();
-    let mut jeff_count = 0;
+    let mut jeff_start_fight_cooldown = 0.0;
+    let mut jeff_attack_cooldown = 0.0;
+    let mut jeff_attackvalid = false;
+    let mut jeff_knifevalid = false;
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -85,42 +87,62 @@ pub async fn run(
         map.draw_map(&tm).await;
         player.handle_inventory();
         player.handle_save_menu().await;
+        let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            return "w1sp".to_string();
+        } if quit {
+            return "main_screen".to_string();
+        }
         player.handle_keypresses(pause, musicdiscfunctions).await;
-        if player.get_cleared() == 4 {
+        if player.get_cleared() == 7 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                    if musicdiscfunctions.get_thickofit_active() == false
-                        && musicdiscfunctions.get_pandemonium_active() == false
-                        && musicdiscfunctions.get_sodapop_active() == false
-                    {
-                        match enemies[i].get_enemy_type() {
-                        "jeff" => {
-                            (jeff_valid, jeff_count) = enemies[i].jeff_checkhit(player, jeff_valid, jeff_count);
-                            if jeff_valid && jeff_count == 0 {
-                                jeff_basic_cooldown = get_time();
-                                jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle2.gif").unwrap(), true);
-                            }
-                            if jeff_valid {
-                                if get_time() - jeff_basic_cooldown > 2.0 {
-                                    println!("jeff attack");
-                                    jeff_basic_cooldown = get_time();
-                                }
-                            }
-                        }
-                        _ => {}
+                    if musicdiscfunctions.get_thickofit_active() == false && musicdiscfunctions.get_pandemonium_active() == false && musicdiscfunctions.get_sodapop_active() == false {
+                    (jeff_valid, jeff_attackvalid) = enemies[i].jeff_checkhit(player, jeff_valid, jeff_attackvalid);
+                    if jeff_valid && jeff_attackvalid {
+                        jeff_start_fight_cooldown = get_time();
+                        jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle2.gif").unwrap(), true);
                     }
+                    if jeff_valid {
+                        if get_time() - jeff_start_fight_cooldown > 3.0 { //length of gif
+                            let choice = jeff.jeff_choose_attack();
+                            match choice {
+                                1 => { //jeff knife dash
+                                    if jeff_attackvalid {
+                                        jeff_attack_cooldown = get_time();
+                                        jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_knife.gif").unwrap(), true);
+                                        jeff_attackvalid = false;
+                                    }
+                                    let time = get_time() - jeff_attack_cooldown;
+                                    if time >= 1.0  && time < 3.0 {
+                                        if jeff_knifevalid == true {
+                                            let (jeff_knifeattack_wallchoice, lbl_warninglabel) = jeff.jeff_knifeattack1();
+                                            jeff_knifevalid = false;
+                                        }
+                                    }
+                                } 
+                                2 => {} //jeff bubble beam
+                                3 => {} //jeff whirlpool bounce
+                                _ => {}
+                            }
+                        };
+                    }
+                }
                     enemies[i].draw();
                 }
             }
-         }
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
+        if enemies.is_empty() && player.get_cleared() == 7 {
+            player.add_cleared();
+            map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+        }
         if mlehit {
             jeff_valid = true;
-            jeff_count += 1;
+            jeff_attackvalid = true;
             enemies[index].dmg_enemy(player.get_meleedmg());
             if enemies[index].get_health() <= 0.0 {
                 enemies[index].add_gold(player);
@@ -129,7 +151,7 @@ pub async fn run(
         }
         if rnghit {
             jeff_valid = true;
-            jeff_count += 1;
+            jeff_attackvalid = true;
             enemies[index].dmg_enemy(player.get_rngdmg());
             if enemies[index].get_health() <= 0.0 {
                 enemies[index].add_gold(player);

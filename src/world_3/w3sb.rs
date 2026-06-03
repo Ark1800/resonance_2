@@ -19,7 +19,6 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
-    game_completed: &mut bool,
 ) -> String {
     player.set_position(virtual_width / 2.0 - 20.0, virtual_height - 100.0);
 
@@ -72,7 +71,7 @@ pub async fn run(
 
     let mut enemies: Vec<Enemy> = vec![];
     cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_f.png").unwrap());
-    if *game_completed {
+    if player.get_cleared() >= 17 {
         cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
     } else {
         enemies.push(cyric);
@@ -89,14 +88,16 @@ pub async fn run(
         let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
 
+        if player.get_cleared() < 17 {
         if enemies[0].get_health() <= 0.0 {
-            *game_completed = true;
+            player.add_cleared();
             enemies[0].set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
             map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
         } else {
             enemies[0].cyric_action(player, tm).await;
         }
         enemies[0].draw_bullet(player);
+        }
         enemies[0].draw();
         player.draw();
         map.draw_map(&tm).await;

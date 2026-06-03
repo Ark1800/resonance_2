@@ -91,7 +91,7 @@ pub async fn run(
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
-         if player.get_cleared() == 1 {
+         if player.get_cleared() == 4 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
@@ -161,6 +161,15 @@ pub async fn run(
 
         player.handle_inventory();
         player.handle_save_menu().await;
+        let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            return "w1sp".to_string();
+        } if quit {
+            return "main_screen".to_string();
+        }
+        if enemies.is_empty() && player.get_cleared() == 4 {
+            player.add_cleared();
+        }
         player.handle_playerdamaging(&enemies);
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();

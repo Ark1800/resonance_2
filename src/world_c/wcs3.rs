@@ -22,7 +22,6 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
-    dungeon_completed: &mut bool,
 ) -> String {
     let mut background = StillImage::new(
         "",
@@ -126,7 +125,7 @@ pub async fn run(
     let mut cutscene_going = false;
     let mut cutscene_num = 0;
     let mut first_time = true;
-    if *dungeon_completed {
+    if player.get_cleared() >= 3 {
         first_time = false;
     }
 
@@ -180,7 +179,7 @@ pub async fn run(
                                 cutscene_going = false;
                             }
                             if script_num == 2 {
-                                *dungeon_completed = true;
+                                player.add_cleared();
                                 return "wcs2".to_string();
                             }
                             } else {

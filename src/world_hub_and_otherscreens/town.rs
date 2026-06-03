@@ -23,7 +23,6 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     musicdiscfunctions: &mut Musicdisc,
-    town_completed: &mut bool,
 ) -> String {
     let mut map = Map::new(
         virtual_width,
@@ -75,7 +74,7 @@ pub async fn run(
 
     let mut lbl_speech = Label::new("", 150.0, 610.0, 30);
     lbl_speech.with_colors(WHITE, None);
-    if !*town_completed {
+    if player.get_cleared() == 3 {
         lbl_speech.with_scroll(true);
     }
     let mut speech_cooldown = 0.0;

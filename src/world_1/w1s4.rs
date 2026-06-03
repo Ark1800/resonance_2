@@ -89,7 +89,7 @@ pub async fn run(
         map.draw_map(&tm).await;
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
-        if player.get_cleared() == 3 {
+        if player.get_cleared() == 6 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
@@ -127,6 +127,12 @@ pub async fn run(
          }
         player.handle_inventory();
         player.handle_save_menu().await;
+        let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            return "w1sp".to_string();
+        } if quit {
+            return "main_screen".to_string();
+        }
         player.move_player(&map, old_pos, &vec![]);
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
@@ -158,6 +164,10 @@ pub async fn run(
                 enemies[index].add_gold(player);
                 enemies.remove(index);
             }
+        }
+        if enemies.is_empty() && player.get_cleared() == 6 {
+            player.add_cleared();
+            map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
         }
 
         player.draw();

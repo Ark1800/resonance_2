@@ -75,12 +75,18 @@ pub async fn run(
         background.draw();
         player.handle_inventory();
         player.handle_save_menu().await;
+        let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            return "w1sp".to_string();
+        } if quit {
+            return "main_screen".to_string();
+        }
         map.draw_map(&tm).await;
         if *pause == false {
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
-            if player.get_cleared() == 8 {
+            if player.get_cleared() == 10 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     match enemies[i].get_enemy_type() {
@@ -143,7 +149,7 @@ pub async fn run(
             }
         }
 
-        if enemies.is_empty() && player.get_cleared() == 8 {
+        if enemies.is_empty() && player.get_cleared() == 10 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
         }

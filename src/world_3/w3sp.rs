@@ -14,7 +14,7 @@ use crate::modules::animated_image::AnimatedImage;
 use crate::modules::enemy::Enemy;
 use crate::modules::grid::draw_grid;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc, world2_completed: &bool) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc) -> String {
     let mut background1 = StillImage::new(
         "",
         virtual_width/2.0,  // width
@@ -110,7 +110,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         let mut enemies: Vec<Enemy> = vec![];
         //backgrounds
         background1.draw();
-        if *world2_completed {
+        if player.get_cleared() >= 12 {
         red_portal.draw();
         }
         //game 
@@ -119,7 +119,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
             return "town".to_string();
         }
         
-        if check_collision(player.view_player(), &portal_hitbox, 1) && *world2_completed {
+        if check_collision(player.view_player(), &portal_hitbox, 1) && player.get_cleared() >= 12 {
             *last_scene = "Top".to_string(); 
             return "w3s1".to_string();
         }

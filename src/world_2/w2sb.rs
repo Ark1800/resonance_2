@@ -79,6 +79,12 @@ boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idle
         background.draw();
         player.handle_inventory();
         player.handle_save_menu().await;
+        let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            return "w1sp".to_string();
+        } if quit {
+            return "main_screen".to_string();
+        }
         map.draw_map(&tm).await;
         if *pause == false {
             let old_pos = player.get_oldpos();
@@ -108,7 +114,7 @@ boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idle
             }
         }
 
-        if enemies.is_empty() && player.get_cleared() == 9 {
+        if enemies.is_empty() && player.get_cleared() == 11 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
         }

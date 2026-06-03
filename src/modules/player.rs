@@ -18,7 +18,6 @@ use std::f32::consts::PI;
 //TO DOOOOOO
 /*
 //Bug fixes/extras
-//0.5 broken web
 //0.7 can't add new save file
 //1. add hitboxes to swords
 //2. coding logs
@@ -151,7 +150,7 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 50.0,
+            mledmg: 1.0,
             rngdmg: 5.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
@@ -680,33 +679,11 @@ impl Player {
         let player_x = x;
         let player_y = y;
 
-        // let mut img_slash_t = StillImage::new(
-        //     "",
-        //     70.0, // width
-        //     30.0, // height
-        //     player_x - 15.0,
-        //     player_y - 30.0,
-        //     true,
-        //     1.0,
-        // )
-        // .await;
         let mut img_slash_t = AnimatedImage::from_gif("", player_x - 15.0, player_y - 30.0, 70.0, 30.0, true).await;
-        // img_slash_t.set_preload(preloads[11].clone());
 
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_t.set_preloaded_gif(preloaded, false);
         }
-        // let mut img_slash_tr = StillImage::new(
-        //     "",
-        //     60.0, // width
-        //     50.0, // heightui();
-        //     player_x + 40.0,
-        //     player_y - 30.0,
-        //     true,
-        //     1.0,
-        // )
-        // .await;
-        // img_slash_tr.set_preload(preloads[11].clone());
 
         let mut img_slash_tr = AnimatedImage::from_gif("", player_x + 40.0, player_y - 30.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
@@ -714,99 +691,32 @@ impl Player {
         }
         img_slash_tr.set_angle(PI / 2.0);
 
-        // let mut img_slash_r = StillImage::new(
-        //     "",
-        //     40.0, // width
-        //     80.0, // height
-        //     player_x + 45.0,
-        //     player_y - 10.0,
-        //     true,
-        //     1.0,
-        // )
-        // .await;
-        // img_slash_r.set_preload(preloads[11].clone());
-
         let mut img_slash_r = AnimatedImage::from_gif("", player_x + 45.0, player_y - 10.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_r.set_preloaded_gif(preloaded, false);
         }
         img_slash_r.set_angle(PI);
 
-        // let mut img_slash_br = StillImage::new(
-        //     "",
-        //     60.0, // width
-        //     50.0, // height
-        //     player_x + 40.0,
-        //     player_y + 60.0,
-        //     true,
-        //     1.0,
-        // )
-        // .await;
-        // img_slash_br.set_preload(preloads[11].clone());
-
         let mut img_slash_br = AnimatedImage::from_gif("", player_x + 40.0, player_y + 60.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_br.set_preloaded_gif(preloaded, false);
         }
-        // let mut img_slash_b = StillImage::new(
-        //     "",
-        //     70.0, // width
-        //     30.0, // height
-        //     player_x - 10.0,
-        //     player_y + 65.0,
-        //     true,
-        //     1.0,
-        // )
-        // .await;
-        // img_slash_b.set_preload(preloads[11].clone());
 
         let mut img_slash_b = AnimatedImage::from_gif("", player_x - 10.0, player_y + 65.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_b.set_preloaded_gif(preloaded, false);
         }
-        // let mut img_slash_bl = StillImage::new(
-        //     "",
-        //     60.0, // width
-        //     50.0, // height
-        //     player_x - 60.0,
-        //     player_y + 50.0,
-        //     true,
-        //     1.0,
-        // )
-        // .await;
-        // img_slash_bl.set_preload(preloads[11].clone());
 
         let mut img_slash_bl = AnimatedImage::from_gif("", player_x - 60.0, player_y + 50.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_bl.set_preloaded_gif(preloaded, false);
         }
         img_slash_bl.set_angle(PI / 2.0);
-        // let mut img_slash_l = StillImage::new(
-        //     "",
-        //     30.0, // width
-        //     70.0, // height
-        //     player_x - 35.0,
-        //     player_y - 10.0,
-        //     true,
-        //     1.0,
-        // )
-        // .await;
-        // img_slash_l.set_preload(preloads[11].clone());
+
         let mut img_slash_l = AnimatedImage::from_gif("", player_x - 35.0, player_y - 10.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_l.set_preloaded_gif(preloaded, false);
         }
-        // let mut img_slash_tl = StillImage::new(
-        //     "",
-        //     60.0, // width
-        //     50.0, // height
-        //     player_x - 60.0,
-        //     player_y - 50.0,
-        //     true,
-        //     1.0,
-        // )
-        // .await;
-        // img_slash_tl.set_preload(preloads[11].clone());
 
         let mut img_slash_tl = AnimatedImage::from_gif("", player_x - 60.0, player_y - 50.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
@@ -1118,6 +1028,7 @@ impl Player {
     }
 
     async fn create_death_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
+        println!("Creating death screen...");
         let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
         shadow.set_preload(preloads[14].clone());
         shadow.set_opacity(0.7);
@@ -1139,8 +1050,10 @@ impl Player {
         (vec![shadow], vec![lbl_death], vec![btn_retry, btn_exit])
     }
 
-    pub async fn handle_death_screen(&mut self) {
+    pub async fn handle_death_screen(&mut self, pause: &mut bool) -> (bool, bool) {
+        let mut btn_clicks = (false, false);
         if self.death_screen_open == true {
+            println!("Drawing death screen...");
             //draw menu
             for image in self.death_screen.0.iter_mut() {
                 image.draw();
@@ -1150,10 +1063,25 @@ impl Player {
             }
             //handle button interactions
 
-            if self.death_screen.2[0].click() { //retry button
-            } else if self.death_screen.2[1].click() { //exit to menu button
+            if self.death_screen.2[0].click() {
+                //retry button
+                btn_clicks.0 = true;
+                self.health = self.maxhealth;
+                self.death_screen_open = false;
+                *pause = false;
+            } else if self.death_screen.2[1].click() {
+                //exit to menu button
+                btn_clicks.1 = true;
+                self.health = self.maxhealth;
+                self.death_screen_open = false;
+                *pause = false;
             }
+        } else if self.health <= 0.0 && self.death_screen_open == false {
+            self.death_screen_open = true;
+            *pause = true; //pause game when death screen opens
+            println!("DEATH SCREEN OPEN")
         }
+        btn_clicks
     }
 
     pub async fn death_screen_open(&self) -> bool {
@@ -1716,7 +1644,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_11);
         let mut tempitem_12 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
@@ -1730,7 +1659,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_12);
         let mut tempitem_14: Item = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
@@ -1744,7 +1674,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_14);
         let mut tempitem_15 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
@@ -1758,7 +1689,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_15);
         let mut tempitem_16 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
@@ -1772,7 +1704,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_16);
         let mut tempitem_17 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
@@ -1786,7 +1719,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_17);
         let mut tempitem_18 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
@@ -1800,7 +1734,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_18);
         let mut tempitem_19 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
@@ -1814,7 +1749,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_19);
         let mut tempitem_20 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
@@ -1828,7 +1764,8 @@ impl Player {
             0.0,
             0,
             0,
-        ).await;
+        )
+        .await;
         possible_items.push(tempitem_20);
         (possible_items)
     }
