@@ -22,16 +22,17 @@ map.create_map_array(chest_num, entrance_num, wall_num, entrance_sides)
 use crate::modules::collision::check_collision;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
+use miniquad::date;
 use macroquad::prelude::*;
 #[derive(Clone)]
 pub struct Map {
-    map_array: [[i32; 10]; 15],
-    wall_list: Vec<StillImage>,
-    change_wall: bool,
-    chest_list: Vec<StillImage>,
-    change_chest: bool,
-    map_dimensions: Vec2,
-    image_list: Vec<String>,
+    map_array: [[i32; 10]; 15],  // Map array
+    wall_list: Vec<StillImage>,  // List of all objects that are walls
+    change_wall: bool,           // Boolean to check if the wall list needs to be changed
+    chest_list: Vec<StillImage>, // List of all objects that are chests
+    change_chest: bool,          // Boolean to check if the chest list needs to be changed
+    map_dimensions: Vec2, // Dimensions of the map., While the grid is 15 by 10, the dimensions is the height and width of the screen, the map will scale to fit the dimensions appropriately
+    image_list: Vec<String>, // List of all images to be used in the map, 0 is wall, 1 is chest
 }
 impl Map {
     pub async fn new(width: f32, height: f32, image_list: Vec<String>) -> Self {
@@ -47,26 +48,29 @@ impl Map {
     }
     #[allow(unused)]
     pub async fn create_map_array(&mut self, chest_num: i32, entrance_num: i32, wall_num: i32, entrance_sides: Vec<i32>) {
+        rand::srand(date::now() as u64);
+        // Clears the map array, setting all spaces to 0
         for x in 0..self.map_array.len() {
-            for y in 0..self.map_array[0].len() {
+            for y in 0..self.map_array[x].len() {
                 if self.map_array[x][y] != 0 {
                     self.map_array[x][y] = 0;
                 }
             }
         }
+        // Sets every edge space to 1, a wall
         for x in 0..self.map_array.len() {
             for y in 0..self.map_array[0].len() {
                 if x == 0 || x == self.map_array.len() - 1 {
                     self.map_array[x][y] = 1;
-                } else {
-                    if y == 0 || y == self.map_array[0].len() - 1 {
-                        self.map_array[x][y] = 1;
-                    }
+                } else if y == 0 || y == self.map_array[0].len() - 1 {
+                    self.map_array[x][y] = 1;
                 }
             }
         }
+        // Randomly generates walls based on how many the user wants, detailed in wall_num
         for _wall in 0..wall_num {
             let mut pass = false;
+            // Rerolls random coordinates until it finds an empty space to put a wall. Only puts a wall if there's not a chest there
             while !pass {
                 let rand_num: Vec2 = vec2(rand::gen_range(1.0, 8.0), rand::gen_range(1.0, 13.0));
                 if self.map_array[rand_num.y as usize][rand_num.x as usize] == 0 {
@@ -75,8 +79,10 @@ impl Map {
                 }
             }
         }
+        // Randomly generates chests based on how many the user wants, detailed in chest_num
         for _chest in 0..chest_num {
             let mut pass = false;
+            // Rerolls random coordinates until it finds an empty space to put a chest. Only puts a chest if there's not a wall there
             while !pass {
                 let rand_num: Vec2 = vec2(rand::gen_range(1.0, 8.0), rand::gen_range(1.0, 13.0));
                 if self.map_array[rand_num.y as usize][rand_num.x as usize] == 0 {
@@ -85,6 +91,7 @@ impl Map {
                 }
             }
         }
+        // Generates entrances based on how many are wanted and where the user wants them
         for entrance in 0..entrance_num {
             // 1 = up, 2 = left, 3 = down, 4 = right
             match entrance_sides[entrance as usize] {
@@ -94,6 +101,7 @@ impl Map {
                 4 => self.map_array[14][4] = 0,
                 _ => println!("Invalid num"),
             }
+            // Runs twice to make two open spaces
             match entrance_sides[entrance as usize] {
                 1 => self.map_array[6][0] = 0,
                 2 => self.map_array[0][5] = 0,
@@ -105,6 +113,7 @@ impl Map {
     }
     #[allow(unused)]
     pub async fn draw_map(&mut self, tm: &TextureManager) {
+        // changed wall and chest are used to check if the change to the wall or chest list has been made
         let mut changed_wall = false;
         let mut changed_chest = false;
 
@@ -117,6 +126,7 @@ impl Map {
 
         for x in 0..self.map_array.len() {
             for y in 0..self.map_array[x].len() {
+                // Pushes new walls into the list, replacing air with wall. If no changes need to be made, doesn't run
                 if self.change_wall {
                     if self.map_array[x][y] == 1 {
                         self.wall_list.push(
@@ -136,6 +146,7 @@ impl Map {
                     }
                     changed_wall = true;
                 }
+                // Pushes new chests into the list, replacing air with chest. If no changes need to be made, doesn't run
                 if self.change_chest {
                     if self.map_array[x][y] == 2 {
                         self.chest_list.push(
@@ -164,6 +175,7 @@ impl Map {
             self.change_chest = false;
         }
 
+        // Draws the walls and chests
         for i in 0..self.wall_list.len() {
             self.wall_list[i].draw();
         }
@@ -179,11 +191,14 @@ impl Map {
         // If the player enters a chest space, it returns true
         let mut chest = false;
 
+        // Checks collision with walls
         for i in 0..self.wall_list.len() {
             if check_collision(player, &self.wall_list[i], 1) {
                 wall = true;
             }
         }
+
+        // Checks collision with chests
         for i in 0..self.chest_list.len() {
             if check_collision(player, &self.chest_list[i], 1) {
                 chest = true;
@@ -195,10 +210,12 @@ impl Map {
     #[allow(unused)]
     // Change list is a list of what the changes are, change coords is a list of what coords to change based on the change list
     pub fn change_map(&mut self, change_list: Vec<i32>, change_coords: Vec<Vec<i32>>) {
+        // Goes through the change list and makes appropriate shifts
         for i in 0..change_list.len() {
             self.map_array[change_coords[i as usize][0] as usize][change_coords[i as usize][1] as usize] = change_list[i];
-            if change_list[i] == 0 {
+            if change_list[i] == 0 && !self.change_wall && !self.change_chest {
                 self.change_wall = true;
+                self.change_chest = true;
             }
             if change_list[i] == 1 && !self.change_wall {
                 self.change_wall = true;

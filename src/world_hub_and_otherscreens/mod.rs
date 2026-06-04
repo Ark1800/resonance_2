@@ -6,3 +6,4 @@ Program Details:
 
 pub mod shop;
 pub mod town;
+pub mod inn;

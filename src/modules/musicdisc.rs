@@ -425,7 +425,9 @@ impl Musicdisc {
                     }
                 }
             }
-            "I'm Still Standing" => {}
+            "I'm Still Standing" => {
+                
+            }
             "Pandemonium" => {
                 if self.pandemonium_valid == true {
                     if self.pandemonium_hit == false {

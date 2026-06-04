@@ -17,7 +17,6 @@ pub async fn run(
     player: &mut crate::modules::player::Player,
     tm: &TextureManager,
     pause: &mut bool,
-    last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
     player.set_position(virtual_width / 2.0 - 20.0, virtual_height - 100.0);
@@ -90,9 +89,11 @@ pub async fn run(
 
         if player.get_cleared() < 17 {
         if enemies[0].get_health() <= 0.0 {
+            player.addcoins(250);
             player.add_cleared();
             enemies[0].set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
             map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
+            player.set_health(player.get_maxhealth());
         } else {
             enemies[0].cyric_action(player, tm).await;
         }

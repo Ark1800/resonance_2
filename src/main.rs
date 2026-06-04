@@ -52,8 +52,8 @@ async fn main() {
     "assets/cyric_files/cyric_f.png", "assets/cyric_files/cyric_b.png", "assets/cyric_files/cyric_dead.png","assets/cyric_files/lightning.png", "assets/cyric_files/lightning_charge.png", "assets/cyric_files/meteor.png",
     "assets/musicdisc_files/effectimages/bibimg.png", "assets/musicdisc_files/effectimages/trident.png", "assets/musicdisc_files/effectimages/black.png", "assets/musicdisc_files/effectimages/meteor.png", 
     "assets/musicdisc_files/covers/backinblack.png", "assets/musicdisc_files/covers/thickofit.png", "assets/musicdisc_files/covers/howitsdone.png", "assets/musicdisc_files/covers/imstillstanding.png", "assets/musicdisc_files/covers/pandemonium.png", "assets/musicdisc_files/covers/sixhundredstrike.png", "assets/musicdisc_files/covers/sodapop.png", "assets/musicdisc_files/covers/greatestshowman.png",
-    "assets/world1_boss/jeff_angry.gif", "assets/world1_boss/jeff_annoyed.gif", "assets/world1_boss/jeff_asleep.gif", "assets/world1_boss/jeff_happy.gif","assets/world1_boss/jeff_idleL.gif", "assets/world1_boss/jeff_idleR.gif", "assets/world1_boss/jeff_idle1.gif", "assets/world1_boss/jeff_idle2.gif", "assets/world1_boss/jeff_knife.gif", "assets/world1_boss/jeff_openmouth1.gif", "assets/world1_boss/jeff_openmouth2.gif", "assets/world1_boss/jeff_preattack.gif", "assets/world1_boss/jeff_sad.gif", "assets/world1_boss/jeff_serious.gif", "assets/world1_boss/jeff_smile.gif", "assets/world1_boss/jeff_sheet.png",
-    "assets/world2_boss/boss_biteL.gif", "assets/world2_boss/boss_biteR.gif", "assets/world2_boss/boss_idleL.gif", "assets/world2_boss/boss_idleR.gif", "assets/world2_boss/boss_digL.gif", "assets/world2_boss/boss_digR.gif","assets/world2_boss/boss_shootL.gif", "assets/world2_boss/boss_shootR.gif", "assets/world1_boss/tentaclemonster.gif"];
+    "assets/world1_boss/jeff_angry.gif", "assets/world1_boss/jeff_annoyed.gif", "assets/world1_boss/jeff_asleep.gif", "assets/world1_boss/jeff_happy.gif","assets/world1_boss/jeff_idleL.gif", "assets/world1_boss/jeff_idleR.gif", "assets/world1_boss/jeff_idle1.gif", "assets/world1_boss/jeff_idle2.gif", "assets/world1_boss/tentaclemonster.gif","assets/world1_boss/jeff_knife.gif", "assets/world1_boss/jeff_openmouth1.gif", "assets/world1_boss/jeff_openmouth2R.gif", "assets/world1_boss/jeff_preattack.gif", "assets/world1_boss/jeff_sad.gif", "assets/world1_boss/jeff_serious.gif", "assets/world1_boss/jeff_smile.gif", "assets/world1_boss/jeff_sheet.png", "assets/world1_boss/jeff_tired.gif", "assets/world1_boss/jeff_full.gif", "assets/world1_boss/jeff_openmouth2L.gif", "assets/world1_boss/jeff_bubblebeam.png",
+    "assets/world2_boss/boss_biteL.gif", "assets/world2_boss/boss_biteR.gif", "assets/world2_boss/boss_idleL.gif", "assets/world2_boss/boss_idleR.gif", "assets/world2_boss/boss_digL.gif", "assets/world2_boss/boss_digR.gif","assets/world2_boss/boss_shootL.gif", "assets/world2_boss/boss_shootR.gif",  "assets/world2_boss/boss_dig_upL.gif","assets/world2_boss/boss_dig_upR.gif", "assets/world2_boss/slime_ball.png",];
     let tm = TextureManager::new();
     let all_sounds = vec!["assets/musicdisc_files/music/backinblack.ogg", "assets/musicdisc_files/music/thickofit.ogg", "assets/musicdisc_files/music/howitsdone.ogg", "assets/musicdisc_files/music/imstillstanding.ogg", "assets/musicdisc_files/music/pandemonium.ogg", "assets/musicdisc_files/music/sixhundredstrike.ogg", "assets/musicdisc_files/music/sodapop.ogg", "assets/musicdisc_files/music/thegreatestshow.ogg"];
     // Using custom loading screen appearance
@@ -75,7 +75,7 @@ async fn main() {
     tm.preload_with_loading_screen(&all_assets, Some(&all_sounds), Some(loading_options)).await;
     //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
     let preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)> = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap(), tm.get_preload("assets/player_files/arrow.png").unwrap(), tm.get_preload("assets/player_files/bow_arrow_image.png").unwrap(), tm.get_preload("assets/map_files/black_square.png").unwrap()];
-    let mut current_screen = "w3sb".to_string();
+    let mut current_screen = "w2sb".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
     let mut musicdiscfunctions = Musicdisc::new(&tm).await;
@@ -96,10 +96,6 @@ async fn main() {
     } else {
        println!("Error fetching records from database: {} ",fetched_results.err().unwrap());
     }
-
-    player.add_cleared();
-    player.add_cleared();
-    player.add_cleared();
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {
@@ -118,13 +114,14 @@ async fn main() {
                 "w3s2" => world_3::w3s2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "w3s3" => world_3::w3s3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "w3s4" => world_3::w3s4::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w3sb" => world_3::w3sb::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
+                "w3sb" => world_3::w3sb::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut musicdiscfunctions).await,
                 "w3sp" => world_3::w3sp::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "wcs1" => world_c::wcs1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "wcs2" => world_c::wcs2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "wcs3" => world_c::wcs3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "town" => world_hub_and_otherscreens::town::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "shop" => world_hub_and_otherscreens::shop::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut musicdiscfunctions).await,
+                "inn" => world_hub_and_otherscreens::inn::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &tm, &mut musicdiscfunctions, &mut records, &mut player, &client).await,
                 _ => break,
             };

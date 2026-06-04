@@ -94,7 +94,7 @@ pub async fn run(
     shop_view.with_colors(WHITE, None, Some(LIGHTGRAY));
     let mut lbl_desc = Label::new("", 50.0, 300.0, 30);
     lbl_desc.with_colors(WHITE, None);
-    let item_price = vec![1000, 500, 500, 750, 9999];
+    let item_price = vec![25, 500, 500, 750, 9999];
     let mut lbl_price = Label::new("", 250.0, 450.0, 40);
     lbl_price.with_colors(WHITE, None);
     let mut btn_buy = TextButton::new(100.0, 200.0, 200.0, 60.0, "Buy", BLUE, GREEN, 30);

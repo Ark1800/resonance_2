@@ -6,12 +6,12 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::modules::animated_image::AnimatedImage;
 use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::modules::animated_image::AnimatedImage;
 use macroquad::prelude::*;
 pub async fn run(
     virtual_width: f32,
@@ -52,21 +52,9 @@ pub async fn run(
     .await;
 
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
-let mut boss = Enemy::new(
-    "",
-    64.0,
-    64.0,
-    100.0,
-    120.0,
-    true,
-    1.0,
-    15.0,
-    3.0,
-    "",
-    "boss",
-)
-.await;
-boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idleL.gif").unwrap(), true);
+    let mut boss = Enemy::new("", 100.0, 100.0, 100.0, 120.0, true, 1.0, 15.0, 3.0, "", "").await;
+    boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idleR.gif").unwrap(), true);
+    boss.set_projectile_preload(tm.get_preload("assets/world2_boss/slime_ball.png").unwrap());
 
     map.create_map_array(0, 1, 0, vec![2]).await;
     if player.get_cleared() == 8 {
@@ -77,12 +65,22 @@ boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idle
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
+        boss.plant_boss_action(player, &tm).await;
+        boss.draw_bullet(player);
+
+
+
+
+
+
+
         player.handle_inventory();
         player.handle_save_menu().await;
         let (restart, quit) = player.handle_death_screen(pause).await;
         if restart {
             return "w1sp".to_string();
-        } if quit {
+        }
+        if quit {
             return "main_screen".to_string();
         }
         map.draw_map(&tm).await;
@@ -90,31 +88,18 @@ boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idle
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
-           boss.draw();
+            boss.draw();
         }
         player.draw();
-        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+        let (mlehit, rnghit, _index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         if mlehit {
-            enemies[index].dmg_enemy(player.get_meleedmg());
-            if enemies[index].get_health() <= 0.0 {
-                if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
-                    if split {
-                        enemies.push(slime1);
-                        enemies.push(slime2);
-                    }
-                }
-                enemies.remove(index);
-            }
+            boss.dmg_enemy(player.get_meleedmg());
         }
         if rnghit {
-            enemies[index].dmg_enemy(player.get_rngdmg());
-            if enemies[index].get_health() <= 0.0 {
-                enemies.remove(index);
-            }
+            boss.dmg_enemy(player.get_rngdmg());
         }
 
-        if enemies.is_empty() && player.get_cleared() == 11 {
+        if boss.get_health() <= 0.0 && player.get_cleared() == 11 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
         }

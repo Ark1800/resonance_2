@@ -24,14 +24,13 @@ use std::f32::consts::PI;
 //3. removing printlns
 //4. cleaning up unused code and comments
 //5. adding comments to all code
+//6. change every file size to what size we use
 
 Work
 //1.3 imstillstanding
 //6. W1SB Boss
 //8. Item after each scene
 //9. All items
-//10. Player Dying
-//14. Start Screen
 
 //Keypresses:
 Move Up - W
@@ -1067,6 +1066,7 @@ impl Player {
                 //retry button
                 btn_clicks.0 = true;
                 self.health = self.maxhealth;
+                self.playerui.1[1].with_fixed_size(400.0, 25.0);
                 self.death_screen_open = false;
                 *pause = false;
             } else if self.death_screen.2[1].click() {
@@ -1457,6 +1457,10 @@ impl Player {
 
     pub fn set_health(&mut self, health: f32) {
         self.health = health;
+    }
+
+    pub fn add_health(&mut self, health: f32) {
+        self.health += health;
     }
 
     pub fn set_save_data(&mut self, record: &DatabaseTable) {

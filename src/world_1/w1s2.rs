@@ -69,7 +69,7 @@ pub async fn run(
     mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
     mage.set_preload(tm.get_preload("assets/fireball.png").unwrap());
     enemies.push(mage);
-    for i in 0..2 {
+    for _i in 0..2 {
         let mut slime = Enemy::new(
         "",
         25.0, //hieght
@@ -169,6 +169,7 @@ pub async fn run(
         }
         if enemies.is_empty() && player.get_cleared() == 4 {
             player.add_cleared();
+            player.add_health(30.0);
         }
         player.handle_playerdamaging(&enemies);
         player.handle_keypresses(pause, musicdiscfunctions).await;

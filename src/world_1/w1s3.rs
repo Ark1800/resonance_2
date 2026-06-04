@@ -183,6 +183,7 @@ pub async fn run(
         if enemies.is_empty() && player.get_cleared() == 5 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+            player.add_health(30.0);
         }
         player.draw();
         if player.get_x() < 10.0 {

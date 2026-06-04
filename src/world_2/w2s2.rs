@@ -153,6 +153,7 @@ pub async fn run(
         if enemies.is_empty() && player.get_cleared() == 9 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]); // opens top side of map when all enemies are dead
+            player.add_health(30.0);
         }
 
         if player.get_y() > -10.0 {

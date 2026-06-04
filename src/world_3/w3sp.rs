@@ -101,7 +101,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         .await,
     ];
     for obj in 0..collidable_objects.len() {
-        collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
+        collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/magma.png").unwrap());
     }
     loop {
         // set virtual resolution and clear frame

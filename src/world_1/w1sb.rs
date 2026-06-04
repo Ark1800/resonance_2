@@ -76,14 +76,17 @@ pub async fn run(
     ).await;
     jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idleR.gif").unwrap(), true);
     let mut jeff_start_fight_cooldown = 0.0;
-    let mut jeff_attack_cooldown = 0.0;
+    let mut jeff_attacktime = 0.0;
     let mut jeff_attackcount = 0;
     let mut jeff_attackvalid = false;
     let mut jeff_drawvalid = true;
     let mut lbl_warninglabel = Label::new("", -50.0, -100.0, 30);
     let mut jeff_knifeattack_wallchoice = 0;
     let mut jeff_knife_direction = Vec2::new(0.0, 0.0);
-    let mut choice = 0;
+    let mut knife_choice = 0;
+    let mut jeff_cooldown = 0.0;
+    let mut jeff_zzz = AnimatedImage::from_gif("", 0.0, 0.0, 0.0, 0.0, true).await;
+    let mut bubblebeam_img = StillImage::new("", 0.0, 0.0, 0.0, 0.0, true, 1.0).await;
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -115,17 +118,17 @@ pub async fn run(
                     if jeff_valid {
                         if get_time() - jeff_start_fight_cooldown > 3.0 { //length of gif
                             if jeff_attackcount == 0 {
-                                choice = jeff.jeff_choose_attack();
+                                knife_choice = jeff.jeff_choose_attack();
                                 jeff_attackcount += 1;
                             }
-                            match choice {
+                            match knife_choice {
                                 1 => { //jeff knife dash
                                     if jeff_attackcount == 1 {
-                                        jeff_attack_cooldown = get_time();
+                                        jeff_attacktime = get_time();
                                         jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_knife.gif").unwrap(), true);
                                         jeff_attackcount += 1;
                                     }
-                                    let time = get_time() - jeff_attack_cooldown;
+                                    let time = get_time() - jeff_attacktime;
                                     if time >= 1.0  && time < 3.0 {
                                         if jeff_attackcount == 2 {
                                             (jeff_knifeattack_wallchoice, lbl_warninglabel) = jeff.jeff_knifeattack1();
@@ -142,14 +145,59 @@ pub async fn run(
                                     if time >= 3.0 && jeff_attackcount == 4 {
                                         let attackend = jeff.jeff_knifeattack3(player, jeff_knife_direction);
                                         if attackend {
-                                            jeff_attackcount = 0;
-                                            jeff_attackvalid = true;
+                                            jeff_attackcount += 1;;
                                             jeff.jeff_normalidle(player, tm);
                                         }
                                     }
-                                        
-                                } 
-                                2 => {} //jeff bubble beam
+                                    if time >= 3.0 && jeff_attackcount == 5 {
+                                        (jeff_cooldown, jeff_zzz) = jeff.jeff_cooldown(tm).await;
+                                    }
+                                    if jeff_cooldown - get_time() > 0.0 && jeff_cooldown - get_time() < 4.0 {
+                                        jeff_zzz.draw();
+                                    }
+                                    if jeff_cooldown - get_time() >= 3.0 {
+                                        jeff_attackcount = 0;
+                                        jeff_valid = false;
+                                        jeff_attackvalid = false;
+                                        jeff_zzz = AnimatedImage::from_gif("", 0.0, 0.0, 0.0, 0.0, true).await;
+                                        lbl_warninglabel = Label::new("", -50.0, -100.0, 30);
+                                    }
+                                    }
+                                2 => { //jeff bubble beam
+                                    if jeff_attackcount == 1 {
+                                        jeff_attacktime = get_time();
+                                        jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_full.gif").unwrap(), true);
+                                        jeff_attackcount += 1;
+                                    }
+                                    let time = get_time() - jeff_attacktime;
+                                    if time >= 1.0 && time < 3.0 {
+                                        if jeff_attackcount == 2 {
+                                        lbl_warninglabel = jeff.jeff_bubblebeam1(tm);
+                                        jeff_attackcount += 1;
+                                        }
+                                        lbl_warninglabel.draw();
+                                    }
+                                    if time >= 3.0 && time < 4.0 {
+                                        if jeff_attackcount == 3 {
+                                            bubblebeam_img = jeff.jeff_bubblebeam2(player, &mut lbl_warninglabel, tm).await;
+                                            jeff_attackcount += 1;
+                                        }
+                                        bubblebeam_img.draw();
+                                    }
+                                    if time >= 4.0 && jeff_attackcount == 4 {
+                                        (jeff_cooldown, jeff_zzz) = jeff.jeff_cooldown(tm).await;
+                                    }
+                                    if jeff_cooldown - get_time() > 0.0 && jeff_cooldown - get_time() < 4.0 {
+                                        jeff_zzz.draw();
+                                    }
+                                    if jeff_cooldown - get_time() >= 3.0 {
+                                        jeff_attackcount = 0;
+                                        jeff_valid = false;
+                                        jeff_attackvalid = false;
+                                        jeff_zzz = AnimatedImage::from_gif("", 0.0, 0.0, 0.0, 0.0, true).await;
+                                        lbl_warninglabel = Label::new("", -50.0, -100.0, 30);
+                                    }
+                                }
                                 3 => {} //jeff whirlpool bounce
                                 _ => {}
                             }

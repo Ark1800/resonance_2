@@ -4,6 +4,7 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
 use crate::modules::enemy::Enemy;
 //use crate::modules::item::Item;
 use crate::modules::map::Map;
@@ -19,7 +20,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
-    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
     let mut background = StillImage::new(
         "",
@@ -35,65 +36,40 @@ pub async fn run(
     let mut map = Map::new(
         virtual_width,
         virtual_height,
-        vec!["assets/map_files/magma.png".to_string(), "assets/map_files/chest.png".to_string()],
+        vec![
+            "assets/map_files/magma.png".to_string(),
+            "assets/map_files/chest.png".to_string(),
+        ],
     )
     .await;
-    if last_scene == "Left" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
+    // If cleared
+    if player.get_cleared() == 13 {
         map.create_map_array(0, 1, 0, vec![4]).await;
-    } else if last_scene == "Right" {
-        player.set_position(80.0, virtual_height / 2.0);
-        map.create_map_array(0, 1, 0, vec![2]).await;
-    } else if last_scene == "Down" {
-        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
-        map.create_map_array(0, 1, 0, vec![3]).await;
-    } else if last_scene == "Up" {
-        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
-        map.create_map_array(0, 1, 0, vec![1]).await;
     } else {
-        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-        map.create_map_array(0, 0, 0, vec![]).await;
+        map.create_map_array(0, 2, 0, vec![1, 4]).await;
     }
+    println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
-
+    let mut archerx = 200.0;
     for _i in 0..2 {
-        let mut mage = Enemy::new("", 50.0, 50.0, 200.0, 200.0, true, 1.0, 100.0, 15.0, "", "mage").await;
-        mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
-        mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
-        enemies.push(mage);
-    }
-
-    /*let mut archerx = 200.0;
-    for _i in 0..1 {
-        let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10, 5, "", "archer").await;
+        let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10.0, 5.0, "", "archer").await;
         archerx += 100.0;
         archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
         archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
         enemies.push(archer);
-    }*/
-
-    let mut slimey = 200.0;
-    for i in 0..3 {
-        let mut large_slime = Enemy::new(
-            "",
-            75.0,                        //hieght
-            75.0,                        //width
-            300.0,                       //x
-            slimey * (i as f32 * 100.0), //y
-            true,                        //stretching
-            1.0,                         //zoom level
-            20.0,                        //health
-            8.0,                         //damage
-            "",
-            "large_slime",
-        )
-        .await;
-        large_slime.set_preload(tm.get_preload("assets/slime_files/large_slime.png").unwrap());
-        enemies.push(large_slime);
     }
-
+    if *last_scene == "Top" {
+        player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
+    } else if *last_scene == "Down" {
+        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
+    } else if *last_scene == "Left" {
+        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
+    } else if *last_scene == "Right" {
+        player.set_position(80.0, virtual_height / 2.0);
+    }
+    player.set_position(VIRTUAL_WIDTH/2.0, VIRTUAL_HEIGHT/2.0);
     loop {
-        player.handle_keypresses(pause, _musicdiscfunctions).await;
+        player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -102,42 +78,49 @@ pub async fn run(
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
-            for i in 0..enemies.len() {
-                //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                match enemies[i].get_enemy_type() {
-                    "archer" => {
-                        enemies[i].archer_action(tm, player).await;
-                        enemies[i].draw_bullet(player);
-                    }
-                    "slime" => {
-                        enemies[i].slime_action(player);
-                    }
-                    "summoner" => {
-                        let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
-                        if summoned {
-                            enemies.push(slime1);
-                            enemies.push(slime2);
-                            enemies.push(slime3);
+            if player.get_cleared() == 13 {
+                for i in 0..enemies.len() {
+                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                    if musicdiscfunctions.get_thickofit_active() == false
+                        && musicdiscfunctions.get_pandemonium_active() == false
+                        && musicdiscfunctions.get_sodapop_active() == false
+                    {
+                                            match enemies[i].get_enemy_type() {
+                        "archer" => {
+                            enemies[i].archer_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
                         }
+                        "slime" => {
+                            enemies[i].slime_action(player);
+                        }
+                        "summoner" => {
+                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                            if summoned {
+                                enemies.push(slime1);
+                                enemies.push(slime2);
+                                enemies.push(slime3);
+                            }
+                        }
+                        "mage" => {
+                            enemies[i].mage_action(tm, player).await;
+                            enemies[i].draw_bullet(player);
+                        }
+                        "large_slime" => {
+                            enemies[i].large_slime_action(tm, player).await;
+                        }
+                        _ => {}
                     }
-                    "mage" => {
-                        enemies[i].mage_action(tm, player).await;
-                        enemies[i].draw_bullet(player);
-                    }
-                    "large_slime" => {
-                        enemies[i].large_slime_action(tm, player).await;
-                    }
-                    _ => {}
+                    enemies[i].draw();
                 }
-                enemies[i].draw();
             }
         }
         player.draw();
-        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
+            enemies[index].knockback(player, "enemy");
             if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
                     let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
@@ -152,6 +135,7 @@ pub async fn run(
         }
         if rnghit {
             enemies[index].dmg_enemy(player.get_rngdmg());
+            enemies[index].knockback(player, "enemy");
             if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
                     let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
@@ -164,16 +148,32 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
+
         player.handle_inventory();
         player.handle_save_menu().await;
+        if enemies.is_empty() && player.get_cleared() == 13 {
+            player.add_cleared();
+            map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+            player.add_health(30.0);
+        }
         if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();
             return "w3s1".to_string();
         }
+         
         if player.get_y() < 10.0 {
-            *last_scene = "Up".to_string();
-            return "w3s3".to_string();
+            *last_scene = "Top".to_string();
+            return "w2s3".to_string();
+        }
+    }
+    let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            return "w3sp".to_string();
+            
+        } if quit {
+            return "main_screen".to_string();
         }
         next_frame().await;
-    }
-}
+}}
+
+// Cleared starts at 13, goes to 14

@@ -82,7 +82,7 @@ pub async fn run(
             return "town".to_string();
         }
 
-        if check_collision(player.view_player(), &portal_hitbox, 1) {
+        if check_collision(player.view_player(), &portal_hitbox, 1) && player.get_cleared() >= 8 {
             *last_scene = "Right".to_string();
             return "w2s1".to_string();
         }
@@ -98,7 +98,9 @@ pub async fn run(
 
         player.handle_inventory();
         player.handle_save_menu().await;
+        if player.get_cleared() >= 8 {
         green_portal.draw();
+        }
         player.draw();
         map.draw_map(&tm).await;
         next_frame().await;

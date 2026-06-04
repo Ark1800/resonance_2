@@ -51,7 +51,7 @@ pub async fn run(
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
     let mut archerx = 200.0;
-    for i in 0..2 {
+    for _i in 0..2 {
         let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10.0, 5.0, "", "archer").await;
         archerx += 100.0;
         archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
@@ -159,14 +159,12 @@ pub async fn run(
         if enemies.is_empty() && player.get_cleared() == 3 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+            player.add_health(30.0);
         }
         if player.get_y() < 10.0 && player.get_cleared() >= 3 {
             *last_scene = "Top".to_string();
             println!("Returning w1s2");
-            return "w1s2".to_string
-        
-        
-        ();
+            return "w1s2".to_string();
         }
     }
     let (restart, quit) = player.handle_death_screen(pause).await;

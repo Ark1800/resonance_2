@@ -3,7 +3,7 @@ By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
 Program Details:
 */
-use crate::modules::database::{DatabaseClient, DatabaseTable, create_database_client};
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::label::Label;
 use crate::modules::messagebox::MessageBox;
 use crate::modules::player::Player;
@@ -13,7 +13,6 @@ use crate::modules::still_image::StillImage;
 use crate::modules::text_button::TextButton;
 use crate::modules::text_input::TextInput;
 use macroquad::prelude::*;
-use serde_json::error;
 
 #[allow(unused)]
 pub async fn run(
