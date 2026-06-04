@@ -232,6 +232,7 @@ use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 use miniquad::date;
+use ureq::rustls::quic::DirectionalKeys;
 
 #[derive(Clone)]
 // Internal representation for an enemy's visual
@@ -1106,6 +1107,57 @@ impl Enemy {
         }
         lbl_warninglabel.draw();
         (wallchoice, lbl_warninglabel)
+    }
+
+    pub fn jeff_knifeattack2(&mut self,wallchoice: i32, warninglabel: &mut Label) -> Vec2 {
+        let mut Direction = Vec2::new(0.0, 0.0);
+        match wallchoice {
+            1 => { //north wall
+                let position = warninglabel.get_position();
+                self.set_position(position.x, position.y - 100.0);
+                Direction = Vec2::new(0.0, 1.0);
+            },
+            2 => { //east wall
+                let position = warninglabel.get_position();
+                self.set_position(position.x - 100.0, position.y);
+                Direction = Vec2::new(1.0, 0.0);
+            },
+            3 => { //south wall
+                let position = warninglabel.get_position();
+                self.set_position(position.x, VIRTUAL_HEIGHT +100.0);
+                Direction = Vec2::new(0.0, -1.0);
+            }
+            4 => { //west wall
+                let position = warninglabel.get_position();
+                self.set_position(VIRTUAL_WIDTH + 100.0, position.y);
+                Direction = Vec2::new(-1.0, 0.0);
+            },
+            _ => {}
+        }
+        Direction
+    }
+
+    pub fn jeff_knifeattack3(&mut self, player: &mut Player, direction: Vec2) -> bool {
+        let mut attackend = false;
+        self.movement = direction * self.move_speed * get_frame_time();
+        self.set_x(self.get_x() + self.movement.x);
+        self.set_y(self.get_y() + self.movement.y);
+        if check_collision(self.view_enemy(), player.view_player(), 1) {
+            self.knockback(player, "player");
+            player.dmgplayer(20.0);
+        }
+        if self.get_x() < -100.0 || self.get_x() > VIRTUAL_WIDTH + 100.0 || self.get_y() < -100.0 || self.get_y() > VIRTUAL_HEIGHT + 100.0 {
+            attackend = true;
+        }
+        attackend
+    }
+
+    pub fn jeff_normalidle(&mut self, player: &mut Player, tm: &TextureManager) {
+        if self.get_x() < player.get_x() {
+           // self.set_preload_gif(tm.get_preload_gif("assets/jeff_files/jeff_idleR.gif").unwrap(), true);
+        } else if self.get_x() > player.get_x() {
+            //self.set_preload_gif(tm.get_preload_gif("assets/jeff_files/jeff_idleL.gif").unwrap(), true);
+        }
     }
 
     pub fn knockback(&mut self, player: &mut Player, target: &str) {

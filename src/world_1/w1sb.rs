@@ -10,6 +10,7 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
+use crate::modules::label::Label;
 use crate::modules::enemy::Enemy;
 
 pub async fn run(
@@ -76,14 +77,21 @@ pub async fn run(
     jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idleR.gif").unwrap(), true);
     let mut jeff_start_fight_cooldown = 0.0;
     let mut jeff_attack_cooldown = 0.0;
+    let mut jeff_attackcount = 0;
     let mut jeff_attackvalid = false;
-    let mut jeff_knifevalid = false;
+    let mut jeff_drawvalid = true;
+    let mut lbl_warninglabel = Label::new("", -50.0, -100.0, 30);
+    let mut jeff_knifeattack_wallchoice = 0;
+    let mut jeff_knife_direction = Vec2::new(0.0, 0.0);
+    let mut choice = 0;
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
        // whirlpool.draw();
-        jeff.draw();
+        if jeff_drawvalid {
+            jeff.draw();
+        }
         map.draw_map(&tm).await;
         player.handle_inventory();
         player.handle_save_menu().await;
@@ -102,24 +110,44 @@ pub async fn run(
                     if jeff_valid && jeff_attackvalid {
                         jeff_start_fight_cooldown = get_time();
                         jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle2.gif").unwrap(), true);
+                        jeff_attackvalid = false;
                     }
                     if jeff_valid {
                         if get_time() - jeff_start_fight_cooldown > 3.0 { //length of gif
-                            let choice = jeff.jeff_choose_attack();
+                            if jeff_attackcount == 0 {
+                                choice = jeff.jeff_choose_attack();
+                                jeff_attackcount += 1;
+                            }
                             match choice {
                                 1 => { //jeff knife dash
-                                    if jeff_attackvalid {
+                                    if jeff_attackcount == 1 {
                                         jeff_attack_cooldown = get_time();
                                         jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_knife.gif").unwrap(), true);
-                                        jeff_attackvalid = false;
+                                        jeff_attackcount += 1;
                                     }
                                     let time = get_time() - jeff_attack_cooldown;
                                     if time >= 1.0  && time < 3.0 {
-                                        if jeff_knifevalid == true {
-                                            let (jeff_knifeattack_wallchoice, lbl_warninglabel) = jeff.jeff_knifeattack1();
-                                            jeff_knifevalid = false;
+                                        if jeff_attackcount == 2 {
+                                            (jeff_knifeattack_wallchoice, lbl_warninglabel) = jeff.jeff_knifeattack1();
+                                            jeff_drawvalid = false;
+                                            jeff_attackcount += 1;
+                                        }
+                                        lbl_warninglabel.draw();
+                                    }
+                                    if time >= 3.0 && jeff_attackcount == 3 {
+                                        jeff_drawvalid = true;
+                                        jeff_knife_direction = jeff.jeff_knifeattack2(jeff_knifeattack_wallchoice, &mut lbl_warninglabel);
+                                        jeff_attackcount += 1;
+                                    }
+                                    if time >= 3.0 && jeff_attackcount == 4 {
+                                        let attackend = jeff.jeff_knifeattack3(player, jeff_knife_direction);
+                                        if attackend {
+                                            jeff_attackcount = 0;
+                                            jeff_attackvalid = true;
+                                            jeff.jeff_normalidle(player, tm);
                                         }
                                     }
+                                        
                                 } 
                                 2 => {} //jeff bubble beam
                                 3 => {} //jeff whirlpool bounce
