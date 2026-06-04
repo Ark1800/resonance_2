@@ -5,6 +5,7 @@ Program Details:
 */
 
 use crate::modules::animated_image::AnimatedImage;
+use crate::modules::collision::check_collision;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
