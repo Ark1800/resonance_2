@@ -47,6 +47,7 @@ pub async fn run(
     .await;
     background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
     let mut whirlpool = AnimatedImage::from_gif("", (virtual_width / 2.0) - 200.0, (virtual_height / 2.0) - 200.0, 400.0, 400.0, true).await;
+    let mut whirlpool_hitbox = StillImage::new("", 400.0, 400.0, (virtual_width / 2.0) - 200.0, (virtual_height / 2.0) - 200.0, true, 1.0).await;
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/world1/whirlpool.gif") {
         whirlpool.set_preloaded_gif(preloaded, true);
     }
@@ -84,10 +85,11 @@ pub async fn run(
     let mut lbl_warninglabel = Label::new("", -50.0, -100.0, 30);
     let mut jeff_knifeattack_wallchoice = 0;
     let mut jeff_knife_direction = Vec2::new(0.0, 0.0);
-    let mut knife_choice = 0;
+    let mut attack_choice = 0;
     let mut jeff_cooldown = 0.0;
     let mut jeff_zzz = AnimatedImage::from_gif("", 0.0, 0.0, 0.0, 0.0, true).await;
     let mut bubblebeam_img = StillImage::new("", 0.0, 0.0, 0.0, 0.0, true, 1.0).await;
+    let mut whirlpool_direction = Vec2::new(1.0, 1.0);
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -101,7 +103,8 @@ pub async fn run(
         player.handle_save_menu().await;
         let (restart, quit) = player.handle_death_screen(pause).await;
         if restart {
-            return "w1sp".to_string();
+            *last_scene = "None".to_string();
+            return "inn".to_string();
         } if quit {
             return "main_screen".to_string();
         }
@@ -119,10 +122,10 @@ pub async fn run(
                     if jeff_valid {
                         if get_time() - jeff_start_fight_cooldown > 3.0 { //length of gif
                             if jeff_attackcount == 0 {
-                                knife_choice = jeff.jeff_choose_attack();
+                                attack_choice = jeff.jeff_choose_attack();
                                 jeff_attackcount += 1;
                             }
-                            match knife_choice {
+                            match attack_choice {
                                 1 => { //jeff knife dash
                                     if jeff_attackcount == 1 {
                                         jeff_attacktime = get_time();
@@ -199,7 +202,34 @@ pub async fn run(
                                         lbl_warninglabel = Label::new("", -50.0, -100.0, 30);
                                     }
                                 }
-                                3 => {} //jeff whirlpool bounce
+                                3 => { //jeff whirlpool bounce
+                                    if jeff_attackcount == 1 {
+                                        jeff_attacktime = get_time();
+                                        jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle1.png").unwrap(), true);
+                                        jeff_attackcount += 1;
+                                    }
+                                    let time = get_time() - jeff_attacktime;
+                                    if time >= 1.0 && time < 10.0 {
+                                        if jeff_attackcount == 2 {
+                                        jeff_drawvalid = false;
+                                        jeff_attackcount += 1;
+                                        }
+                                        whirlpool_direction = jeff.jeff_whirlpoolbounce(player, &mut whirlpool, &mut whirlpool_hitbox, &mut map, whirlpool_direction);
+                                    }
+                                    if time >= 10.0 && jeff_attackcount == 3 {
+                                        jeff_drawvalid = true;
+                                        (jeff_cooldown, jeff_zzz) = jeff.jeff_cooldown(tm).await;
+                                    }
+                                    if jeff_cooldown - get_time() > 0.0 && jeff_cooldown - get_time() < 4.0 {
+                                        jeff_zzz.draw();
+                                    }
+                                    if jeff_cooldown - get_time() >= 3.0 {
+                                        jeff_attackcount = 0;
+                                        jeff_valid = false;
+                                        jeff_attackvalid = false;
+                                        jeff_zzz = AnimatedImage::from_gif("", 0.0, 0.0, 0.0, 0.0, true).await;
+                                    }
+                                } 
                                 _ => {}
                             }
                         };

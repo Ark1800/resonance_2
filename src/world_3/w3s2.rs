@@ -168,7 +168,8 @@ pub async fn run(
     }
     let (restart, quit) = player.handle_death_screen(pause).await;
         if restart {
-            return "w3sp".to_string();
+            *last_scene = "None".to_string();
+            return "inn".to_string();
             
         } if quit {
             return "main_screen".to_string();

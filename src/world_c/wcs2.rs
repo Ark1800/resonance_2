@@ -226,6 +226,15 @@ pub async fn run(
         }
         lbl_speech.scrolling_text_draw();
         lbl_tutorial.scrolling_text_draw();
+
+    let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            *last_scene = "None".to_string();
+            return "wcs1".to_string();
+            
+        } if quit {
+            return "main_screen".to_string();
+        }
         next_frame().await;
     }
 }

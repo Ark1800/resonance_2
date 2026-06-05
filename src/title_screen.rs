@@ -152,6 +152,7 @@ pub async fn run(
                             active_scene = records[i].player_currentscreenvar.clone();
                             player.set_save_data(&records[i].clone());
                             player.set_usernamepassword(txt_username.get_text(), txt_password.get_text());
+                            return "town".to_string();
                             break;
                         }
                     }

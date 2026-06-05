@@ -473,13 +473,13 @@ impl Enemy {
         if move_dir.length() > 0.0 {
             move_dir = move_dir.normalize();
         }
-let collision = check_collision(self.view_enemy(), player.view_player(), 1); 
+        let collision = check_collision(self.view_enemy(), player.view_player(), 1);
 
-if collision{
-    player.dmgplayer(self.get_dmg());
-    self.knockback(player, "player");
-    self.knockback(player, "enemy");
-}
+        if collision {
+            player.dmgplayer(self.get_dmg());
+            self.knockback(player, "player");
+            self.knockback(player, "enemy");
+        }
         // Apply movement based on frame time
     }
     //change dmg
@@ -1103,11 +1103,13 @@ if collision{
         let walldistance_ud = rand::gen_range(150.0, VIRTUAL_WIDTH - 150.0);
         let walldistance_lr = rand::gen_range(150.0, VIRTUAL_HEIGHT - 150.0);
         match wallchoice {
-            1 | 3 => { //north/south walls
+            1 | 3 => {
+                //north/south walls
                 lbl_warninglabel.set_position(walldistance_ud, 0.0);
                 lbl_warninglabel.with_fixed_size(150.0, VIRTUAL_HEIGHT + 100.0);
             }
-            2 | 4 => { //east/west walls
+            2 | 4 => {
+                //east/west walls
                 lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH + 100.0, 150.0);
                 lbl_warninglabel.set_position(0.0, walldistance_lr);
             }
@@ -1118,31 +1120,35 @@ if collision{
     }
 
     pub fn jeff_knifeattack2(&mut self, wallchoice: i32, warninglabel: &mut Label) -> Vec2 {
-        let mut Direction = Vec2::new(0.0, 0.0);
+        let mut direction = Vec2::new(0.0, 0.0);
         match wallchoice {
-            1 => { //north wall
+            1 => {
+                //north wall
                 let position = warninglabel.get_position();
                 self.set_position(position.x, position.y - 100.0);
-                Direction = Vec2::new(0.0, 1.0);
-            },
-            2 => { //east wall
+                direction = Vec2::new(0.0, 1.0);
+            }
+            2 => {
+                //east wall
                 let position = warninglabel.get_position();
                 self.set_position(position.x - 100.0, position.y);
-                Direction = Vec2::new(1.0, 0.0);
-            },
-            3 => { //south wall
-                let position = warninglabel.get_position();
-                self.set_position(position.x, VIRTUAL_HEIGHT +100.0);
-                Direction = Vec2::new(0.0, -1.0);
+                direction = Vec2::new(1.0, 0.0);
             }
-            4 => { //west wall
+            3 => {
+                //south wall
+                let position = warninglabel.get_position();
+                self.set_position(position.x, VIRTUAL_HEIGHT + 100.0);
+                direction = Vec2::new(0.0, -1.0);
+            }
+            4 => {
+                //west wall
                 let position = warninglabel.get_position();
                 self.set_position(VIRTUAL_WIDTH + 100.0, position.y);
-                Direction = Vec2::new(-1.0, 0.0);
-            },
+                direction = Vec2::new(-1.0, 0.0);
+            }
             _ => {}
         }
-        Direction
+        direction
     }
 
     pub fn jeff_knifeattack3(&mut self, player: &mut Player, direction: Vec2) -> bool {
@@ -1171,25 +1177,27 @@ if collision{
     pub async fn jeff_cooldown(&mut self, tm: &TextureManager) -> (f64, AnimatedImage) {
         let cooldown = get_time();
         self.set_position(VIRTUAL_WIDTH / 2.0, VIRTUAL_HEIGHT / 2.0);
-        let mut jeff_zzz = AnimatedImage::from_gif("", self.get_x()+75.0, self.get_y(), 50.0, 100.0, true).await;
+        let mut jeff_zzz = AnimatedImage::from_gif("", self.get_x() + 75.0, self.get_y(), 50.0, 100.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/world1_boss/jeff_zzz.gif") {
             jeff_zzz.set_preloaded_gif(preloaded, true);
         }
         (cooldown, jeff_zzz)
     }
-    
+
     pub fn jeff_bubblebeam1(&mut self, tm: &TextureManager) -> Label {
         let mut lbl_warninglabel = Label::new("", 50.0, 100.0, 30);
         lbl_warninglabel.with_colors(RED, Some(RED));
         let sidechoice = rand::gen_range(1, 3);
         match sidechoice {
-            1 => { //left
+            1 => {
+                //left
                 self.set_position(100.0, (VIRTUAL_HEIGHT / 2.0) - 75.0);
                 self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_openmouth2L.gif").unwrap(), true);
                 lbl_warninglabel.set_position(self.get_x() + 150.0, 0.0);
                 lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
             }
-            2 => { //right
+            2 => {
+                //right
                 self.set_position(VIRTUAL_WIDTH - 100.0, (VIRTUAL_HEIGHT / 2.0) - 75.0);
                 self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_openmouth2R.gif").unwrap(), true);
                 lbl_warninglabel.set_position(-100.0, 0.0);
@@ -1203,124 +1211,214 @@ if collision{
 
     pub async fn jeff_bubblebeam2(&mut self, player: &mut Player, warninglabel: &mut Label, tm: &TextureManager) -> StillImage {
         let mut bubblebeam = StillImage::new(
-        "",
-        warninglabel.get_width().unwrap_or(0.0), // width
-        warninglabel.get_height().unwrap_or(0.0),      // height
-        warninglabel.get_x(), // x position
-        warninglabel.get_y(),                 // y position
-        true,                // Enable stretching
-        1.0,                 // Normal zoom (100%)
-    )
-    .await;
-    bubblebeam.set_preload(tm.get_preload("assets/world1_boss/jeff_bubblebeam.png").unwrap());
-    if check_collision(&bubblebeam, player.view_player(), 1) {
-        player.dmgplayer(30.0);
+            "",
+            warninglabel.get_width().unwrap_or(0.0),  // width
+            warninglabel.get_height().unwrap_or(0.0), // height
+            warninglabel.get_x(),                     // x position
+            warninglabel.get_y(),                     // y position
+            true,                                     // Enable stretching
+            1.0,                                      // Normal zoom (100%)
+        )
+        .await;
+        bubblebeam.set_preload(tm.get_preload("assets/world1_boss/jeff_bubblebeam.png").unwrap());
+        if check_collision(&bubblebeam, player.view_player(), 1) {
+            player.dmgplayer(30.0);
+        }
+        bubblebeam
     }
-    bubblebeam
+
+    pub fn jeff_whirlpoolbounce(
+        &mut self,
+        player: &mut Player,
+        whirlpool: &mut AnimatedImage,
+        whirlpool_hitbox: &mut StillImage,
+        map: &mut map::Map,
+        whirlpool_direction: Vec2,
+    ) -> Vec2 {
+        let mut direction = whirlpool_direction;
+        let move_speed = 200.0;
+        let movement = direction * move_speed * get_frame_time();
+        whirlpool.set_x(whirlpool.get_x() + movement.x);
+        whirlpool_hitbox.set_x(whirlpool_hitbox.get_x() + movement.x);
+        if map.map_collision(whirlpool_hitbox).0 {
+            direction.x = -direction.x;
+        }
+        whirlpool.set_y(whirlpool.get_y() + movement.y);
+        whirlpool_hitbox.set_y(whirlpool_hitbox.get_y() + movement.y);
+        if map.map_collision(whirlpool_hitbox).0 {
+            direction.y = -direction.y;
+        }
+        direction
     }
 
-
-
-    pub async fn plant_boss_action(&mut self, player: &mut Player, tm: &TextureManager) {
-         let mut way = "";
+    pub async fn plant_boss_action(
+        &mut self,
+        player: &mut Player,
+        tm: &TextureManager,
+        attack: &mut bool,
+        timer: &mut f64,
+        shoot: &mut bool,
+        chomp: &mut bool,
+        attack_choice: &mut i32,
+        dig: &mut bool,
+    ) {
+        let mut way = "";
         if player.get_x() < self.get_x() {
-             way = "L";
+            way = "L";
         } else {
-             way = "R";
+            way = "R";
+        }
+
+        if *attack == true {
+            self.cooldown = get_time();
         }
         if get_time() > self.cooldown + 5.0 {
-             rand::srand(date::now() as u64);
-             let attack_choice = rand::gen_range(0, 2);
-             if attack_choice == 0 {
-                 println!("Plant Boss used Shoot!");
-       self.plant_boss_shoot(player, tm, way).await;
-             }
-                else {
-                    
-       self.plant_boss_chomp(player, tm, way).await;
-             }
-             self.cooldown = get_time();
+            if get_time() <= self.cooldown + 5.1 {
+                rand::srand(date::now() as u64);
+                *attack_choice = rand::gen_range(0, 2);
+            }
+
+            if *attack_choice == 0 {
+                self.plant_boss_shoot(player, tm, way, shoot, dig, timer).await;
+            } else {
+                self.plant_boss_chomp(player, tm, way, chomp, dig, timer).await;
+            }
+            if get_time() > self.cooldown + 9.0 {
+                self.cooldown = get_time();
+                self.set_preload_gif(
+                    tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_idle{}.gif", way).as_str())
+                        .unwrap(),
+                    true,
+                );
+                *attack = true;
+                *dig = false;
+                *shoot = false;
+                *chomp = false;
+            }
         }
-        let hitbox = StillImage::new( "",100.0, 100.0, self.get_x(), self.get_y(), true, 1.0,).await;
-let collision = check_collision(&hitbox, player.view_player(), 1);
-if collision {
-    player.dmgplayer(self.get_dmg());
-    self.knockback(player, "player");
-}
+        *attack = false;
+
+        let hitbox = StillImage::new("", 100.0, 100.0, self.get_x(), self.get_y(), true, 1.0).await;
+        let collision = check_collision(&hitbox, player.view_player(), 1);
+        if collision {
+            player.dmgplayer(self.get_dmg());
+            self.knockback(player, "player");
+        }
 
         let mut healthbar = self.set_healthbar();
         healthbar.draw();
     }
 
-    pub async fn plant_boss_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str) {
-        let timer = get_time();
-self.plant_boss_dig_shoot(player, tm, way).await;
-if get_time()>timer+2.0{
-    println!("Plant Boss used Shoot!");
-    self.set_preload_gif(tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_shoot{}.gif", way).as_str()).unwrap(), false);
-        let mut projectile = Projectile::new(self.projectile_image.clone(), 40.0, 40.0, self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
-        // Calculate the angle towards the player and set it for the projectile
-        let angle = projectile.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
-        projectile.set_angle(angle);
-        projectile.set_direction(player.get_oldpos());
-        if get_time()> timer + 3.0{
-            
-        
-        self.projectiles.push(projectile);
-    }}}
+    pub async fn plant_boss_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str, shoot: &mut bool, dig: &mut bool, timer: &mut f64) {
+        println!("Plant Boss used Shoot!");
+        if *shoot == false {
+            self.cooldown2 = get_time();
 
-    pub async fn plant_boss_chomp(&mut self, player: &mut Player, tm: &TextureManager, way: &str) {
-        let timer = get_time();
-        self.plant_boss_dig_bite(player, tm, way).await;
-        if get_time()>timer+2.0{
-            println!("Plant Boss used Chomp!");
-            self.set_preload_gif(tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_bite{}.gif", way).as_str()).unwrap(), false);
+            *shoot = true;
         }
-        
-       
+        self.plant_boss_dig_shoot(player, tm, way, dig, timer).await;
+        if get_time() > self.cooldown2 + 2.5 && get_time() < self.cooldown2 + 2.6 {
+            println!("Plant Boss used Shoot!");
+            self.set_preload_gif(
+                tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_shoot{}.gif", way).as_str())
+                    .unwrap(),
+                false,
+            );
+            let mut projectile = Projectile::new(self.projectile_image.clone(), 40.0, 40.0, self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
+            // Calculate the angle towards the player and set it for the projectile
+            let angle = projectile.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
+            projectile.set_angle(angle);
+            projectile.set_direction(player.get_oldpos());
+            if get_time() > self.cooldown2 + 3.0 && get_time() < self.cooldown2 + 3.1 {
+                self.projectiles.push(projectile);
+            }
+        }
     }
 
-    pub async fn plant_boss_dig_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str) {
-       
-        let timer = get_time();
+    pub async fn plant_boss_chomp(&mut self, player: &mut Player, tm: &TextureManager, way: &str, chomp: &mut bool, dig: &mut bool, timer: &mut f64) {
+        println!("Plant Boss used Chomp!");
+        if *chomp == false {
+            self.cooldown2 = get_time();
 
-        self.set_preload_gif(tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig{}.gif", way).as_str()).unwrap(), false);
-        if get_time()>timer+1.0{
-            self.set_preload_gif(tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig_up{}.gif", way).as_str()).unwrap(), false);
+            *chomp = true;
         }
-        else if get_time()>timer+2.0{
+        self.plant_boss_dig_bite(player, tm, way, dig, timer).await;
+        if get_time() > self.cooldown2 + 2.0 && get_time() < self.cooldown2 + 2.1 {
+            println!("Plant Boss used Chomp!");
+            self.set_preload_gif(
+                tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_bite{}.gif", way).as_str())
+                    .unwrap(),
+                false,
+            );
+        }
+    }
+
+    pub async fn plant_boss_dig_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str, dig: &mut bool, timer: &mut f64) {
+        println!("Plant Boss used Dig(Shoot)!");
+        if *dig == false {
+            *timer = get_time();
+            *dig = true;
+        }
+        if get_time() > *timer + 0.1 && get_time() < *timer + 0.2 {
+            self.set_preload_gif(
+                tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig{}.gif", way).as_str())
+                    .unwrap(),
+                false,
+            );
+        }
+        self.set_preload_gif(
+            tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig{}.gif", way).as_str())
+                .unwrap(),
+            false,
+        );
+        if get_time() > *timer + 1.0 && get_time() < *timer + 1.1 {
+            self.set_preload_gif(
+                tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig_up{}.gif", way).as_str())
+                    .unwrap(),
+                false,
+            );
+      
+            rand::srand(date::now() as u64);
+            let rand_x = rand::gen_range(70.0, 900.0);
+            let rand_y = player.get_y();
+            self.set_position(rand_x, rand_y);
+        }
+    }
+    pub async fn plant_boss_dig_bite(&mut self, player: &mut Player, tm: &TextureManager, way: &str, dig: &mut bool, timer: &mut f64) {
+        println!("Plant Boss used Dig(Bite)!");
+        if *dig == false {
+            *timer = get_time();
+            *dig = true;
+        }
+        if get_time() > *timer + 0.1 && get_time() < *timer + 0.2 {
+            self.set_preload_gif(
+                tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig{}.gif", way).as_str())
+                    .unwrap(),
+                false,
+            );
+        }
+
+        if get_time() > *timer + 1.0 && get_time() < *timer + 1.1 {
+            self.set_preload_gif(
+                tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig_up{}.gif", way).as_str())
+                    .unwrap(),
+                false,
+            );
         
-        rand::srand(date::now() as u64);
-        let rand_x = rand::gen_range(70.0, 900.0);
-        let rand_y = player.get_y();
-        self.set_position(rand_x, rand_y);
-       
-    }}
-        pub async fn plant_boss_dig_bite(&mut self, player: &mut Player, tm: &TextureManager, way: &str) {
-       
-        let timer = get_time();
+            rand::srand(date::now() as u64);
+            let rand_x = rand::gen_range(0, 2);
+            let away;
+            if rand_x == 0 {
+                away = 1.0;
+            } else {
+                away = -1.0;
+            }
 
-        self.set_preload_gif(tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig{}.gif", way).as_str()).unwrap(), false);
-        if get_time()>timer+1.0{
-            self.set_preload_gif(tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig_up{}.gif", way).as_str()).unwrap(), false);
+            let pos_x = player.get_x() + away * 50.0; // Adjust the offset as needed
+            let rand_y = player.get_y();
+            self.set_position(pos_x, rand_y);
         }
-        else if get_time()>timer+2.0{
-        
-        rand::srand(date::now() as u64);
-        let rand_x =rand::gen_range(0, 2);
-        let away;
-        if rand_x == 0 {
-            away = 1.0;
-        } else {
-            away = -1.0;
-        }
-
-        let pos_x = player.get_x() + away * 50.0; // Adjust the offset as needed
-        let rand_y = player.get_y();
-        self.set_position(pos_x, rand_y);
-       
-    }}
-
+    }
 
     pub fn knockback(&mut self, player: &mut Player, target: &str) {
         let player_pos = player.get_oldpos();

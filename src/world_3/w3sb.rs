@@ -17,6 +17,7 @@ pub async fn run(
     player: &mut crate::modules::player::Player,
     tm: &TextureManager,
     pause: &mut bool,
+    last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
     player.set_position(virtual_width / 2.0 - 20.0, virtual_height - 100.0);
@@ -102,6 +103,14 @@ pub async fn run(
         enemies[0].draw();
         player.draw();
         map.draw_map(&tm).await;
+    let (restart, quit) = player.handle_death_screen(pause).await;
+        if restart {
+            *last_scene = "None".to_string();
+            return "inn".to_string();
+            
+        } if quit {
+            return "main_screen".to_string();
+        }
         next_frame().await;
     }
 }

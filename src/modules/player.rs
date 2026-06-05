@@ -1,6 +1,7 @@
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
 use crate::modules::database::DatabaseTable;
+use crate::modules::database::DatabaseClient;
 use crate::modules::enemy::Enemy;
 use crate::modules::item::Item;
 use crate::modules::label::Label;
@@ -13,6 +14,7 @@ use crate::modules::text_button::TextButton;
 use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH, modules};
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
+use ureq::rustls::client;
 use std::f32::consts::PI;
 
 //TO DOOOOOO
@@ -20,6 +22,7 @@ use std::f32::consts::PI;
 //Bug fixes/extras
 //0.7 can't add new save file
 //1. add hitboxes to swords
+//1.5. sword gif positions
 //2. coding logs
 //3. removing printlns
 //4. cleaning up unused code and comments
@@ -28,7 +31,7 @@ use std::f32::consts::PI;
 
 Work
 //1.3 imstillstanding
-//6. W1SB Boss
+//2 saving and grabbing from db
 //8. Item after each scene
 //9. All items
 
@@ -1009,7 +1012,8 @@ impl Player {
         (vec![shadow], vec![lbl_paused], vec![btn_save, btn_exit])
     }
 
-    pub async fn handle_save_menu(&mut self) {
+    pub async fn handle_save_menu(&mut self) -> (bool, bool) {
+        let (mut save, mut exit) = (false, false);
         if self.save_menu_open == true {
             //draw menu
             for image in self.savemenu.0.iter_mut() {
@@ -1020,10 +1024,16 @@ impl Player {
             }
             //handle button interactions
 
-            if self.savemenu.2[0].click() { //save button
+            if self.savemenu.2[0].click() { //save button 
+                save = true;
+                self.save_menu_open = false;
+
             } else if self.savemenu.2[1].click() { //exit to menu button
+                exit = true;
+                self.save_menu_open = false;
             }
         }
+        (save, exit)
     }
 
     async fn create_death_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
@@ -1497,6 +1507,36 @@ impl Player {
             }
         }
     }
+    
+    pub async fn update_save_data(&self, records: &Vec<DatabaseTable>, client: &DatabaseClient, last_scene: &String) {
+        let mut save_id = 1;
+            for i in 0..records.len() {
+                if records[i].user_name == self.get_name() {
+                    save_id = records[i].id;
+                }
+            }
+            if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_clearedvar", self.get_cleared().to_string().as_str()).await {
+            if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_currentscreenvar", last_scene.as_str()).await {
+            if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_x", self.get_x().to_string().as_str()).await {
+            if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_y", self.get_y().to_string().as_str()).await {
+            if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "musicoins", self.get_musicoins().to_string().as_str()).await {
+            if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "current_health", self.get_health().to_string().as_str()).await {
+            // Andrew does the rest
+    } else {
+    }
+    } else {
+    }
+    } else {
+    }
+    } else {
+    }
+    } else {
+    }    
+    } else {
+    }
+    }
+
+
 
     pub async fn create_all_items(&mut self, tm: &TextureManager) -> Vec<Item> {
         let mut possible_items = vec![];

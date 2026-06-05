@@ -55,7 +55,12 @@ pub async fn run(
     let mut boss = Enemy::new("", 100.0, 100.0, 100.0, 120.0, true, 1.0, 15.0, 3.0, "", "").await;
     boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idleR.gif").unwrap(), true);
     boss.set_projectile_preload(tm.get_preload("assets/world2_boss/slime_ball.png").unwrap());
-
+    let mut attack =true;
+    let mut shoot = false;
+    let mut chomp = false;
+    let mut dig = false;
+    let mut attack_choice = 0;
+    let mut timer=0.0;
     map.create_map_array(0, 1, 0, vec![2]).await;
     if player.get_cleared() == 8 {
         map.create_map_array(0, 2, 0, vec![2, 1]).await;
@@ -65,7 +70,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-        boss.plant_boss_action(player, &tm).await;
+        boss.plant_boss_action(player, &tm, &mut attack,&mut timer,&mut shoot,&mut chomp, &mut attack_choice, &mut dig).await;
         boss.draw_bullet(player);
 
 
@@ -78,7 +83,8 @@ pub async fn run(
         player.handle_save_menu().await;
         let (restart, quit) = player.handle_death_screen(pause).await;
         if restart {
-            return "w1sp".to_string();
+            *last_scene = "None".to_string();
+            return "inn".to_string();
         }
         if quit {
             return "main_screen".to_string();

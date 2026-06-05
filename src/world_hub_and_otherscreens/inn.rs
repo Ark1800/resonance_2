@@ -28,11 +28,27 @@ pub async fn run(
         vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
+
+    let mut collidable_objects = vec![
+        StillImage::new("", 0.0, -10.0, virtual_width, 10.0, true, 1.0).await,
+        StillImage::new("", -10.0, 0.0, 10.0, virtual_height, true, 1.0).await,
+        StillImage::new("", virtual_width, 0.0, 10.0, virtual_height, true, 1.0).await,
+        StillImage::new("", 0.0, virtual_height, virtual_width, 10.0, true, 1.0).await,
+        StillImage::new("", 0.0, 0.0, 250.0, 250.0, true, 1.0).await,
+        StillImage::new("", 0.0, 0.0, 250.0, 250.0, true, 1.0).await
+
+    ];
+    for obj in 0..3 {
+        collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
+    } for obj in 4..5 {
+        collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/circle.png").unwrap());
+        
+    }
     
     if last_scene == "Top" {
-        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
+        player.set_position(virtual_width - 50.0, 150.0);
     } else {
-        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
+        player.set_position(225.0, 140.0);
     }
     let mut background = StillImage::new(
         "",
@@ -44,22 +60,7 @@ pub async fn run(
         1.0,            // Normal zoom (100%)
     )
     .await;
-    background.set_preload(tm.get_preload("assets/slime.png").unwrap());
-
-    let mut collidable_objects: Vec<StillImage> = vec![
-        StillImage::new("", 120.0, 50.0, 0.0, 250.0, true, 1.0).await,
-        StillImage::new("", 125.0, 50.0, 250.0, 250.0, true, 1.0).await,
-        StillImage::new("", 10.0, 250.0, 250.0, 0.0, true, 1.0).await,
-        StillImage::new("", 150.0, 275.0, 675.0, 0.0, true, 1.0).await,
-        StillImage::new("", 225.0, 50.0, 800.0, 250.0, true, 1.0).await,
-        StillImage::new("", 290.0, 100.0, 0.0, 510.0, true, 1.0).await,
-        StillImage::new("", 150.0, 100.0, 260.0, 560.0, true, 1.0).await,
-        StillImage::new("", 200.0, 100.0, 600.0, 560.0, true, 1.0).await,
-        StillImage::new("", 230.0, 100.0, 790.0, 510.0, true, 1.0).await,
-    ];
-    for obj in 0..collidable_objects.len() {
-        collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
-    }
+    background.set_preload(tm.get_preload("assets/map_files/tavern.png").unwrap());
     let mut enemies: Vec<Enemy> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -69,7 +70,7 @@ pub async fn run(
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
         if player.get_y() > virtual_height - 10.0 {
-            *last_scene = "Down".to_string();
+            *last_scene = "Inn".to_string();
             return "town".to_string();
         }
         
@@ -82,6 +83,7 @@ pub async fn run(
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         player.draw();
+        draw_grid(50.0, BLACK);
         next_frame().await;
     }
 }

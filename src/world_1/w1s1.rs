@@ -10,6 +10,7 @@ use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::database::{DatabaseClient, DatabaseTable, create_database_client};
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
@@ -21,6 +22,8 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient
 ) -> String {
     let mut background = StillImage::new(
         "",
@@ -150,7 +153,13 @@ pub async fn run(
         }
 
         player.handle_inventory();
-        player.handle_save_menu().await;
+        let (save, exit) = player.handle_save_menu().await;
+
+        if save {
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "main_screen".to_string();
+        }
         
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();
@@ -169,7 +178,8 @@ pub async fn run(
     }
     let (restart, quit) = player.handle_death_screen(pause).await;
         if restart {
-            return "w1sp".to_string();
+            *last_scene = "None".to_string();
+            return "inn".to_string();
         } if quit {
             return "main_screen".to_string();
         }

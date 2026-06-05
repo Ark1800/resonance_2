@@ -38,7 +38,9 @@ pub async fn run(
         player.set_position(virtual_width / 2.0, virtual_height - 80.0);
     } else if last_scene == "down" {
         player.set_position(virtual_width / 2.0, 80.0);
-    } else {
+    } else if last_scene == "Inn" {
+        player.set_position(750.0, 300.0);
+    }else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
     let mut background = StillImage::new(
@@ -222,6 +224,9 @@ pub async fn run(
             return "w3s1".to_string();
         } else if (player.get_x() > 130.0 && player.get_x() < 200.00) && (player.get_y() > 200.0 && player.get_y() < 270.00) {
             return "shop".to_string();
+        } else if (player.get_x() > 700.0 && player.get_x() < 800.0) && (player.get_y() > 250.0 && player.get_y() < 300.00) {
+            *last_scene = "Top".to_string();
+            return "inn".to_string();
         }
         if player.get_cleared() <= 3 {
             if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_cooldown <= 0.0 {
@@ -254,6 +259,7 @@ pub async fn run(
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         player.draw();
+        draw_grid(50.0, BLACK);
         next_frame().await;
     }
 }
