@@ -9,6 +9,7 @@ use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -19,7 +20,10 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient
 ) -> String {
+    player.set_currentscreen("w3sb".to_string());
     player.set_position(virtual_width / 2.0 - 20.0, virtual_height - 100.0);
 
     let mut map = Map::new(
@@ -81,7 +85,13 @@ pub async fn run(
         clear_background(RED);
         background.draw();
         player.handle_inventory();
-        player.handle_save_menu().await;
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "title_screen".to_string();
+        }
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
@@ -96,14 +106,14 @@ pub async fn run(
             map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
             player.set_health(player.get_maxhealth());
         } else {
-            enemies[0].cyric_action(player, tm).await;
+            enemies[0].cyric_action(player, tm, _musicdiscfunctions).await;
         }
-        enemies[0].draw_bullet(player);
+        enemies[0].draw_bullet(player, _musicdiscfunctions);
         }
         enemies[0].draw();
         player.draw();
         map.draw_map(&tm).await;
-    let (restart, quit) = player.handle_death_screen(pause).await;
+    let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();

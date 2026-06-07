@@ -6,13 +6,16 @@ Program Details:
 
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
+use crate::modules::item;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 use crate::modules::label::Label;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
+use crate::modules::text_button::TextButton;
 
 pub async fn run(
     virtual_width: f32,
@@ -22,7 +25,11 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient
+
 ) -> String {
+    player.set_currentscreen("w1sb".to_string());
     let mut jeff_valid = false;
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
@@ -77,6 +84,7 @@ pub async fn run(
     "jeff_the_behemoth"//enemy type
     ).await;
     jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idleR.gif").unwrap(), true);
+    enemies.push(jeff);
     let mut jeff_start_fight_cooldown = 0.0;
     let mut jeff_attacktime = 0.0;
     let mut jeff_attackcount = 0;
@@ -90,18 +98,36 @@ pub async fn run(
     let mut jeff_zzz = AnimatedImage::from_gif("", 0.0, 0.0, 0.0, 0.0, true).await;
     let mut bubblebeam_img = StillImage::new("", 0.0, 0.0, 0.0, 0.0, true, 1.0).await;
     let mut whirlpool_direction = Vec2::new(1.0, 1.0);
+    let mut choose_open = false;
+    let mut item_valid = false;
+     let btn_skip = TextButton::new(
+        0.0,
+        0.0,
+        200.0,
+        200.0,
+        "Skip",
+        BLUE,
+        GREEN,
+        30
+    ); 
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
        // whirlpool.draw();
         if jeff_drawvalid {
-            jeff.draw();
+            enemies[0].draw();
         }
         map.draw_map(&tm).await;
         player.handle_inventory();
-        player.handle_save_menu().await;
-        let (restart, quit) = player.handle_death_screen(pause).await;
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "title_screen".to_string();
+        }
+        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
@@ -116,26 +142,26 @@ pub async fn run(
                     (jeff_valid, jeff_attackvalid) = enemies[i].jeff_checkhit(player, jeff_valid, jeff_attackvalid);
                     if jeff_valid && jeff_attackvalid {
                         jeff_start_fight_cooldown = get_time();
-                        jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle2.gif").unwrap(), true);
+                        enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle2.gif").unwrap(), true);
                         jeff_attackvalid = false;
                     }
                     if jeff_valid {
                         if get_time() - jeff_start_fight_cooldown > 3.0 { //length of gif
                             if jeff_attackcount == 0 {
-                                attack_choice = jeff.jeff_choose_attack();
+                                attack_choice = enemies[0].jeff_choose_attack();
                                 jeff_attackcount += 1;
                             }
                             match attack_choice {
                                 1 => { //jeff knife dash
                                     if jeff_attackcount == 1 {
                                         jeff_attacktime = get_time();
-                                        jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_knife.gif").unwrap(), true);
+                                        enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_knife.gif").unwrap(), true);
                                         jeff_attackcount += 1;
                                     }
                                     let time = get_time() - jeff_attacktime;
                                     if time >= 1.0  && time < 3.0 {
                                         if jeff_attackcount == 2 {
-                                            (jeff_knifeattack_wallchoice, lbl_warninglabel) = jeff.jeff_knifeattack1();
+                                            (jeff_knifeattack_wallchoice, lbl_warninglabel) = enemies[0].jeff_knifeattack1();
                                             jeff_drawvalid = false;
                                             jeff_attackcount += 1;
                                         }
@@ -143,18 +169,18 @@ pub async fn run(
                                     }
                                     if time >= 3.0 && jeff_attackcount == 3 {
                                         jeff_drawvalid = true;
-                                        jeff_knife_direction = jeff.jeff_knifeattack2(jeff_knifeattack_wallchoice, &mut lbl_warninglabel);
+                                        jeff_knife_direction = enemies[0].jeff_knifeattack2(jeff_knifeattack_wallchoice, &mut lbl_warninglabel);
                                         jeff_attackcount += 1;
                                     }
                                     if time >= 3.0 && jeff_attackcount == 4 {
-                                        let attackend = jeff.jeff_knifeattack3(player, jeff_knife_direction);
+                                        let attackend = enemies[0].jeff_knifeattack3(player, jeff_knife_direction, musicdiscfunctions);
                                         if attackend {
                                             jeff_attackcount += 1;;
-                                            jeff.jeff_normalidle(player, tm);
+                                            enemies[0].jeff_normalidle(player, tm);
                                         }
                                     }
                                     if time >= 3.0 && jeff_attackcount == 5 {
-                                        (jeff_cooldown, jeff_zzz) = jeff.jeff_cooldown(tm).await;
+                                        (jeff_cooldown, jeff_zzz) = enemies[0].jeff_cooldown(tm).await;
                                     }
                                     if jeff_cooldown - get_time() > 0.0 && jeff_cooldown - get_time() < 4.0 {
                                         jeff_zzz.draw();
@@ -170,26 +196,26 @@ pub async fn run(
                                 2 => { //jeff bubble beam
                                     if jeff_attackcount == 1 {
                                         jeff_attacktime = get_time();
-                                        jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_full.gif").unwrap(), true);
+                                        enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_full.gif").unwrap(), true);
                                         jeff_attackcount += 1;
                                     }
                                     let time = get_time() - jeff_attacktime;
                                     if time >= 1.0 && time < 3.0 {
                                         if jeff_attackcount == 2 {
-                                        lbl_warninglabel = jeff.jeff_bubblebeam1(tm);
+                                        lbl_warninglabel = enemies[0].jeff_bubblebeam1(tm);
                                         jeff_attackcount += 1;
                                         }
                                         lbl_warninglabel.draw();
                                     }
                                     if time >= 3.0 && time < 4.0 {
                                         if jeff_attackcount == 3 {
-                                            bubblebeam_img = jeff.jeff_bubblebeam2(player, &mut lbl_warninglabel, tm).await;
+                                            bubblebeam_img = enemies[0].jeff_bubblebeam2(player, &mut lbl_warninglabel, tm, musicdiscfunctions).await;
                                             jeff_attackcount += 1;
                                         }
                                         bubblebeam_img.draw();
                                     }
                                     if time >= 4.0 && jeff_attackcount == 4 {
-                                        (jeff_cooldown, jeff_zzz) = jeff.jeff_cooldown(tm).await;
+                                        (jeff_cooldown, jeff_zzz) = enemies[0].jeff_cooldown(tm).await;
                                     }
                                     if jeff_cooldown - get_time() > 0.0 && jeff_cooldown - get_time() < 4.0 {
                                         jeff_zzz.draw();
@@ -205,7 +231,7 @@ pub async fn run(
                                 3 => { //jeff whirlpool bounce
                                     if jeff_attackcount == 1 {
                                         jeff_attacktime = get_time();
-                                        jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle1.png").unwrap(), true);
+                                        enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle1.png").unwrap(), true);
                                         jeff_attackcount += 1;
                                     }
                                     let time = get_time() - jeff_attacktime;
@@ -214,11 +240,11 @@ pub async fn run(
                                         jeff_drawvalid = false;
                                         jeff_attackcount += 1;
                                         }
-                                        whirlpool_direction = jeff.jeff_whirlpoolbounce(player, &mut whirlpool, &mut whirlpool_hitbox, &mut map, whirlpool_direction);
+                                        whirlpool_direction = enemies[0].jeff_whirlpoolbounce(player, &mut whirlpool, &mut whirlpool_hitbox, &mut map, whirlpool_direction);
                                     }
                                     if time >= 10.0 && jeff_attackcount == 3 {
                                         jeff_drawvalid = true;
-                                        (jeff_cooldown, jeff_zzz) = jeff.jeff_cooldown(tm).await;
+                                        (jeff_cooldown, jeff_zzz) = enemies[0].jeff_cooldown(tm).await;
                                     }
                                     if jeff_cooldown - get_time() > 0.0 && jeff_cooldown - get_time() < 4.0 {
                                         jeff_zzz.draw();
@@ -245,7 +271,15 @@ pub async fn run(
         player.set_player_activedisc(activedisc);
         if enemies.is_empty() && player.get_cleared() == 7 {
             player.add_cleared();
+            item_valid = true;
+            choose_open = true;
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+        }
+        if btn_skip.click() {
+            player.add_cleared();
+            item_valid = true;
+            choose_open = true;
+            return "town".to_string();
         }
         if mlehit {
             jeff_valid = true;
@@ -270,6 +304,7 @@ pub async fn run(
             *last_scene = "Right".to_string();
             return "w1s4".to_string();
         }
+        (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         next_frame().await;
     }
 }

@@ -36,7 +36,7 @@ fn window_conf() -> Conf {
 const VIRTUAL_WIDTH: f32 = 1024.0;
 const VIRTUAL_HEIGHT: f32 = 768.0;
 
-#[macroquad::main(window_conf)]
+#[macroquad::main(window_conf())]
 async fn main() {
     //PRELOADEEDDDDDDDDD           
     let all_assets = vec![
@@ -75,7 +75,7 @@ async fn main() {
     tm.preload_with_loading_screen(&all_assets, Some(&all_sounds), Some(loading_options)).await;
     //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
     let preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)> = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap(), tm.get_preload("assets/player_files/arrow.png").unwrap(), tm.get_preload("assets/player_files/bow_arrow_image.png").unwrap(), tm.get_preload("assets/map_files/black_square.png").unwrap()];
-    let mut current_screen = "w2sb".to_string();
+    let mut current_screen = "title_screen".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
     let mut musicdiscfunctions = Musicdisc::new(&tm).await;
@@ -100,28 +100,28 @@ async fn main() {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {
                 "w1s1" => world_1::w1s1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
-                "w1s2" => world_1::w1s2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w1s3" => world_1::w1s3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w1s4" => world_1::w1s4::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w1sb" => world_1::w1sb::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w1sp" => world_1::w1sp::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w2s1" => world_2::w2s1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w2s2" => world_2::w2s2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w2s3" => world_2::w2s3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w2sb" => world_2::w2sb::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w2sp" => world_2::w2sp::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w3s1" => world_3::w3s1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w3s2" => world_3::w3s2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w3s3" => world_3::w3s3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w3s4" => world_3::w3s4::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w3sb" => world_3::w3sb::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "w3sp" => world_3::w3sp::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "wcs1" => world_c::wcs1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "wcs2" => world_c::wcs2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "wcs3" => world_c::wcs3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
-                "town" => world_hub_and_otherscreens::town::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
+                "w1s2" => world_1::w1s2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w1s3" => world_1::w1s3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w1s4" => world_1::w1s4::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w1sb" => world_1::w1sb::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w1sp" => world_1::w1sp::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w2s1" => world_2::w2s1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w2s2" => world_2::w2s2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w2s3" => world_2::w2s3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w2sb" => world_2::w2sb::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w2sp" => world_2::w2sp::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w3s1" => world_3::w3s1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w3s2" => world_3::w3s2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w3s3" => world_3::w3s3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w3s4" => world_3::w3s4::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w3sb" => world_3::w3sb::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "w3sp" => world_3::w3sp::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "wcs1" => world_c::wcs1::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "wcs2" => world_c::wcs2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
+                "wcs3" => world_c::wcs3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions,&records, &client).await,
+                "town" => world_hub_and_otherscreens::town::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
                 "shop" => world_hub_and_otherscreens::shop::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut musicdiscfunctions).await,
-                "inn" => world_hub_and_otherscreens::inn::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
+                "inn" => world_hub_and_otherscreens::inn::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
                 "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &tm, &mut musicdiscfunctions, &mut records, &mut player, &client).await,
                 _ => break,
             };

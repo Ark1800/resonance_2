@@ -11,6 +11,7 @@ use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::grid::draw_grid;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
@@ -22,7 +23,10 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient,
 ) -> String {
+    player.set_currentscreen("wcs3".to_string());
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -244,7 +248,6 @@ pub async fn run(
                     return "wcs2".to_string();
                 }
             }
-
             if first_time {
                 if lbl_interact.scroll() && is_key_pressed(KeyCode::E) {
                     cutscene_going = true;
@@ -274,7 +277,13 @@ pub async fn run(
                 lbl_speech.scrolling_text_draw();
                 cyric.draw();
             }
-player.handle_save_menu().await;
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "title_screen".to_string();
+        }
             draw_grid(50.0, BROWN);
             next_frame().await;
         }

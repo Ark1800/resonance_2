@@ -10,6 +10,7 @@ use crate::modules::player::Player;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
@@ -21,7 +22,10 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient
 ) -> String {
+    player.set_currentscreen("wcs1".to_string());
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -150,20 +154,16 @@ pub async fn run(
             }
 
             player.handle_keypresses(pause, _musicdiscfunctions).await;
-            player.handle_save_menu().await;
+            let (save, exit) = player.handle_save_menu().await;
+            if save {
+                println!("Saving game...");
+                player.update_save_data(records, client, last_scene).await;
+            } if exit {
+                return "title_screen".to_string();
+            }
 
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
-            let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
-            player.set_player_activedisc(activedisc);
-
-            if player.get_y() > virtual_height - 10.0 {
-                if player.get_cleared() == 0 {
-                    player.add_cleared();
-                }
-                *last_scene = "Down".to_string();
-                return "wcs2".to_string();
-            }
             player.draw();
                 cyric.draw();
                 if lbl_speech.get_text() != "" {
@@ -181,7 +181,9 @@ pub async fn run(
                     lbl_tutorial.draw();
                 }
             
-
+            if player.get_y() > virtual_height {
+                return "wcs2".to_string();
+            }
             next_frame().await;
         }
     }

@@ -10,6 +10,7 @@ use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -20,7 +21,10 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient
 ) -> String {
+    player.set_currentscreen("w2sp".to_string());
     let mut map = Map::new(
         virtual_width,
         virtual_height,
@@ -97,7 +101,13 @@ pub async fn run(
         player.set_player_activedisc(activedisc);
 
         player.handle_inventory();
-        player.handle_save_menu().await;
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "title_screen".to_string();
+        }
         if player.get_cleared() >= 8 {
         green_portal.draw();
         }

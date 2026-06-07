@@ -11,6 +11,7 @@ pub struct Item {
     hpchng: i32,
     armor: i32,
     cooldownmult: f32,
+    thorns: bool,
     movespeedmult: f32,
 }
 
@@ -28,9 +29,18 @@ impl Item {
             armor,
             cooldownmult,
             movespeedmult,
+            thorns: false,
         }
     }
 
+    pub fn set_thorns(&mut self, thorns: bool) {
+        self.thorns = thorns;
+    }
+
+    pub fn get_thorns(&self) -> bool {
+        self.thorns
+    }
+    
     pub fn get_itemassetpath(&self) -> String {
         self.assetpath.clone()
     }

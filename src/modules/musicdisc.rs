@@ -54,6 +54,7 @@ pub struct Musicdisc {
     imstillstanding_hit: bool,
     imstillstanding_cooldown: f64,
     imstillstanding_cct: f64,
+    imstillstanding: bool,
     pandemonium_starttime: f64,
     pandemonium_valid: bool,
     pandemonium_hit: bool,
@@ -148,6 +149,7 @@ impl Musicdisc {
             imstillstanding_hit: false,
             imstillstanding_cooldown: 0.0,
             imstillstanding_cct: 0.0,
+            imstillstanding: false,
             pandemonium_starttime: 0.0,
             pandemonium_valid: true,
             pandemonium_hit: false,
@@ -264,24 +266,28 @@ impl Musicdisc {
         self.sodapop
     }
 
-    fn update_musicdisc_cooldowns(&mut self) {
+    pub fn get_imstillstanding_active(&self) -> bool {
+        self.imstillstanding
+    }
+
+    fn update_musicdisc_cooldowns(&mut self, player: &mut Player) {
         if self.backinblack_valid == false {
             self.backinblack_cct = get_time() - self.backinblack_cooldown;
-            if self.backinblack_cct >= 45.0 {
+            if self.backinblack_cct >= 45.0 * player.get_cooldownmult() as f64 {
                 self.backinblack_valid = true;
                 self.backinblack_cct = 0.0;
             }
         }
         if self.thickofitvalid == false {
             self.thickofit_cct = get_time() - self.thickofitcooldown;
-            if self.thickofit_cct >= 60.0 {
+            if self.thickofit_cct >= 60.0 * player.get_cooldownmult() as f64{
                 self.thickofitvalid = true;
                 self.thickofit_cct = 0.0;
             }
         }
         if self.howitsdone_valid == false {
             self.howitsdone_cct = get_time() - self.howitsdone_cooldown;
-            if self.howitsdone_cct >= 70.0 {
+            if self.howitsdone_cct >= 70.0 * player.get_cooldownmult() as f64 {
                 self.howitsdone_valid = true;
                 self.howitsdone_hit = false;
                 self.howitsdone_cct = 0.0;
@@ -289,7 +295,7 @@ impl Musicdisc {
         }
         if self.imstillstanding_valid == false {
             self.imstillstanding_cct = get_time() - self.imstillstanding_cooldown;
-            if self.imstillstanding_cct >= 120.0 {
+            if self.imstillstanding_cct >= 120.0 * player.get_cooldownmult() as f64 {
                 self.imstillstanding_valid = true;
                 self.imstillstanding_hit = false;
                 self.imstillstanding_cct = 0.0;
@@ -297,7 +303,7 @@ impl Musicdisc {
         }
         if self.pandemonium_valid == false {
             self.pandemonium_cct = get_time() - self.pandemonium_cooldown;
-            if self.pandemonium_cct >= 100.0 {
+            if self.pandemonium_cct >= 100.0 * player.get_cooldownmult() as f64{
                 self.pandemonium_valid = true;
                 self.pandemonium_hit = false;
                 self.pandemonium_cct = 0.0;
@@ -305,7 +311,7 @@ impl Musicdisc {
         }
         if self.sixhundredstrike_valid == false {
             self.sixhundredstrike_cct = get_time() - self.sixhundredstrike_cooldown;
-            if self.sixhundredstrike_cct >= 70.0 {
+            if self.sixhundredstrike_cct >= 70.0 * player.get_cooldownmult() as f64{
                 self.sixhundredstrike_valid = true;
                 self.sixhundredstrike_hit = false;
                 self.sixhundredstrike_cct = 0.0;
@@ -313,7 +319,7 @@ impl Musicdisc {
         }
         if self.sodapop_valid == false {
             self.sodapop_cct = get_time() - self.sodapop_cooldown;
-            if self.sodapop_cct >= 70.0 {
+            if self.sodapop_cct >= 70.0 * player.get_cooldownmult() as f64{
                 self.sodapop_valid = true;
                 self.sodapop_hit = false;
                 self.sodapop_cct = 0.0;
@@ -321,7 +327,7 @@ impl Musicdisc {
         }
         if self.greatestshow_valid == false {
             self.greatestshow_cct = get_time() - self.greatestshow_cooldown;
-            if self.greatestshow_cct >= 80.0 {
+            if self.greatestshow_cct >= 80.0 * player.get_cooldownmult() as f64{
                 self.greatestshow_valid = true;
                 self.greatestshow_hit = false;
                 self.greatestshow_cct = 0.0;
@@ -337,7 +343,7 @@ impl Musicdisc {
         map: &mut Map,
         tm: &TextureManager,
     ) -> String {
-        self.update_musicdisc_cooldowns();
+        self.update_musicdisc_cooldowns(player);
         let mut discmatch = activedisc.as_str();
         match discmatch {
             "Back In Black" => {
@@ -426,7 +432,7 @@ impl Musicdisc {
                 }
             }
             "I'm Still Standing" => {
-                
+                //dont do nothing, player cant activate
             }
             "Pandemonium" => {
                 if self.pandemonium_valid == true {
@@ -585,6 +591,26 @@ impl Musicdisc {
                 }
             }
             _ => {}
+        }
+        if self.backinblack_valid == false && self.thickofitvalid == false  && self.pandemonium_valid == false && self.sixhundredstrike_valid == false && self.sodapop_valid == false && self.howitsdone_valid == false && self.greatestshow_valid == false {
+            if player.get_health() < 0.0 {
+                if self.imstillstanding_hit == false {
+                    discmatch = "I'm Still Standing";
+                    self.imstillstanding = true;
+                    play_sound(&self.sounds[3], PlaySoundParams { looped: false, volume: 1.0 });
+                    self.imstillstanding_hit = true;
+                    self.imstillstanding_starttime = get_time();
+                    player.set_health(30.0);
+                }
+                let time = get_time() - self.imstillstanding_starttime;
+                if time >= 10.0 {
+                    self.imstillstanding = false;
+                    self.imstillstanding_hit = false;
+                    self.imstillstanding_valid = false;
+                    self.imstillstanding_cooldown = get_time();
+                    discmatch = "";
+                }
+            }
         }
         //println!("Discmatch: {}", discmatch);
         discmatch.to_string()

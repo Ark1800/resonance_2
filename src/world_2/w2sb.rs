@@ -11,7 +11,10 @@ use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
+use crate::modules::text_button::TextButton;
 use crate::modules::still_image::StillImage;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
+
 use macroquad::prelude::*;
 pub async fn run(
     virtual_width: f32,
@@ -21,7 +24,10 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient
 ) -> String {
+    player.set_currentscreen("w2sb".to_string());
     let mut map = Map::new(
         virtual_width,
         virtual_height,
@@ -65,13 +71,25 @@ pub async fn run(
     if player.get_cleared() == 8 {
         map.create_map_array(0, 2, 0, vec![2, 1]).await;
     }
+    let mut choose_open = false;
+    let mut item_valid = false;
+    let btn_skip = TextButton::new(
+        0.0,
+        0.0,
+        200.0,
+        200.0,
+        "Skip",
+        BLUE,
+        GREEN,
+        30
+    ); 
     loop {
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-        boss.plant_boss_action(player, &tm, &mut attack,&mut timer,&mut shoot,&mut chomp, &mut attack_choice, &mut dig).await;
-        boss.draw_bullet(player);
+        boss.plant_boss_action(player, &tm, &mut attack,&mut timer,&mut shoot,&mut chomp, &mut attack_choice, &mut dig, _musicdiscfunctions).await;
+        boss.draw_bullet(player, _musicdiscfunctions);
 
 
 
@@ -80,8 +98,14 @@ pub async fn run(
 
 
         player.handle_inventory();
-        player.handle_save_menu().await;
-        let (restart, quit) = player.handle_death_screen(pause).await;
+       let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "title_screen".to_string();
+        }
+        let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
@@ -107,9 +131,16 @@ pub async fn run(
 
         if boss.get_health() <= 0.0 && player.get_cleared() == 11 {
             player.add_cleared();
+            item_valid = true;
+            choose_open = true;
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
         }
-
+        if btn_skip.click() {
+            player.add_cleared();
+            item_valid = true;
+            choose_open = true;
+            map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
+        }
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Left".to_string();
             return "w2s3".to_string();
@@ -119,8 +150,8 @@ pub async fn run(
             *last_scene = "Up".to_string();
             return "w2s1".to_string();
         }
-
         player.draw();
+        (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         next_frame().await;
     }
 }

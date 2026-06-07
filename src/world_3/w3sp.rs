@@ -10,11 +10,14 @@ use crate::modules::map::Map;
 use macroquad::prelude::*;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::enemy::Enemy;
 use crate::modules::grid::draw_grid;
 
-pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc) -> String {
+pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc, records: &Vec<DatabaseTable>,
+    client: &DatabaseClient) -> String {
+    player.set_currentscreen("w3sp".to_string());
     let mut background1 = StillImage::new(
         "",
         virtual_width/2.0,  // width
@@ -127,7 +130,13 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
         player.handle_inventory();      
-        player.handle_save_menu().await;
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "title_screen".to_string();
+        }
         let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         let old_pos = player.get_oldpos();

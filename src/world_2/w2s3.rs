@@ -11,6 +11,7 @@ use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use macroquad::prelude::*;
 pub async fn run(
     virtual_width: f32,
@@ -20,7 +21,10 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient
 ) -> String {
+    player.set_currentscreen("w2s3".to_string());
     let mut map = Map::new(
         virtual_width,
         virtual_height,
@@ -68,14 +72,22 @@ pub async fn run(
     if player.get_cleared() == 8 {
         map.create_map_array(0, 2, 0, vec![2, 1]).await;
     }
+    let mut choose_open = false;
+    let mut item_valid = false;
     loop {
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
         player.handle_inventory();
-        player.handle_save_menu().await;
-        let (restart, quit) = player.handle_death_screen(pause).await;
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "title_screen".to_string();
+        }
+        let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
@@ -92,11 +104,11 @@ pub async fn run(
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     match enemies[i].get_enemy_type() {
                         "archer" => {
-                            enemies[i].archer_action(tm, player).await;
-                            enemies[i].draw_bullet(player);
+                            enemies[i].archer_action(tm, player, _musicdiscfunctions).await;
+                            enemies[i].draw_bullet(player, _musicdiscfunctions);
                         }
                         "slime" => {
-                            enemies[i].slime_action(player);
+                            enemies[i].slime_action(player, _musicdiscfunctions);
                         }
                         "summoner" => {
                             let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
@@ -107,11 +119,11 @@ pub async fn run(
                             }
                         }
                         "mage" => {
-                            enemies[i].mage_action(tm, player).await;
-                            enemies[i].draw_bullet(player);
+                            enemies[i].mage_action(tm, player, _musicdiscfunctions).await;
+                            enemies[i].draw_bullet(player, _musicdiscfunctions);
                         }
                         "large_slime" => {
-                            enemies[i].large_slime_action(tm, player).await;
+                            enemies[i].large_slime_action(tm, player, _musicdiscfunctions).await;
                         }
                         _ => {}
                     }
@@ -125,7 +137,7 @@ pub async fn run(
             enemies[index].dmg_enemy(player.get_meleedmg());
             if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, _musicdiscfunctions).await;
                     if split {
                         enemies.push(slime1);
                         enemies.push(slime2);
@@ -139,7 +151,7 @@ pub async fn run(
             enemies[index].dmg_enemy(player.get_rngdmg());
             if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player).await;
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, _musicdiscfunctions).await;
                     if split {
                         enemies.push(slime1);
                         enemies.push(slime2);
@@ -152,6 +164,8 @@ pub async fn run(
 
         if enemies.is_empty() && player.get_cleared() == 10 {
             player.add_cleared();
+            item_valid = true;
+            choose_open = true;
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
             player.add_health(30.0);
         }
@@ -167,6 +181,7 @@ pub async fn run(
         }
 
         player.draw();
+        (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         next_frame().await;
     }
 }

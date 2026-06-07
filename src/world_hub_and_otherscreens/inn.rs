@@ -10,6 +10,7 @@ use crate::modules::map::Map;
 use crate::modules::musicdisc::Musicdisc;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
@@ -21,7 +22,10 @@ pub async fn run(
     pause: &mut bool,
     last_scene: &mut String,
     musicdiscfunctions: &mut Musicdisc,
+    records: &Vec<DatabaseTable>,
+    client: &DatabaseClient
 ) -> String {
+    player.set_currentscreen("inn".to_string());
     let mut map = Map::new(
         virtual_width,
         virtual_height,
@@ -78,8 +82,14 @@ pub async fn run(
         draw_grid(50.0, BLACK);
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
         player.handle_inventory();
-        player.handle_save_menu().await;
-        player.handle_playerdamaging(&enemies);
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        } if exit {
+            return "title_screen".to_string();
+        }
+        player.handle_playerdamaging(&enemies, musicdiscfunctions);
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         player.draw();

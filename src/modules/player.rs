@@ -4,6 +4,7 @@ use crate::modules::database::DatabaseTable;
 use crate::modules::database::DatabaseClient;
 use crate::modules::enemy::Enemy;
 use crate::modules::item::Item;
+use miniquad::date;
 use crate::modules::label::Label;
 use crate::modules::listview::ListView;
 use crate::modules::map::Map;
@@ -14,26 +15,30 @@ use crate::modules::text_button::TextButton;
 use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH, modules};
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
-use ureq::rustls::client;
 use std::f32::consts::PI;
 
-//TO DOOOOOO
-/*
-//Bug fixes/extras
-//0.7 can't add new save file
-//1. add hitboxes to swords
-//1.5. sword gif positions
+
+//questions
+//1. what should we do about weapon hitbox? image must be used.
+//2. hitboxes for minislimes?
+//3. wcs3?
+
+//STILL TO DOOOOOO
+//1. add note that player needs to equip their weapons after loading a save (cant be fixed)
 //2. coding logs
 //3. removing printlns
 //4. cleaning up unused code and comments
 //5. adding comments to all code
 //6. change every file size to what size we use
 
-Work
-//1.3 imstillstanding
-//2 saving and grabbing from db
-//8. Item after each scene
-//9. All items
+/*
+//Bug fixes/extras
+
+//Work
+//1. add thorns
+//2. add tmos rapier
+//3. add rest of items
+
 
 //Keypresses:
 Move Up - W
@@ -101,7 +106,7 @@ pub struct Player {
     equipped_items: Vec<usize>,                          //vector of indices of equipped items in the items vector
     itemstats: (Vec<String>, Vec<i32>, Vec<f32>, Vec<(Texture2D, Option<Vec<u8>>, String)>), //2d list for stats
     inventory: (Vec<ListView>, Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for inventory UI elements (listviews, images, labels, buttons)
-    playerui: (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>), //2d list for player UI elements (images, labels)
+    playerui: (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>, Vec<StillImage>), //2d list for player UI elements (images, labels)
     inventoryopen: bool,
     savemenu: (Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for save menu UI elements (images, labels, buttons)
     save_menu_open: bool,                                     //is inventory open
@@ -110,6 +115,7 @@ pub struct Player {
     last_attack_time: f64,                                    //time of last attack for timing attack labels
     attackimgfound: bool, //has the correct attack label been found for the current direction of attack (to prevent repeatedly searching for it every frame)
     attackimg: AnimatedImage, //current attack label to be drawn when attacking
+    hitboximg: StillImage, //invisible image used for collision detection for attacks to prevent the player from having to be pixel perfect with their attacks
     mlevalid: bool,       //is player currently performing a melee attack (for preventing multiple melee hits from one attack input)
     rangedattack: bool,   //is player currently performing a ranged attack (for drawing ranged attack labels)
     last_rng_attack_time: f64, //time of last ranged attack for timing ranged attack labels and cooldowns
@@ -124,6 +130,11 @@ pub struct Player {
     possible_items: Vec<Item>,
     name: String,
     password: String,
+    itemui: (Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for item description UI elements (images, labels, buttons)
+    itemindex1: usize,
+    itemindex2: usize,
+    itemindex3: usize,
+    currentscreen: String,
 }
 
 impl Player {
@@ -143,8 +154,11 @@ impl Player {
         let playerui = Player::create_player_ui(x, y, &preloadlist, tm).await;
         let inventory = Player::create_inventory(&preloadlist).await;
         let savemenu = Player::create_save_menu(&preloadlist).await;
+        let itemui = Player::create_item_ui(tm).await;
         let death_screen = Player::create_death_screen(&preloadlist).await;
         let attackimg = playerui.2[0].clone();
+        let hitboximg = playerui.4[0].clone();
+        let possible_items = Player::create_all_items(tm).await;
 
         Player {
             view,
@@ -152,7 +166,7 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 1.0,
+            mledmg: 3.0,
             rngdmg: 5.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
@@ -167,12 +181,14 @@ impl Player {
             savemenu,
             save_menu_open: false,
             armor: 0,
+            itemui,
             playerui,
             attack: false,
             last_attack_time: get_time(),
             player_direction: "b".to_string(),
             attackimgfound: false,
             attackimg,
+            hitboximg,
             mlevalid: true,
             rangedattack: false,
             last_rng_attack_time: 0.0,
@@ -180,12 +196,16 @@ impl Player {
             ranged_movespeeds: Vec::new(),
             arrows: Vec::new(),
             activedisc: "none".to_string(),
-            cleared: 0,
+            cleared: 3,
             death_screen,
             death_screen_open: false,
             name: String::new(),
-            possible_items: Vec::new(),
+            possible_items,
             password: String::new(),
+            itemindex1: 0,
+            itemindex2: 0,
+            itemindex3: 0,
+            currentscreen: "".to_string(),
         }
     }
     //movement functions
@@ -332,6 +352,10 @@ impl Player {
             img.set_x(img.get_x() + self.movement.x);
             img.set_y(img.get_y() + self.movement.y);
         }
+        for img in self.playerui.4.iter_mut() {
+            img.set_x(img.get_x() + self.movement.x);
+            img.set_y(img.get_y() + self.movement.y);
+        }
         self.attackimg.set_x(self.attackimg.get_x() + self.movement.x);
         self.attackimg.set_y(self.attackimg.get_y() + self.movement.y);
         self.move_x();
@@ -350,6 +374,9 @@ impl Player {
                 img.set_x(img.get_x() - self.movement.x); //move player UI elements back if collision to prevent them getting stuck in walls
             }
             for img in self.playerui.3.iter_mut() {
+                img.set_x(img.get_x() - self.movement.x); //move player UI elements back if collision to prevent them getting stuck in walls
+            }
+            for img in self.playerui.4.iter_mut() {
                 img.set_x(img.get_x() - self.movement.x); //move player UI elements back if collision to prevent them getting stuck in walls
             }
             self.attackimg.set_x(self.attackimg.get_x() - self.movement.x);
@@ -372,6 +399,9 @@ impl Player {
                 img.set_y(img.get_y() - self.movement.y); //move player UI elements back if collision to prevent them getting stuck in walls
             }
             for img in self.playerui.3.iter_mut() {
+                img.set_y(img.get_y() - self.movement.y); //move player UI elements back if collision to prevent them getting stuck in walls
+            }
+            for img in self.playerui.4.iter_mut() {
                 img.set_y(img.get_y() - self.movement.y); //move player UI elements back if collision to prevent them getting stuck in walls
             }
             self.attackimg.set_y(self.attackimg.get_y() - self.movement.y);
@@ -440,19 +470,35 @@ impl Player {
         self.playerui.2[1].set_x(x + 40.0);
         self.playerui.2[1].set_y(y - 30.0);
         self.playerui.2[2].set_x(x + 45.0);
-        self.playerui.2[2].set_y(y - 10.0);
+        self.playerui.2[2].set_y(y + 10.0);
         self.playerui.2[3].set_x(x + 40.0);
         self.playerui.2[3].set_y(y + 60.0);
         self.playerui.2[4].set_x(x - 10.0);
         self.playerui.2[4].set_y(y + 65.0);
         self.playerui.2[5].set_x(x - 60.0);
         self.playerui.2[5].set_y(y + 50.0);
-        self.playerui.2[6].set_x(x - 35.0);
-        self.playerui.2[6].set_y(y - 10.0);
+        self.playerui.2[6].set_x(x - 65.0);
+        self.playerui.2[6].set_y(y + 10.0); 
         self.playerui.2[7].set_x(x - 60.0);
         self.playerui.2[7].set_y(y - 50.0);
         self.playerui.3[0].set_x(x);
         self.playerui.3[0].set_y(y);
+        self.playerui.4[0].set_x(x - 15.0);
+        self.playerui.4[0].set_y(y - 30.0);
+        self.playerui.4[1].set_x(x + 40.0);
+        self.playerui.4[1].set_y(y - 30.0);
+        self.playerui.4[2].set_x(x + 45.0);
+        self.playerui.4[2].set_y(y + 10.0);
+        self.playerui.4[3].set_x(x + 40.0);
+        self.playerui.4[3].set_y(y + 60.0);
+        self.playerui.4[4].set_x(x - 10.0);
+        self.playerui.4[4].set_y(y + 65.0);
+        self.playerui.4[5].set_x(x - 60.0);
+        self.playerui.4[5].set_y(y + 50.0);
+        self.playerui.4[6].set_x(x - 65.0);
+        self.playerui.4[6].set_y(y + 10.0);
+        self.playerui.4[7].set_x(x - 60.0);
+        self.playerui.4[7].set_y(y - 50.0);
     }
 
     pub fn draw(&self) {
@@ -506,20 +552,26 @@ impl Player {
         self.musicoins += coins;
     }
 
-    pub fn dmgplayer(&mut self, dmg: f32) {
-        let mut dmg = dmg - self.armor as f32;
-        if dmg < 0.0 {
-            dmg = 0.0;
+    pub fn dmgplayer(&mut self, dmg: f32, issactive: bool) {
+        if issactive == false {
+            let mut dmg = dmg - self.armor as f32;
+            if dmg < 0.0 {
+                dmg = 0.0;
+            }
+            self.health -= dmg;
+            let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
+            let max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+            if new_width < 0.0 {
+                new_width = 0.0; // Prevent negative width
+            }
+            self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
+            self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
+            if self.inventory.1[2].get_filename() == "assets/item_files/armour/helmet_of_thorns.png" {
+
+            }
         }
-        self.health -= dmg;
-        let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
-        let max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
-        if new_width < 0.0 {
-            new_width = 0.0; // Prevent negative width
-        }
-        self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
-        self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
     }
+
     #[allow(unused)]
     pub fn healplayer(&mut self, heal: f32) {
         self.health += heal;
@@ -535,10 +587,11 @@ impl Player {
         self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
     }
 
-    pub fn handle_playerdamaging(&mut self, enemies: &Vec<Enemy>) {
+    pub fn handle_playerdamaging(&mut self, enemies: &Vec<Enemy>, musicdiscfunctions: &mut Musicdisc) {
         for enemy in enemies.iter() {
             if check_collision(self.view_player(), enemy.view_enemy(), 1) {
-                self.dmgplayer(enemy.get_dmg());
+                let issactive = musicdiscfunctions.get_imstillstanding_active();
+                self.dmgplayer(enemy.get_dmg(), issactive);
             }
         }
     }
@@ -599,7 +652,7 @@ impl Player {
         y: f32,
         preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>,
         tm: &TextureManager,
-    ) -> (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>) {
+    ) -> (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>, Vec<StillImage>) {
         let mut img_heart = StillImage::new(
             "", 100.0, // width
             50.0,  // height
@@ -693,7 +746,7 @@ impl Player {
         }
         img_slash_tr.set_angle(PI / 2.0);
 
-        let mut img_slash_r = AnimatedImage::from_gif("", player_x + 45.0, player_y - 10.0, 70.0, 30.0, true).await;
+        let mut img_slash_r = AnimatedImage::from_gif("", player_x + 45.0, player_y + 10.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_r.set_preloaded_gif(preloaded, false);
         }
@@ -714,16 +767,91 @@ impl Player {
             img_slash_bl.set_preloaded_gif(preloaded, false);
         }
         img_slash_bl.set_angle(PI / 2.0);
-
-        let mut img_slash_l = AnimatedImage::from_gif("", player_x - 35.0, player_y - 10.0, 70.0, 30.0, true).await;
+        let mut img_slash_l = AnimatedImage::from_gif("", player_x - 65.0, player_y + 10.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_l.set_preloaded_gif(preloaded, false);
         }
-
         let mut img_slash_tl = AnimatedImage::from_gif("", player_x - 60.0, player_y - 50.0, 70.0, 30.0, true).await;
         if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/player_files/sword_slash.gif") {
             img_slash_tl.set_preloaded_gif(preloaded, false);
         }
+        let mut img_slash_t_hitbox= StillImage::new(
+            "", 
+            70.0,  // width
+            30.0,  // height
+            player_x - 15.0, // x position
+            player_y - 30.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
+        let mut img_slash_tr_hitbox= StillImage::new(
+            "", 
+            70.0,  // width
+            30.0,  // height
+            player_x + 40.0, // x position
+            player_y - 30.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
+        let mut img_slash_r_hitbox= StillImage::new(
+            "", 
+            70.0,  // width
+            30.0,  // height
+            player_x + 45.0, // x position
+            player_y + 10.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
+        let mut img_slash_br_hitbox= StillImage::new(
+            "", 
+            70.0,  // width
+            30.0,  // height
+            player_x + 40.0, // x position
+            player_y + 60.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
+        let mut img_slash_b_hitbox= StillImage::new(
+            "", 
+            70.0,  // width
+            30.0,  // height
+            player_x - 10.0, // x position
+            player_y + 65.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        ).await;
+         let mut img_slash_bl_hitbox= StillImage::new(
+            "", 
+            70.0,  // width
+            30.0,  // height
+            player_x - 60.0, // x position
+            player_y + 50.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        ).await;
+        let mut img_slash_l_hitbox= StillImage::new(
+            "", 
+            70.0,  // width
+            30.0,  // height
+            player_x - 65.0, // x position
+            player_y + 10.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        ).await;
+        let mut img_slash_tl_hitbox= StillImage::new(
+            "", 
+            70.0,  // width
+            30.0,  // height
+            player_x - 60.0, // x position
+            player_y - 50.0,   // y position
+            true,  // Enable stretching
+            1.0,   // Normal zoom (100%)
+        )
+        .await;
         let mut player_hitbox = StillImage::new(
             "", 40.0, // width
             60.0, // height
@@ -753,6 +881,16 @@ impl Player {
                 img_slash_tl,
             ],
             vec![player_hitbox],
+            vec![
+                img_slash_t_hitbox,
+                img_slash_tr_hitbox,
+                img_slash_r_hitbox,
+                img_slash_br_hitbox,
+                img_slash_b_hitbox,
+                img_slash_bl_hitbox,
+                img_slash_l_hitbox,
+                img_slash_tl_hitbox,
+            ]
         )
     }
 
@@ -871,7 +1009,7 @@ impl Player {
         if self.rangedattack {
             self.create_range_attack().await;
             if rngtimepassed > 0.5 && rngtimepassed < 3.0 {
-                let cooldown = 3.0 - rngtimepassed + 1.0; //+1 to not show 0 when cooldown is ready
+                let cooldown = (3.0 - rngtimepassed + 1.0) as f32 * self.cooldownmult; //+1 to not show 0 when cooldown is ready
                 self.playerui.1[3].set_text(format!("{:.0}", cooldown));
             } else if rngtimepassed >= 3.0 {
                 self.playerui.1[3].set_text("".to_string());
@@ -934,9 +1072,19 @@ impl Player {
                 "tl" => self.playerui.2[7].clone(),
                 _ => self.playerui.2[0].clone(),
             };
-
             self.attackimg.reset();
             self.attackimgfound = true;
+            self.hitboximg = match self.player_direction.as_str() {
+                "t" => self.playerui.4[0].clone(),
+                "tr" => self.playerui.4[1].clone(),
+                "r" => self.playerui.4[2].clone(),
+                "br" => self.playerui.4[3].clone(),
+                "b" => self.playerui.4[4].clone(),
+                "bl" => self.playerui.4[5].clone(),
+                "l" => self.playerui.4[6].clone(),
+                "tl" => self.playerui.4[7].clone(),
+                _ => self.playerui.4[0].clone(),
+            };
             for i in 0..enemies.len() {
                 if check_collision(&self.attackimg, enemies[i].view_enemy(), 1) {
                     mlehit = true;
@@ -1059,7 +1207,7 @@ impl Player {
         (vec![shadow], vec![lbl_death], vec![btn_retry, btn_exit])
     }
 
-    pub async fn handle_death_screen(&mut self, pause: &mut bool) -> (bool, bool) {
+    pub async fn handle_death_screen(&mut self, pause: &mut bool, musicdiscfunctions: &mut Musicdisc) -> (bool, bool) {
         let mut btn_clicks = (false, false);
         if self.death_screen_open == true {
             println!("Drawing death screen...");
@@ -1086,7 +1234,7 @@ impl Player {
                 self.death_screen_open = false;
                 *pause = false;
             }
-        } else if self.health <= 0.0 && self.death_screen_open == false {
+        } else if self.health <= 0.0 && self.death_screen_open == false && musicdiscfunctions.get_imstillstanding_active() == false {
             self.death_screen_open = true;
             *pause = true; //pause game when death screen opens
             println!("DEATH SCREEN OPEN")
@@ -1467,10 +1615,27 @@ impl Player {
 
     pub fn set_health(&mut self, health: f32) {
         self.health = health;
+        let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
+        let max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+        if new_width < 0.0 {
+            new_width = 0.0; // Prevent negative width
+        }
+        self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
+        self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
     }
 
     pub fn add_health(&mut self, health: f32) {
         self.health += health;
+        if health > self.maxhealth {
+            self.health = self.maxhealth;
+        }
+        let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
+        let max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+        if new_width < 0.0 {
+            new_width = 0.0; // Prevent negative width
+        }
+        self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
+        self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
     }
 
     pub fn set_save_data(&mut self, record: &DatabaseTable) {
@@ -1508,37 +1673,214 @@ impl Player {
         }
     }
     
-    pub async fn update_save_data(&self, records: &Vec<DatabaseTable>, client: &DatabaseClient, last_scene: &String) {
+    pub fn get_currentscreen(&self) -> String {
+        self.currentscreen.clone()
+    }
+
+    pub fn set_currentscreen(&mut self, screen: String) {
+        self.currentscreen = screen;
+    }
+
+    pub async fn update_save_data(&self, records: &Vec<DatabaseTable>, client: &DatabaseClient, _last_scene: &String) {
         let mut save_id = 1;
             for i in 0..records.len() {
                 if records[i].user_name == self.get_name() {
                     save_id = records[i].id;
+                    println!("Found matching save record with id: {}", save_id);
                 }
             }
             if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_clearedvar", self.get_cleared().to_string().as_str()).await {
-            if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_currentscreenvar", last_scene.as_str()).await {
+            }
+            if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_currentscreenvar", self.get_currentscreen().as_str()).await {
+            }
             if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_x", self.get_x().to_string().as_str()).await {
+            }
             if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "player_y", self.get_y().to_string().as_str()).await {
+            }
             if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "musicoins", self.get_musicoins().to_string().as_str()).await {
+            }
             if let Ok(_updated_count) = client.update_record_by_id("save_table", save_id as i64, "current_health", self.get_health().to_string().as_str()).await {
-            // Andrew does the rest
-    } else {
-    }
-    } else {
-    }
-    } else {
-    }
-    } else {
-    }
-    } else {
-    }    
-    } else {
-    }
+            }
+            for (slot_index, inventory_item) in self.items.iter().enumerate() {
+                let column_name = format!("inv_{}", slot_index + 1);
+                for (item_index, possible_item) in self.possible_items.iter().enumerate() {
+                    if inventory_item.get_itemtitle() == possible_item.get_itemtitle() {
+                        if let Ok(_updated_count) = client.update_record_by_id(
+                            "save_table",
+                            save_id as i64,
+                            column_name.as_str(),
+                            (item_index + 1).to_string().as_str(),
+                        )
+                        .await
+                        {
+                        }
+                        break;
+                    }
+                }
+            }
     }
 
 
+    pub async fn create_item_ui(tm: &TextureManager) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
+         let mut lbl_bg_item1 = Label::new("", 50.0, 75.0, 30);
+    lbl_bg_item1.with_colors(WHITE, Some(BLUE));
+    lbl_bg_item1.with_fixed_size(250.0, 700.0);
+    let mut lbl_bg_item2 = Label::new("", 400.0, 75.0, 30);
+    lbl_bg_item2.with_colors(WHITE, Some(RED));
+    lbl_bg_item2.with_fixed_size(250.0, 700.0);
+    let mut lbl_bg_item3 = Label::new("", 750.0, 75.0, 30);
+    lbl_bg_item3.with_colors(WHITE, Some(GREEN));
+    lbl_bg_item3.with_fixed_size(250.0, 700.0);
+    let mut img_item1 = StillImage::new(
+        "",
+        220.0,  // width
+        200.0,  // height
+        60.0,  // x position
+        60.0,   // y position
+        true,   // Enable stretching
+        1.0,    // Normal zoom (100%)
+    ).await;
+    img_item1.set_preload(tm.get_preload("assets/arrow.png").unwrap());
+    let mut lbl_item1_title = Label::new(format!("Item 1"), 50.0, 300.0, 60);
+    lbl_item1_title.with_colors(BLACK, None);
+    lbl_item1_title.with_fixed_size(250.0, 75.0);
+    lbl_item1_title.with_alignment(modules::label::TextAlign::Center);
+    let mut lbl_item1_desc = Label::new(format!("This is a description of item 1. yaorg3grwg wgrwiohwgogwhogwe we ioghogwhogw io  ghr hwogi hiowg hio g iohwh iowgioh ghoi gw"), 50.0, 350.0, 30);
+    lbl_item1_desc.with_colors(BLACK, None);
+    lbl_item1_desc.with_fixed_size(250.0, 700.0);
+    lbl_item1_desc.with_alignment(modules::label::TextAlign::Left);
+     let btn_item1 = TextButton::new(
+        50.0,
+        640.0,
+        240.0,
+        100.0,
+        "Choose!",
+        PINK,
+        GREEN,
+        30
+    );
+    let mut img_item2 = StillImage::new(
+        "",
+        220.0,  // width
+        200.0,  // height
+        410.0,  // x position
+        60.0,   // y position
+        true,   // Enable stretching
+        1.0,    // Normal zoom (100%)
+    ).await;
+    img_item2.set_preload(tm.get_preload("assets/arrow.png").unwrap());
+     let mut lbl_item2_title = Label::new(format!("Item 2"), 400.0, 300.0, 60);
+    lbl_item2_title.with_colors(BLACK, None);
+    lbl_item2_title.with_fixed_size(250.0, 75.0);
+    lbl_item2_title.with_alignment(modules::label::TextAlign::Center);
+    let mut lbl_item2_desc = Label::new(format!("This is a description of item 2. yaorg3grwg wgrwiohwgogwhogwe we ioghogwhogw io  ghr hwogi hiowg hio g iohwh iowgioh ghoi gw"), 400.0, 350.0, 30);
+    lbl_item2_desc.with_colors(BLACK, None);
+    lbl_item2_desc.with_fixed_size(250.0, 700.0);
+    lbl_item2_desc.with_alignment(modules::label::TextAlign::Left);
+    let btn_item2 = TextButton::new(
+        400.0,
+        640.0,
+        240.0,
+        100.0,
+        "Choose!",
+        ORANGE,
+        GREEN,
+        30
+    );
+    let mut img_item3 = StillImage::new(
+        "",
+        220.0,  // width
+        200.0,  // height
+        760.0,  // x position
+        60.0,   // y position
+        true,   // Enable stretching
+        1.0,    // Normal zoom (100%)
+    ).await;
+    img_item3.set_preload(tm.get_preload("assets/arrow.png").unwrap());
+    let mut lbl_item3_title = Label::new(format!("Item 3"), 750.0, 300.0, 60);
+    lbl_item3_title.with_colors(BLACK, None);
+    lbl_item3_title.with_fixed_size(250.0, 75.0);
+    lbl_item3_title.with_alignment(modules::label::TextAlign::Center);
+    let mut lbl_item3_desc = Label::new(format!("This is a description of item 3. yaorg3grwg wgrwiohwgogwhogwe we ioghogwhogw io  ghr hwogi hiowg hio g iohwh iowgioh ghoi gw"), 750.0, 350.0, 30);
+    lbl_item3_desc.with_colors(BLACK, None);
+    lbl_item3_desc.with_fixed_size(250.0, 700.0);
+    lbl_item3_desc.with_alignment(modules::label::TextAlign::Left);
+    let btn_item3 = TextButton::new(
+        750.0,
+        640.0,
+        240.0,
+        100.0,
+        "Choose!",
+        BROWN,
+        GREEN,
+        30
+    );
 
-    pub async fn create_all_items(&mut self, tm: &TextureManager) -> Vec<Item> {
+    (
+        vec![img_item1, img_item2, img_item3],
+        vec![lbl_bg_item1, lbl_bg_item2, lbl_bg_item3, lbl_item1_title, lbl_item1_desc, lbl_item2_title, lbl_item2_desc, lbl_item3_title, lbl_item3_desc],
+        vec![btn_item1, btn_item2, btn_item3],
+    )
+    }
+
+    pub fn handle_choose_item(&mut self, choose_open: &mut bool, item_valid: &mut bool) -> (bool, bool) {
+        rand::srand(date::now() as u64);
+        if choose_open == &true {
+            for label in self.itemui.1.iter_mut() {
+                label.draw();
+            }
+            for item in self.itemui.0.iter_mut() {
+                item.draw();
+            }
+            if item_valid == &true {
+                let item_count = self.possible_items.len();
+                if item_count < 3 {
+                    return (*choose_open, *item_valid);
+                }
+                let pick_unique_index = |used_indices: &[usize]| -> usize {
+                    loop {
+                        let candidate = rand::gen_range(0, item_count as i32) as usize;
+                        if !used_indices.contains(&candidate) {
+                            return candidate;
+                        }
+                    }
+                };
+                loop {
+                    self.itemindex1 = pick_unique_index(&[]);
+                    if self.possible_items[self.itemindex1].get_itemtitle() != self.inventory.2[0].get_text() {
+                        break;
+                    }
+                }
+                self.itemindex2 = pick_unique_index(&[self.itemindex1]);
+                self.itemindex3 = pick_unique_index(&[self.itemindex1, self.itemindex2]);
+                self.itemui.0[0].set_preload(self.possible_items[self.itemindex1].get_itemimgpath());
+                self.itemui.0[1].set_preload(self.possible_items[self.itemindex2].get_itemimgpath());
+                self.itemui.0[2].set_preload(self.possible_items[self.itemindex3].get_itemimgpath());
+                self.itemui.1[3].set_text(self.possible_items[self.itemindex1].get_itemtitle());
+                self.itemui.1[4].set_text(self.possible_items[self.itemindex1].get_itemdescription());
+                self.itemui.1[5].set_text(self.possible_items[self.itemindex2].get_itemtitle());
+                self.itemui.1[6].set_text(self.possible_items[self.itemindex2].get_itemdescription());
+                self.itemui.1[7].set_text(self.possible_items[self.itemindex3].get_itemtitle());
+                self.itemui.1[8].set_text(self.possible_items[self.itemindex3].get_itemdescription());
+                *item_valid = false;
+            }
+            if self.itemui.2[0].click() {
+                self.add_inventory_item(self.possible_items[self.itemindex1].clone());
+                *choose_open = false;
+            }
+            if self.itemui.2[1].click() {
+                self.add_inventory_item(self.possible_items[self.itemindex2].clone());
+                *choose_open = false;
+            }
+            if self.itemui.2[2].click() {
+                self.add_inventory_item(self.possible_items[self.itemindex3].clone());
+                *choose_open = false;
+            }
+        }
+        (*choose_open, *item_valid)
+    }
+
+    pub async fn create_all_items(tm: &TextureManager) -> Vec<Item> {
         let mut possible_items = vec![];
         let backinblackitem = Item::new(
             tm.get_preload("assets/musicdisc_files/covers/backinblack.png").unwrap(),
@@ -1586,7 +1928,7 @@ impl Player {
         )
         .await;
         possible_items.push(howitsdoneitem);
-        let mut pandemoniumitem = Item::new(
+        let pandemoniumitem = Item::new(
             tm.get_preload("assets/musicdisc_files/covers/pandemonium.png").unwrap(),
             "assets/musicdisc_files/covers/pandemonium.png".to_string(),
             "Pandemonium".to_string(),
@@ -1601,7 +1943,7 @@ impl Player {
         )
         .await;
         possible_items.push(pandemoniumitem);
-        let mut sixhundredstrikeitem = Item::new(
+        let sixhundredstrikeitem = Item::new(
             tm.get_preload("assets/musicdisc_files/covers/sixhundredstrike.png").unwrap(),
             "assets/musicdisc_files/covers/sixhundredstrike.png".to_string(),
             "Six Hundred Strike".to_string(),
@@ -1616,7 +1958,7 @@ impl Player {
         )
         .await;
         possible_items.push(sixhundredstrikeitem);
-        let mut sodapopitem = Item::new(
+        let sodapopitem = Item::new(
             tm.get_preload("assets/musicdisc_files/covers/sodapop.png").unwrap(),
             "assets/musicdisc_files/covers/sodapop.png".to_string(),
             "Soda Pop".to_string(),
@@ -1631,7 +1973,7 @@ impl Player {
         )
         .await;
         possible_items.push(sodapopitem);
-        let mut greatestshowitem = Item::new(
+        let greatestshowitem = Item::new(
             tm.get_preload("assets/musicdisc_files/covers/greatestshowman.png").unwrap(),
             "assets/musicdisc_files/covers/greatestshowman.png".to_string(),
             "The Greatest Show".to_string(),
@@ -1646,81 +1988,81 @@ impl Player {
         )
         .await;
         possible_items.push(greatestshowitem);
-        let mut tempitem_9 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item".to_string(),
-            "This is a test item used for debugging, it does nothing".to_string(),
+        let time_sword = Item::new(
+            tm.get_preload("assets/item_files/weapons/time_sword.png").unwrap(),
+            "assets/item_files/weapons/time_sword.png".to_string(),
+            "Time Sword".to_string(),
+            "A Sword wielded across timelines, increasing damage and movespeed".to_string(),
             "melee".to_string(),
-            0,
+            10,
             0,
             0.0,
-            0.0,
+            1.5,
             0,
             0,
         )
         .await;
-        possible_items.push(tempitem_9);
-        let mut tempitem_10 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 2".to_string(),
-            "This is another test item used for debugging, it also does nothing".to_string(),
+        possible_items.push(time_sword);
+        let future_bow = Item::new(
+            tm.get_preload("assets/item_files/weapons/future_bow.png").unwrap(),
+            "assets/item_files/weapons/future_bow.png".to_string(),
+            "Future Bow".to_string(),
+            "A Bow that can shoot into the future increasing damage and decreasing cooldowns".to_string(),
             "ranged".to_string(),
             0,
-            0,
-            0.0,
+            10,
+            0.5,
             0.0,
             0,
             0,
         )
         .await;
-        possible_items.push(tempitem_10);
-        let mut tempitem_11 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
+        possible_items.push(future_bow);
+        let diamond_armor = Item::new(
+            tm.get_preload("assets/item_files/armour/diamond_armor.png").unwrap(),
+            "assets/item_files/armour/diamond_armor.png".to_string(),
+            "Diamond Armour".to_string(),
+            "A chesplate rumoured to be unbreakable, increasing armor signifigantly".to_string(),
+            "bodyarmor".to_string(),
+            0,
+            0,
+            0.0,
+            0.0,
+            0,
+            8,
+        )
+        .await;
+        possible_items.push(diamond_armor);
+        let hermes_boots = Item::new(
+            tm.get_preload("assets/item_files/armour/hermes_boots.png").unwrap(),
+            "assets/item_files/armour/hermes_boots.png".to_string(),
+            "Hermes Boots".to_string(),
+            "A pair of boots a god once used to take flight, increases movespeed to an astonishing degree, also increaes armor slightly".to_string(),
+            "boots".to_string(),
+            0,
+            0,
+            0.0,
+            3.0,
+            0,
+            1,
+        )
+        .await;
+        possible_items.push(hermes_boots);
+        let helmet_of_thorns: Item = Item::new(
+            tm.get_preload("assets/item_files/armour/helmet_of_thorns.png").unwrap(),
+            "assets/item_files/armour/helmet_of_thorns.png".to_string(),
+            "Helmet Of Thorns".to_string(),
+            "A helmet that punishes any who dare hit the wearer with ravenous thorns, also increaes armor slightly".to_string(),
             "helmet".to_string(),
             0,
             0,
             0.0,
             0.0,
             0,
-            0,
+            2,
         )
         .await;
-        possible_items.push(tempitem_11);
-        let mut tempitem_12 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
-            "helmet".to_string(),
-            0,
-            0,
-            0.0,
-            0.0,
-            0,
-            0,
-        )
-        .await;
-        possible_items.push(tempitem_12);
-        let mut tempitem_14: Item = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
-            "helmet".to_string(),
-            0,
-            0,
-            0.0,
-            0.0,
-            0,
-            0,
-        )
-        .await;
-        possible_items.push(tempitem_14);
+        possible_items.push(helmet_of_thorns);
         let mut tempitem_15 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
             "assets/player_files/invslot.png".to_string(),

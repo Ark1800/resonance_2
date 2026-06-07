@@ -13,6 +13,7 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use crate::modules::text_button::TextButton;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -23,6 +24,7 @@ pub async fn run(
     _pause: &mut bool,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
+    player.set_currentscreen("shop".to_string());
     let diamond_armour = Item::new(
         tm.get_preload("assets/item_files/armour/diamond_armor.png").unwrap(), // Preload
         "assets/item_files/armour/diamond_armor.png".to_string(),              // Image path

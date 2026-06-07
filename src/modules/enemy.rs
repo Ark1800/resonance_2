@@ -1,5 +1,6 @@
 use crate::VIRTUAL_HEIGHT;
 use crate::VIRTUAL_WIDTH;
+use crate::modules;
 /*pub mod enemy;
 
 //enemy knockback on hit
@@ -233,7 +234,7 @@ use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 use miniquad::date;
-use ureq::rustls::quic::DirectionalKeys;
+use crate::modules::musicdisc::Musicdisc;
 
 #[derive(Clone)]
 // Internal representation for an enemy's visual
@@ -291,7 +292,7 @@ impl Enemy {
     ) -> Enemy {
         Enemy {
             view: Enemy::make_view(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
-            move_speed: 200.0, // Default speed
+            move_speed: 100.0, // Default speed
             movement: Vec2::ZERO,
             health,
             max_health: health,
@@ -448,35 +449,34 @@ impl Enemy {
     }
 
     #[allow(unused)]
-    pub fn moveing(&mut self, player: &mut Player) {
+    pub fn moveing(&mut self, player: &mut Player, musicdiscfunctions: &mut Musicdisc) {
         // Direction to move in
         let mut move_dir = vec2(0.0, 0.0);
 
-        self.movement = move_dir * self.move_speed * get_frame_time();
-
         if self.get_view_x() < player.get_x() {
             move_dir.x += 1.0; // Move right
-            self.set_view_x(self.get_view_x() + 1.0);
         } else if self.get_view_x() > player.get_x() {
             move_dir.x -= 1.0; // Move left
-            self.set_view_x(self.get_view_x() - 1.0);
         }
-
         if self.get_view_y() < player.get_y() {
             move_dir.y += 1.0; // Move down
-            self.set_view_y(self.get_view_y() + 1.0);
         } else if self.get_view_y() > player.get_y() {
             move_dir.y -= 1.0; // Move up
-            self.set_view_y(self.get_view_y() - 1.0);
         }
         // Normalize the movement to prevent faster diagonal movement
         if move_dir.length() > 0.0 {
             move_dir = move_dir.normalize();
         }
+
+        self.movement = move_dir * self.move_speed * get_frame_time();
+
+        self.set_view_x(self.get_view_x() + self.movement.x);
+        self.set_view_y(self.get_view_y() + self.movement.y);
         let collision = check_collision(self.view_enemy(), player.view_player(), 1);
 
         if collision {
-            player.dmgplayer(self.get_dmg());
+            let issactive = musicdiscfunctions.get_imstillstanding_active();
+            player.dmgplayer(self.get_dmg(), issactive);
             self.knockback(player, "player");
             self.knockback(player, "enemy");
         }
@@ -643,13 +643,14 @@ impl Enemy {
         self.projectiles.push(projectile);
     }
     // Draw all owned enemy bullets
-    pub fn draw_bullet(&mut self, player: &mut Player) {
+    pub fn draw_bullet(&mut self, player: &mut Player, musicdiscfunctions: &mut Musicdisc) {
         let dmg = self.get_dmg();
         for projectile in 0..self.projectiles.len() {
             let collision = check_collision(self.projectiles[projectile].view_player(), player.view_player(), 1);
             self.projectiles[projectile].move_projectiles(player.get_oldpos());
             if collision {
-                player.dmgplayer(dmg);
+                let issactive = musicdiscfunctions.get_imstillstanding_active();
+                player.dmgplayer(dmg, issactive);
                 self.knockback(player, "player");
 
                 self.projectiles.remove(projectile);
@@ -675,7 +676,7 @@ impl Enemy {
         self.set_y(rand_y);
     }
     // Archer action method that handles movement, image changes, and shooting based on player proximity and cooldowns
-    pub async fn archer_action(&mut self, tm: &TextureManager, player: &mut Player) {
+    pub async fn archer_action(&mut self, tm: &TextureManager, player: &mut Player, musicdiscfunctions: &mut Musicdisc) {
         if ((self.get_x() - player.get_x()).abs() < 225.0) && ((self.get_y() - player.get_y()).abs() < 225.0) {
             if get_time() - self.cooldown > 0.5 {
                 self.archer_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
@@ -687,14 +688,14 @@ impl Enemy {
                 self.shoot(player, 40.0, 40.0).await;
             }
         } else {
-            self.moveing(player);
+            self.moveing(player, musicdiscfunctions);
             self.archer_img_change(player.get_x(), self.get_x(), "move", &tm).await;
         }
         let mut healthbar = self.set_healthbar();
         healthbar.draw();
     }
     // Mage action method that handles movement, image changes, and shooting based on player proximity and cooldowns
-    pub async fn mage_action(&mut self, tm: &TextureManager, player: &mut Player) {
+    pub async fn mage_action(&mut self, tm: &TextureManager, player: &mut Player, musicdiscfunctions: &mut Musicdisc) {
         if ((self.get_x() - player.get_x()).abs() < 150.0) && ((self.get_y() - player.get_y()).abs() < 150.0) {
             if get_time() - self.cooldown > 0.5 {
                 self.mage_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
@@ -706,7 +707,7 @@ impl Enemy {
                 self.mage_img_change(player.get_x(), self.get_x(), "attack", &tm).await;
             }
         } else {
-            self.moveing(player);
+            self.moveing(player, musicdiscfunctions);
 
             self.mage_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
         }
@@ -831,7 +832,7 @@ impl Enemy {
     }
     // Slime action method that handles movement and splitting into smaller slimes upon death
     #[allow(unused)]
-    pub async fn large_slime_action(&mut self, tm: &TextureManager, player: &mut Player) -> (Enemy, Enemy, bool) {
+    pub async fn large_slime_action(&mut self, tm: &TextureManager, player: &mut Player, musicdiscfunctions: &mut Musicdisc) -> (Enemy, Enemy, bool) {
         let mut slime1 = Enemy::new(
             "",
             25.0,
@@ -862,7 +863,7 @@ impl Enemy {
         .await;
 
         let mut split = false;
-        self.moveing(player);
+        self.moveing(player, musicdiscfunctions);
         if self.health <= 0.0 {
             println!("Large slime split");
             split = true;
@@ -872,16 +873,16 @@ impl Enemy {
         healthbar.draw();
         (slime1, slime2, split)
     }
-    pub fn slime_action(&mut self, player: &mut Player) {
-        self.moveing(player);
+    pub fn slime_action(&mut self, player: &mut Player, musicdiscfunctions: &mut Musicdisc) {
+        self.moveing(player, musicdiscfunctions);
         let mut healthbar = self.set_healthbar();
         healthbar.draw();
     }
 
-    pub async fn cyric_action(&mut self, player: &mut Player, tm: &TextureManager) {
+    pub async fn cyric_action(&mut self, player: &mut Player, tm: &TextureManager, musicdiscfunctions: &mut Musicdisc) {
         rand::srand(date::now() as u64);
         if !((self.get_x() - player.get_x()).abs() < 150.0) || !((self.get_y() - player.get_y()).abs() < 150.0) {
-            self.moveing(player);
+            self.moveing(player, musicdiscfunctions);
         }
         if (get_time() - self.cooldown).abs() > self.cooldown2 {
             self.cooldown = get_time();
@@ -1151,14 +1152,15 @@ impl Enemy {
         direction
     }
 
-    pub fn jeff_knifeattack3(&mut self, player: &mut Player, direction: Vec2) -> bool {
+    pub fn jeff_knifeattack3(&mut self, player: &mut Player, direction: Vec2, musicdiscfunctions: &mut Musicdisc) -> bool {
         let mut attackend = false;
         self.movement = direction * self.move_speed * get_frame_time();
         self.set_x(self.get_x() + self.movement.x);
         self.set_y(self.get_y() + self.movement.y);
         if check_collision(self.view_enemy(), player.view_player(), 1) {
             self.knockback(player, "player");
-            player.dmgplayer(20.0);
+            let issactive = musicdiscfunctions.get_imstillstanding_active();
+            player.dmgplayer(20.0, issactive);
         }
         if self.get_x() < -100.0 || self.get_x() > VIRTUAL_WIDTH + 100.0 || self.get_y() < -100.0 || self.get_y() > VIRTUAL_HEIGHT + 100.0 {
             attackend = true;
@@ -1209,7 +1211,7 @@ impl Enemy {
         lbl_warninglabel
     }
 
-    pub async fn jeff_bubblebeam2(&mut self, player: &mut Player, warninglabel: &mut Label, tm: &TextureManager) -> StillImage {
+    pub async fn jeff_bubblebeam2(&mut self, player: &mut Player, warninglabel: &mut Label, tm: &TextureManager, musicdiscfunctions: &mut Musicdisc) -> StillImage {
         let mut bubblebeam = StillImage::new(
             "",
             warninglabel.get_width().unwrap_or(0.0),  // width
@@ -1222,7 +1224,8 @@ impl Enemy {
         .await;
         bubblebeam.set_preload(tm.get_preload("assets/world1_boss/jeff_bubblebeam.png").unwrap());
         if check_collision(&bubblebeam, player.view_player(), 1) {
-            player.dmgplayer(30.0);
+            let issactive = musicdiscfunctions.get_imstillstanding_active();
+            player.dmgplayer(30.0, issactive);
         }
         bubblebeam
     }
@@ -1261,6 +1264,7 @@ impl Enemy {
         chomp: &mut bool,
         attack_choice: &mut i32,
         dig: &mut bool,
+        musicdiscfunctions: &mut Musicdisc
     ) {
         let mut way = "";
         if player.get_x() < self.get_x() {
@@ -1301,7 +1305,8 @@ impl Enemy {
         let hitbox = StillImage::new("", 100.0, 100.0, self.get_x(), self.get_y(), true, 1.0).await;
         let collision = check_collision(&hitbox, player.view_player(), 1);
         if collision {
-            player.dmgplayer(self.get_dmg());
+            let issactive = musicdiscfunctions.get_imstillstanding_active();
+            player.dmgplayer(self.get_dmg(), issactive);
             self.knockback(player, "player");
         }
 
@@ -1424,8 +1429,9 @@ impl Enemy {
         let player_pos = player.get_oldpos();
         let enemy_pos = self.get_pos();
         let direction = (enemy_pos - player_pos).normalize();
-        let knockback_distance = 25.0; // Adjust this value as needed
+        let knockback_distance = 100.0; // Adjust this value as needed
         let knockback_vector = direction * knockback_distance;
+        /* 
         if target == "player" {
             player.set_position((player.get_x() - knockback_vector.x), (player.get_y() - knockback_vector.y));
             if player.get_x() < 40.0 {
@@ -1440,7 +1446,9 @@ impl Enemy {
             if player.get_y() > VIRTUAL_HEIGHT - 60.0 {
                 player.set_position(player.get_x(), VIRTUAL_HEIGHT - 70.0);
             }
-        } else if target == "enemy" {
+        }
+            */
+        if target == "enemy" {
             self.set_x(self.get_x() + knockback_vector.x);
             self.set_y(self.get_y() + knockback_vector.y);
 
