@@ -164,7 +164,6 @@ impl AnimatedImage {
         let safe_cols = cols.max(1);
         let safe_rows = rows.max(1);
         let (texture, transparency_mask) = set_texture(spritesheet_path).await;
-
         let frame_width = texture.width() / safe_cols as f32;
         let frame_height = texture.height() / safe_rows as f32;
         let total_frames = safe_cols * safe_rows;
@@ -710,6 +709,7 @@ impl AnimatedImage {
             },
         );
     }
+
     #[allow(unused)]
     pub async fn set_texture(texture_path: &str) -> (Texture2D, Option<Vec<u8>>) {
         let texture = load_texture(texture_path).await.unwrap();

@@ -381,6 +381,7 @@ function __wbg_get_imports() {
         table.set(offset + 3, false);
     };
     return imports.wbg;
+    return imports.wbg;
 
     return imports;
 }
