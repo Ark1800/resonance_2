@@ -98,6 +98,7 @@ Then inside the loop you would use:
 use crate::modules::preload_image::{PreloadedAnimatedGif, PreloadedAnimatedSpritesheet};
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
+use crate::modules::still_image::StillImage;
 
 #[derive(Clone, PartialEq)]
 #[allow(unused)]
@@ -213,6 +214,7 @@ impl AnimatedImage {
             y,
             width,
             height,
+
             transparency_mask: preloaded.transparency_mask,
             frame_masks: None,
             cols: safe_cols,

@@ -89,7 +89,7 @@ pub async fn run(
         "Finally found this place! That took forever.. ".to_string(),
         "Come on, lets go further in. Try to keep up! ".to_string(),
     ];
-    let tutorial_list: Vec<String> = vec!["WASD to move".to_string(), "SHIFT to dash".to_string()];
+    let tutorial_list: Vec<String> = vec!["WASD to move ".to_string(), "SHIFT to dash ".to_string()];
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
     lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
 
@@ -107,7 +107,6 @@ pub async fn run(
     speech_box.set_preload(tm.get_preload("assets/map_files/textbox.png").unwrap());
     let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
     name_box.with_colors(WHITE, None);
-    let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -142,7 +141,7 @@ pub async fn run(
                 }
             }
 
-            if player.get_cleared() < 3 {
+            if player.get_cleared() < 1 {
                 if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() && speech_cooldown <= 0.0 {
                     speech_cooldown = 1.0;
                     speech_num += 1;
@@ -183,6 +182,10 @@ pub async fn run(
             
             if player.get_y() > virtual_height {
                 return "wcs2".to_string();
+            }
+            if player.get_y() < 10.0 && player.get_cleared() >= 3 {
+                *last_scene = "Top".to_string();
+                return "town".to_string();
             }
             next_frame().await;
         }

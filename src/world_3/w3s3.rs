@@ -54,13 +54,37 @@ pub async fn run(
     }
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
-    let mut archerx = 200.0;
-    for _i in 0..2 {
-        let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10.0, 5.0, "", "archer").await;
-        archerx += 100.0;
-        archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
-        archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
-        enemies.push(archer);
+    for _i in 0..1 {
+let mut summoner = Enemy::new(
+"summoner.png",
+50.0, //hieght
+50.0, //width
+70.0, //x
+80.0, //y
+true, //stretching
+1.0, //zoom level
+80.0, //health
+10.0, //damage
+"",
+"summoner"//enemy type
+).await;
+        summoner.set_preload(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap());
+        enemies.push(summoner);
+    } for _i in 0..12 {
+        let mut slime = Enemy::new("",
+        50.0,
+        50.0,
+        rand::gen_range(100.0, virtual_width - 100.0),
+        rand::gen_range(100.0, virtual_height - 100.0),
+        true,
+        1.0,
+        40.0, // health
+        8.0, // Damage
+        "", // Projectile Preload
+        "slime" // Enemy type
+    ).await;
+        slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        enemies.push(slime);
     }
     if *last_scene == "Top" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);

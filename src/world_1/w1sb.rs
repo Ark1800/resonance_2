@@ -73,7 +73,7 @@ pub async fn run(
     let mut jeff = Enemy::new(
     "",
     150.0, //height
-150.0, //width
+    150.0, //width
     300.0, //x
     300.0, //y
     true, //stretching
@@ -277,8 +277,6 @@ pub async fn run(
         }
         if btn_skip.click() {
             player.add_cleared();
-            item_valid = true;
-            choose_open = true;
             return "town".to_string();
         }
         if mlehit {

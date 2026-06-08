@@ -54,13 +54,37 @@ pub async fn run(
     }
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
-    let mut archerx = 200.0;
-    for _i in 0..2 {
-        let mut archer = Enemy::new("", 50.0, 50.0, archerx, 200.0, true, 1.0, 10.0, 5.0, "", "archer").await;
-        archerx += 100.0;
-        archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
-        archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
-        enemies.push(archer);
+    for _i in 0..3 {
+        let mut mage = Enemy::new("",
+        50.0,
+        50.0,
+        rand::gen_range(100.0, virtual_width - 100.0),
+        rand::gen_range(100.0, virtual_height - 100.0),
+        true,
+        1.0,
+        100.0, // health
+        15.0, // Damage
+        "", // Projectile Preload
+        "mage" // Enemy type
+    ).await;
+        mage.set_preload(tm.get_preload("assets/archer_files/mage_standR.png").unwrap());
+        mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
+        enemies.push(mage);
+    } for _i in 0..1 {
+        let mut large_slime = Enemy::new("",
+        100.0,
+        100.0,
+        rand::gen_range(100.0, virtual_width - 100.0),
+        rand::gen_range(100.0, virtual_height - 100.0),
+        true,
+        1.0,
+        200.0, // health
+        12.0, // Damage
+        "", // Projectile Preload
+        "large_slime" // Enemy type
+    ).await;
+        large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        enemies.push(large_slime);
     }
     if *last_scene == "Top" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);

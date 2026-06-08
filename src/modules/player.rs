@@ -38,6 +38,8 @@ use std::f32::consts::PI;
 //1. add thorns
 //2. add tmos rapier
 //3. add rest of items
+//4. add roman numerals to worlds
+//5. fix jeff boss fight
 
 
 //Keypresses:
@@ -135,6 +137,7 @@ pub struct Player {
     itemindex2: usize,
     itemindex3: usize,
     currentscreen: String,
+    mleattackdrawing: bool, //is the melee attack currently being drawn (for timing when to stop drawing melee attack labels)
 }
 
 impl Player {
@@ -206,6 +209,7 @@ impl Player {
             itemindex2: 0,
             itemindex3: 0,
             currentscreen: "".to_string(),
+            mleattackdrawing: false,
         }
     }
     //movement functions
@@ -572,6 +576,10 @@ impl Player {
         }
     }
 
+    pub fn get_hitboximg(&self) -> StillImage {
+        self.hitboximg.clone()
+    }
+
     #[allow(unused)]
     pub fn healplayer(&mut self, heal: f32) {
         self.health += heal;
@@ -643,6 +651,10 @@ impl Player {
 
     pub fn get_password(&self) -> String {
         self.password.clone()
+    }
+
+    pub fn get_mleattackdrawing(&self) -> bool {
+        self.mleattackdrawing
     }
 
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
@@ -785,6 +797,7 @@ impl Player {
             1.0,   // Normal zoom (100%)
         )
         .await;
+        img_slash_t_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap().clone());
         let mut img_slash_tr_hitbox= StillImage::new(
             "", 
             70.0,  // width
@@ -795,6 +808,7 @@ impl Player {
             1.0,   // Normal zoom (100%)
         )
         .await;
+        img_slash_tr_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap().clone());
         let mut img_slash_r_hitbox= StillImage::new(
             "", 
             70.0,  // width
@@ -805,6 +819,7 @@ impl Player {
             1.0,   // Normal zoom (100%)
         )
         .await;
+        img_slash_r_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap().clone());
         let mut img_slash_br_hitbox= StillImage::new(
             "", 
             70.0,  // width
@@ -815,6 +830,7 @@ impl Player {
             1.0,   // Normal zoom (100%)
         )
         .await;
+        img_slash_br_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap().clone());
         let mut img_slash_b_hitbox= StillImage::new(
             "", 
             70.0,  // width
@@ -824,6 +840,7 @@ impl Player {
             true,  // Enable stretching
             1.0,   // Normal zoom (100%)
         ).await;
+        img_slash_b_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap().clone());
          let mut img_slash_bl_hitbox= StillImage::new(
             "", 
             70.0,  // width
@@ -833,6 +850,7 @@ impl Player {
             true,  // Enable stretching
             1.0,   // Normal zoom (100%)
         ).await;
+        img_slash_bl_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap().clone());
         let mut img_slash_l_hitbox= StillImage::new(
             "", 
             70.0,  // width
@@ -842,6 +860,7 @@ impl Player {
             true,  // Enable stretching
             1.0,   // Normal zoom (100%)
         ).await;
+        img_slash_l_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap().clone());
         let mut img_slash_tl_hitbox= StillImage::new(
             "", 
             70.0,  // width
@@ -852,6 +871,7 @@ impl Player {
             1.0,   // Normal zoom (100%)
         )
         .await;
+        img_slash_tl_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap().clone());
         let mut player_hitbox = StillImage::new(
             "", 40.0, // width
             60.0, // height
@@ -976,26 +996,13 @@ impl Player {
                 _ => {}
             }
         }
-        /*
-            if self.items[*item].get_itemtype() == "disc".to_string() {
-                let title = self.items[*item].get_itemtitle();
-                let times = self.musicdiscfunctions.get_musicdisc_cooldowns();
-                if title == "Back In Black" {
-                    self.playerui.1[4].set_text(format!("{}", times.0));
-                    println!("{} cooldown: {}", title, times.0);
-                    if times.0 <= 0.0 {
-                        self.playerui.1[4].set_text("".to_string());
-                    }
-                }
-            }
-        }
-        */
         if self.attack {
             if self.mlevalid == true {
                 (index, mlehit) = self.create_melee_attack(enemies, index, mlehit);
                 self.mlevalid = false; //prevents multiple melee hits from one attack input
             }
             if mletimepassed > 0.1 && mletimepassed < 1.0 {
+                self.mleattackdrawing = true;
                 self.attackimg.draw();
             }
             if mletimepassed > 1.0 {
@@ -1003,6 +1010,7 @@ impl Player {
                 self.attack = false;
                 self.mlevalid = true;
                 self.attackimgfound = false;
+                self.mleattackdrawing = false;
                 self.last_attack_time = get_time();
             }
         }
@@ -1086,7 +1094,7 @@ impl Player {
                 _ => self.playerui.4[0].clone(),
             };
             for i in 0..enemies.len() {
-                if check_collision(&self.attackimg, enemies[i].view_enemy(), 1) {
+                if check_collision(&self.hitboximg, enemies[i].view_enemy(), 1) {
                     mlehit = true;
                     index = i;
                 }
@@ -1185,7 +1193,6 @@ impl Player {
     }
 
     async fn create_death_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
-        println!("Creating death screen...");
         let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
         shadow.set_preload(preloads[14].clone());
         shadow.set_opacity(0.7);
@@ -1210,7 +1217,6 @@ impl Player {
     pub async fn handle_death_screen(&mut self, pause: &mut bool, musicdiscfunctions: &mut Musicdisc) -> (bool, bool) {
         let mut btn_clicks = (false, false);
         if self.death_screen_open == true {
-            println!("Drawing death screen...");
             //draw menu
             for image in self.death_screen.0.iter_mut() {
                 image.draw();
@@ -1242,6 +1248,7 @@ impl Player {
         btn_clicks
     }
 
+    #[allow(unused)]
     pub async fn death_screen_open(&self) -> bool {
         self.death_screen_open
     }
@@ -2040,7 +2047,7 @@ impl Player {
             "A pair of boots a god once used to take flight, increases movespeed to an astonishing degree, also increaes armor slightly".to_string(),
             "boots".to_string(),
             0,
-            0,
+            0, 
             0.0,
             3.0,
             0,
@@ -2063,7 +2070,7 @@ impl Player {
         )
         .await;
         possible_items.push(helmet_of_thorns);
-        let mut tempitem_15 = Item::new(
+        let tempitem_15 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
             "assets/player_files/invslot.png".to_string(),
             "Test Item 3".to_string(),
@@ -2078,7 +2085,7 @@ impl Player {
         )
         .await;
         possible_items.push(tempitem_15);
-        let mut tempitem_16 = Item::new(
+        let tempitem_16 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
             "assets/player_files/invslot.png".to_string(),
             "Test Item 3".to_string(),
@@ -2093,7 +2100,7 @@ impl Player {
         )
         .await;
         possible_items.push(tempitem_16);
-        let mut tempitem_17 = Item::new(
+        let tempitem_17 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
             "assets/player_files/invslot.png".to_string(),
             "Test Item 3".to_string(),
@@ -2108,7 +2115,7 @@ impl Player {
         )
         .await;
         possible_items.push(tempitem_17);
-        let mut tempitem_18 = Item::new(
+        let tempitem_18 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
             "assets/player_files/invslot.png".to_string(),
             "Test Item 3".to_string(),
@@ -2123,7 +2130,7 @@ impl Player {
         )
         .await;
         possible_items.push(tempitem_18);
-        let mut tempitem_19 = Item::new(
+        let tempitem_19 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
             "assets/player_files/invslot.png".to_string(),
             "Test Item 3".to_string(),
@@ -2138,7 +2145,7 @@ impl Player {
         )
         .await;
         possible_items.push(tempitem_19);
-        let mut tempitem_20 = Item::new(
+        let tempitem_20 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
             "assets/player_files/invslot.png".to_string(),
             "Test Item 3".to_string(),
@@ -2153,6 +2160,6 @@ impl Player {
         )
         .await;
         possible_items.push(tempitem_20);
-        (possible_items)
+        possible_items
     }
 }

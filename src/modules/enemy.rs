@@ -227,6 +227,7 @@ use crate::modules::collision;
 use crate::modules::collision::check_collision;
 use crate::modules::label::Label;
 use crate::modules::map;
+use crate::modules::musicdisc::Musicdisc;
 use crate::modules::player::Player;
 use crate::modules::preload_image::{PreloadedAnimatedGif, TextureManager};
 use crate::modules::progressbar::ProgressBar;
@@ -234,7 +235,6 @@ use crate::modules::projectile::Projectile;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 use miniquad::date;
-use crate::modules::musicdisc::Musicdisc;
 
 #[derive(Clone)]
 // Internal representation for an enemy's visual
@@ -539,7 +539,7 @@ impl Enemy {
     pub fn view_enemy(&self) -> &StillImage {
         match &self.view {
             EnemyView::Still(still) => still,
-            EnemyView::Animated(animated) => panic!("Animated enemies do not have a single StillImage view"),
+            EnemyView::Animated(animated) => panic!("view_enemy() is only valid for still-image enemies"),
         }
     }
     // Setter for position
@@ -1211,7 +1211,13 @@ impl Enemy {
         lbl_warninglabel
     }
 
-    pub async fn jeff_bubblebeam2(&mut self, player: &mut Player, warninglabel: &mut Label, tm: &TextureManager, musicdiscfunctions: &mut Musicdisc) -> StillImage {
+    pub async fn jeff_bubblebeam2(
+        &mut self,
+        player: &mut Player,
+        warninglabel: &mut Label,
+        tm: &TextureManager,
+        musicdiscfunctions: &mut Musicdisc,
+    ) -> StillImage {
         let mut bubblebeam = StillImage::new(
             "",
             warninglabel.get_width().unwrap_or(0.0),  // width
@@ -1264,7 +1270,7 @@ impl Enemy {
         chomp: &mut bool,
         attack_choice: &mut i32,
         dig: &mut bool,
-        musicdiscfunctions: &mut Musicdisc
+        musicdiscfunctions: &mut Musicdisc,
     ) {
         let mut way = "";
         if player.get_x() < self.get_x() {
@@ -1277,7 +1283,7 @@ impl Enemy {
             self.cooldown = get_time();
         }
         if get_time() > self.cooldown + 5.0 {
-            if get_time() <= self.cooldown + 5.1 {
+            if get_time() >= self.cooldown + 5.1 && get_time() < self.cooldown + 5.2 {
                 rand::srand(date::now() as u64);
                 *attack_choice = rand::gen_range(0, 2);
             }
@@ -1315,29 +1321,26 @@ impl Enemy {
     }
 
     pub async fn plant_boss_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str, shoot: &mut bool, dig: &mut bool, timer: &mut f64) {
-        println!("Plant Boss used Shoot!");
+        println!("Plant Boss used shoot!");
         if *shoot == false {
             self.cooldown2 = get_time();
 
             *shoot = true;
         }
         self.plant_boss_dig_shoot(player, tm, way, dig, timer).await;
-        if get_time() > self.cooldown2 + 2.5 && get_time() < self.cooldown2 + 2.6 {
-            println!("Plant Boss used Shoot!");
+        if get_time() > self.cooldown2 + 2.0 && get_time() < self.cooldown2 + 2.1 {
+            println!("Plant Boss used shoot!");
             self.set_preload_gif(
                 tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_shoot{}.gif", way).as_str())
                     .unwrap(),
                 false,
-            );
-            let mut projectile = Projectile::new(self.projectile_image.clone(), 40.0, 40.0, self.get_x(), self.get_y(), true, 1.0).await; // Create a projectile at the enemy's position
-            // Calculate the angle towards the player and set it for the projectile
-            let angle = projectile.set_rotation(player.get_x(), player.get_y(), self.get_x(), self.get_y());
-            projectile.set_angle(angle);
-            projectile.set_direction(player.get_oldpos());
-            if get_time() > self.cooldown2 + 3.0 && get_time() < self.cooldown2 + 3.1 {
-                self.projectiles.push(projectile);
-            }
+            );}
+            if get_time()> self.cooldown2+2.5{
+        if *shoot == true {
+          self.shoot(player, 100.0, 100.0).await;
+        *shoot = false;}
         }
+        
     }
 
     pub async fn plant_boss_chomp(&mut self, player: &mut Player, tm: &TextureManager, way: &str, chomp: &mut bool, dig: &mut bool, timer: &mut f64) {
@@ -1359,7 +1362,7 @@ impl Enemy {
     }
 
     pub async fn plant_boss_dig_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str, dig: &mut bool, timer: &mut f64) {
-        println!("Plant Boss used Dig(Shoot)!");
+           println!("Plant Boss used Dig(Shoot)!");
         if *dig == false {
             *timer = get_time();
             *dig = true;
@@ -1371,18 +1374,14 @@ impl Enemy {
                 false,
             );
         }
-        self.set_preload_gif(
-            tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig{}.gif", way).as_str())
-                .unwrap(),
-            false,
-        );
+
         if get_time() > *timer + 1.0 && get_time() < *timer + 1.1 {
             self.set_preload_gif(
                 tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_dig_up{}.gif", way).as_str())
                     .unwrap(),
                 false,
             );
-      
+
             rand::srand(date::now() as u64);
             let rand_x = rand::gen_range(70.0, 900.0);
             let rand_y = player.get_y();
@@ -1409,7 +1408,7 @@ impl Enemy {
                     .unwrap(),
                 false,
             );
-        
+
             rand::srand(date::now() as u64);
             let rand_x = rand::gen_range(0, 2);
             let away;
@@ -1431,7 +1430,7 @@ impl Enemy {
         let direction = (enemy_pos - player_pos).normalize();
         let knockback_distance = 100.0; // Adjust this value as needed
         let knockback_vector = direction * knockback_distance;
-        /* 
+        /*
         if target == "player" {
             player.set_position((player.get_x() - knockback_vector.x), (player.get_y() - knockback_vector.y));
             if player.get_x() < 40.0 {
