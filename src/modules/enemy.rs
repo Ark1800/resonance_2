@@ -1,3 +1,5 @@
+use core::panic;
+
 use crate::VIRTUAL_HEIGHT;
 use crate::VIRTUAL_WIDTH;
 use crate::modules;
@@ -539,9 +541,24 @@ impl Enemy {
     pub fn view_enemy(&self) -> &StillImage {
         match &self.view {
             EnemyView::Still(still) => still,
-            EnemyView::Animated(animated) => panic!("view_enemy() is only valid for still-image enemies"),
+            EnemyView::Animated(animated) => panic!("Cannot get still image from an animated enemy"),
         }
     }
+
+     pub fn view_enemy_animated(&self) -> &AnimatedImage {
+        match &self.view {
+            EnemyView::Still(still) => panic!("Cannot get animated image from a still enemy"),
+            EnemyView::Animated(animated) => animated
+        }
+    }
+
+    pub fn get_enemy_view_type(&self) -> String {
+        match &self.view {
+            EnemyView::Still(still) => "still".into(),
+            EnemyView::Animated(animated) => "animated".into(),
+        }
+    }
+
     // Setter for position
     #[allow(unused)]
     pub fn set_position(&mut self, x: f32, y: f32) -> &mut Self {
@@ -1085,7 +1102,7 @@ impl Enemy {
     pub fn jeff_checkhit(&self, player: &mut Player, jeff_valid: bool, jeff_attackvalid: bool) -> (bool, bool) {
         let mut hit = jeff_valid;
         let mut jeff_attackvalid = jeff_attackvalid;
-        if check_collision(self.view_enemy(), player.view_player(), 1) {
+        if check_collision(self.view_enemy_animated(), player.view_player(), 1) {
             hit = true;
             jeff_attackvalid == true;
         }
@@ -1157,7 +1174,7 @@ impl Enemy {
         self.movement = direction * self.move_speed * get_frame_time();
         self.set_x(self.get_x() + self.movement.x);
         self.set_y(self.get_y() + self.movement.y);
-        if check_collision(self.view_enemy(), player.view_player(), 1) {
+        if check_collision(self.view_enemy_animated(), player.view_player(), 1) {
             self.knockback(player, "player");
             let issactive = musicdiscfunctions.get_imstillstanding_active();
             player.dmgplayer(20.0, issactive);

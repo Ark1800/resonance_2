@@ -75,7 +75,7 @@ async fn main() {
     tm.preload_with_loading_screen(&all_assets, Some(&all_sounds), Some(loading_options)).await;
     //VARSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
     let preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)> = vec![tm.get_preload("assets/player_files/player_b.png").unwrap(), tm.get_preload("assets/player_files/invslot.png").unwrap(), tm.get_preload("assets/player_files/player_shadow.png").unwrap(), tm.get_preload("assets/player_files/player_t.png").unwrap(), tm.get_preload("assets/player_files/player_l.png").unwrap(), tm.get_preload("assets/player_files/player_r.png").unwrap(), tm.get_preload("assets/player_files/player_tl.png").unwrap(), tm.get_preload("assets/player_files/player_tr.png").unwrap(), tm.get_preload("assets/player_files/player_bl.png").unwrap(), tm.get_preload("assets/player_files/player_br.png").unwrap(), tm.get_preload("assets/player_files/heart.png").unwrap(), tm.get_preload("assets/player_files/sword_slash.png").unwrap(), tm.get_preload("assets/player_files/arrow.png").unwrap(), tm.get_preload("assets/player_files/bow_arrow_image.png").unwrap(), tm.get_preload("assets/map_files/black_square.png").unwrap()];
-    let mut current_screen = "title_screen".to_string();
+    let mut current_screen = "w1sb".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
     let mut musicdiscfunctions = Musicdisc::new(&tm).await;

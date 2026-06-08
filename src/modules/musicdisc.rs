@@ -366,9 +366,17 @@ impl Musicdisc {
                             if self.backinblack_hit == false {
                                 for image in self.disc_elements.0.iter() {
                                     for enemy in enemies.iter_mut() {
-                                        if check_collision(image, enemy.view_enemy(), 1) {
-                                            println!("Hit enemy with Back In Black for 20 damage!");
-                                            enemy.dmg_enemy(20.0);
+                                        if enemy.get_enemy_view_type() == "still" {
+                                            if check_collision(image, enemy.view_enemy(), 1) {
+                                                println!("Hit enemy with Back In Black for 20 damage!");
+                                                enemy.dmg_enemy(20.0);
+                                            }
+                                        }
+                                        if enemy.get_enemy_view_type() == "animated" {
+                                            if check_collision(image, enemy.view_enemy_animated(), 1) {
+                                                println!("Hit enemy with Back In Black for 20 damage!");
+                                                enemy.dmg_enemy(20.0);
+                                            }
                                         }
                                     }
                                 }
@@ -457,9 +465,19 @@ impl Musicdisc {
                             } else {
                                 let enemy_old_pos = enemies[i].get_pos();
                                 enemies[i].pandemonium(highesthealthenemypos, enemy_old_pos);
-                                if enemies[i].check_collision(enemies[highesthealthenemyindex].view_enemy()) {
-                                    enemies[highesthealthenemyindex].dmg_enemy(1.0);
-                                    enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
+                                if enemies[i].get_enemy_view_type() == "still" {
+                                    if check_collision(enemies[i].view_enemy(), enemies[highesthealthenemyindex].view_enemy(), 1) {
+                                        println!("Hit enemy with Pandemonium for 1 damage!");
+                                        enemies[highesthealthenemyindex].dmg_enemy(1.0);
+                                        enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
+                                    }
+                                }
+                                if enemies[i].get_enemy_view_type() == "animated" {
+                                    if check_collision(enemies[i].view_enemy_animated(), enemies[highesthealthenemyindex].view_enemy_animated(), 1) {
+                                        println!("Hit enemy with Pandemonium for 1 damage!");
+                                        enemies[highesthealthenemyindex].dmg_enemy(1.0);
+                                        enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
+                                    }
                                 }
                             }
                         }
@@ -580,8 +598,15 @@ impl Musicdisc {
                                 self.disc_elements.2[i].draw();
                             }
                             for i in 0..enemies.len() {
-                                if enemies[i].check_collision(&self.disc_elements.2[0]) {
-                                    enemies[i].dmg_enemy(200.0);
+                                if enemies[i].get_enemy_view_type() == "still" {
+                                    if enemies[i].check_collision(&self.disc_elements.2[0]) {
+                                        enemies[i].dmg_enemy(200.0);
+                                    }
+                                }
+                                if enemies[i].get_enemy_view_type() == "animated" {
+                                    if enemies[i].check_collision(&self.disc_elements.2[0]) {
+                                        enemies[i].dmg_enemy(200.0);
+                                    }
                                 }
                             }
                         } else if time > 61.0 {

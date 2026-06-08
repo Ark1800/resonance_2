@@ -199,7 +199,7 @@ impl Player {
             ranged_movespeeds: Vec::new(),
             arrows: Vec::new(),
             activedisc: "none".to_string(),
-            cleared: 3,
+            cleared: 7,
             death_screen,
             death_screen_open: false,
             name: String::new(),
@@ -1094,9 +1094,18 @@ impl Player {
                 _ => self.playerui.4[0].clone(),
             };
             for i in 0..enemies.len() {
-                if check_collision(&self.hitboximg, enemies[i].view_enemy(), 1) {
-                    mlehit = true;
-                    index = i;
+                let enemy_view_type = enemies[i].get_enemy_view_type();
+                if enemy_view_type == "still" {
+                    if check_collision(&self.hitboximg, enemies[i].view_enemy(), 1) {
+                        mlehit = true;
+                        index = i;
+                    }
+                }
+                else if enemy_view_type == "animated" {
+                    if check_collision(&self.hitboximg, enemies[i].view_enemy_animated(), 1) {
+                        mlehit = true;
+                        index = i;
+                    }
                 }
             }
         }
