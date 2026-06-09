@@ -560,9 +560,19 @@ impl Player {
             if dmg < 0.0 {
                 dmg = 0.0;
             }
+            let randomnum = rand::gen_range(1, 5);
+            if self.inventory.1[4].get_filename() == "assets/item_files/armor/shadow_boots.png" {
+                if randomnum == 1 {
+                    dmg = 0.0;
+                }
+            }
             self.health -= dmg;
             let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
-            let max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+            let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+            if self.inventory.1[3].get_filename() == "assets/item_files/armor/lifeforce_armor.png" {
+            new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
+            max_width = self.maxhealth * 2.0; // Double the maximum health
+            }
             if new_width < 0.0 {
                 new_width = 0.0; // Prevent negative width
             }
@@ -585,7 +595,11 @@ impl Player {
             self.health = self.maxhealth;
         }
         let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
-        let max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+        let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+        if self.inventory.1[3].get_filename() == "assets/item_files/armor/lifeforce_armor.png" {
+            new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
+            max_width = self.maxhealth * 2.0; // Double the maximum health
+        }
         if new_width > max_width {
             new_width = max_width; // Prevent negative width
         }
@@ -1636,7 +1650,11 @@ impl Player {
     pub fn set_health(&mut self, health: f32) {
         self.health = health;
         let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
-        let max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+        let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+        if self.inventory.1[3].get_filename() == "assets/item_files/armor/lifeforce_armor.png" {
+            new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
+            max_width = self.maxhealth * 2.0; // Double the maximum health
+        }
         if new_width < 0.0 {
             new_width = 0.0; // Prevent negative width
         }
@@ -1650,7 +1668,11 @@ impl Player {
             self.health = self.maxhealth;
         }
         let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
-        let max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+        let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+        if self.inventory.1[3].get_filename() == "assets/item_files/armor/lifeforce_armor.png" {
+            new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
+            max_width = self.maxhealth * 2.0; // Double the maximum health
+        }
         if new_width < 0.0 {
             new_width = 0.0; // Prevent negative width
         }
@@ -1885,15 +1907,30 @@ impl Player {
                 *item_valid = false;
             }
             if self.itemui.2[0].click() {
-                self.add_inventory_item(self.possible_items[self.itemindex1].clone());
+                if self.possible_items[self.itemindex1].get_itemtype() == "health" {
+                    self.add_health(50.0);
+                }
+                else {
+                    self.add_inventory_item(self.possible_items[self.itemindex1].clone());
+                }
                 *choose_open = false;
             }
             if self.itemui.2[1].click() {
-                self.add_inventory_item(self.possible_items[self.itemindex2].clone());
+                if self.possible_items[self.itemindex2].get_itemtype() == "health" {
+                    self.add_health(50.0);
+                }
+                else {
+                    self.add_inventory_item(self.possible_items[self.itemindex2].clone());
+                }
                 *choose_open = false;
             }
             if self.itemui.2[2].click() {
-                self.add_inventory_item(self.possible_items[self.itemindex3].clone());
+                if self.possible_items[self.itemindex3].get_itemtype() == "health" {
+                    self.add_health(50.0);
+                }
+                else {
+                    self.add_inventory_item(self.possible_items[self.itemindex3].clone());
+                }
                 *choose_open = false;
             }
         }
@@ -2104,12 +2141,45 @@ impl Player {
         )
         .await;
         possible_items.push(tmos_rapier);
-        let tempitem_16 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
-            "helmet".to_string(),
+        //bow 2
+        let axl_greatbow = Item::new(
+            tm.get_preload("assets/item_files/weapons/axl_greatbow.png").unwrap(),
+            "assets/item_files/weapons/axl_greatbow.png".to_string(),
+            "Axl Greatbow".to_string(),
+            "A powerful slow bow that can shoot arrows with incredible force, increasing damage cooldowns".to_string(),
+            "ranged".to_string(),
+            0,
+            18,
+            1.5,
+            0.0,
+            0,
+            0,
+        )
+        .await;
+        possible_items.push(axl_greatbow);
+        //bodyarmor 2
+        let lifeforce_armor = Item::new(
+            tm.get_preload("assets/item_files/armour/lifeforce_armor.png").unwrap(),
+            "assets/item_files/armour/lifeforce_armor.png".to_string(),
+            "Scorned Heart BP".to_string(),
+            "An armor that increases the wearer's very life force, doubling max health".to_string(),
+            "bodyarmor".to_string(),
+            0,
+            0,
+            0.0,
+            0.0,
+            100,
+            0,
+        )
+        .await;
+        possible_items.push(lifeforce_armor);
+        //boots 2
+        let shadow_boots = Item::new(
+            tm.get_preload("assets/item_files/armour/shadow_boots.png").unwrap(),
+            "assets/item_files/armour/shadow_boots.png".to_string(),
+            "Shadow Boots".to_string(),
+            "A pair of boots once worn by the sneakiest of rogues, gives the wearer a chance to dodge if an enemy hits them".to_string(),
+            "boots".to_string(),
             0,
             0,
             0.0,
@@ -2118,13 +2188,29 @@ impl Player {
             0,
         )
         .await;
-        possible_items.push(tempitem_16);
-        let tempitem_17 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
+        possible_items.push(shadow_boots);
+        //helmet 2
+        let l_cap = Item::new(
+            tm.get_preload("assets/item_files/armour/l_cap.png").unwrap(),
+            "assets/item_files/armour/l_cap.png".to_string(),
+            "L's Cap".to_string(),
+            "A ballcap that infuses the wearer with a sense of plumbing confidence, and all around efficiency, lightly buffs every stat.".to_string(),
             "helmet".to_string(),
+            2,
+            2,
+            0.8,
+            1.2,
+            0,
+            2,
+        )
+        .await;
+        possible_items.push(l_cap);
+        let healthpot = Item::new(
+            tm.get_preload("assets/item_files/healthpot.png").unwrap(),
+            "assets/item_files/healthpot.png".to_string(),
+            "Health Potion".to_string(),
+            "Restores 50 health instantly".to_string(),
+            "health".to_string(),
             0,
             0,
             0.0,
@@ -2133,52 +2219,7 @@ impl Player {
             0,
         )
         .await;
-        possible_items.push(tempitem_17);
-        let tempitem_18 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
-            "helmet".to_string(),
-            0,
-            0,
-            0.0,
-            0.0,
-            0,
-            0,
-        )
-        .await;
-        possible_items.push(tempitem_18);
-        let tempitem_19 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
-            "helmet".to_string(),
-            0,
-            0,
-            0.0,
-            0.0,
-            0,
-            0,
-        )
-        .await;
-        possible_items.push(tempitem_19);
-        let tempitem_20 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
-            "helmet".to_string(),
-            0,
-            0,
-            0.0,
-            0.0,
-            0,
-            0,
-        )
-        .await;
-        possible_items.push(tempitem_20);
+        possible_items.push(healthpot);
         possible_items
     }
 }

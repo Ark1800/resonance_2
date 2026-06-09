@@ -50,8 +50,8 @@ pub async fn run(
     .await;
     background2.set_preload(tm.get_preload("assets/map_files/world1/beach.png").unwrap());
     let mut blue_portal = AnimatedImage::from_gif("", 100.0, 100.0, 498.0, 498.0, true).await;
-    let portal_hitbox = StillImage::new(
-        "assets/map_files/wall.png",
+    let mut portal_hitbox = StillImage::new(
+        "",
         100.0, // width
         300.0, // height
         300.0, // x position
@@ -60,6 +60,18 @@ pub async fn run(
         1.0,   // Normal zoom (100%)
     )
     .await;
+    portal_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
+    let mut world_numeral = StillImage::new(
+        "",
+        200.0, // width
+        200.0, // height
+        (virtual_width / 2.0) + 100.0, // x position
+        (virtual_height / 2.0) - 100.0, // y position
+        true,  // Enable stretching
+        1.0,   // Normal zoom (100%)
+    )
+    .await;
+    world_numeral.set_preload(tm.get_preload("assets/map_files/1_rn.png").unwrap());
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/world1/blueportal.gif") {
         blue_portal.set_preloaded_gif(preloaded, true);
     }
@@ -128,6 +140,7 @@ pub async fn run(
         background1.draw();
         background2.draw();
         blue_portal.draw();
+        world_numeral.draw();
         //game
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();

@@ -106,6 +106,17 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     for obj in 0..collidable_objects.len() {
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/magma.png").unwrap());
     }
+    let mut world_numeral = StillImage::new(
+        "",
+        200.0, // width
+        200.0, // height
+        (virtual_width / 2.0) - 100.0, // x position
+        (virtual_height / 2.0) - 100.0, // y position
+        true,  // Enable stretching
+        1.0,   // Normal zoom (100%)
+    )
+    .await;
+    world_numeral.set_preload(tm.get_preload("assets/map_files/3_rn.png").unwrap());
     loop {
         // set virtual resolution and clear frame
         use_virtual_resolution(virtual_width, virtual_height);
@@ -116,6 +127,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         if player.get_cleared() >= 12 {
         red_portal.draw();
         }
+        world_numeral.draw();
         //game 
         if player.get_y() > virtual_width - 10.0 {
             *last_scene = "Down".to_string();
