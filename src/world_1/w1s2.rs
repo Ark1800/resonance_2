@@ -71,7 +71,7 @@ pub async fn run(
     )
     .await;
     mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
-    mage.set_preload(tm.get_preload("assets/fireball.png").unwrap());
+    mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
     enemies.push(mage);
     for _i in 0..2 {
         let mut slime = Enemy::new(

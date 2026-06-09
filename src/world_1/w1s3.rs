@@ -98,7 +98,7 @@ pub async fn run(
     "mage"//enemy type
     ).await;
     mage.set_preload(tm.get_preload("assets/mage_files/mage_standR.png").unwrap());
-    mage.set_preload(tm.get_preload("assets/fireball.png").unwrap());
+    mage.set_projectile_preload(tm.get_preload("assets/fireball.png").unwrap());
     enemies.push(large_slime);
     enemies.push(summoner);
     enemies.push(mage);

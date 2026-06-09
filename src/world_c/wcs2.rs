@@ -74,15 +74,16 @@ pub async fn run(
     lbl_speech.with_scroll(true);
     let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 40);
+    let mut lbl_tutorial = Label::new("", 50.0, 40.0, 40);
     lbl_tutorial.with_colors(WHITE, None);
     lbl_tutorial.with_scroll(true);
     let mut tutorial_cooldown = 0.0;
+    let mut tutorial_num = 0;
     let speech_list: Vec<String> = vec!["Woah, bogie alert!".to_string(), "You take them, you have the sword!".to_string()];
-    let tutorial_line = "Press UP ARROW to use your melee attack\nPress DOWN ARROW to use your ranged attack".to_string();
+    let tutorial_list: Vec<String> = vec!["Press UP ARROW to use your melee attack\nPress DOWN ARROW to use your ranged attack".to_string(), "If you get music disks, you can use them using Q, E, and X".to_string()];
 
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
-    lbl_tutorial.set_scrolling_text(tutorial_line.clone());
+    lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
 
     let mut enemies: Vec<Enemy> = vec![];
     let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20.0, 10.0, "", "large_slime").await;
@@ -134,7 +135,11 @@ pub async fn run(
                             tutorial_cooldown -= 0.1;
                             if tutorial_cooldown <= 0.0 {
                                 tutorial_cooldown = 0.0;
-                                lbl_tutorial.set_text("");
+                                if tutorial_num == tutorial_list.len() {
+                                    lbl_tutorial.set_text("");
+                                } else {
+                                    lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].to_string());
+                                }
                             }
                         }
                     }
@@ -145,8 +150,9 @@ pub async fn run(
                     speech_cooldown = 0.5;
                     speech_num += 1;
                 }
-                if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() {
-                    tutorial_cooldown = 1.5;
+                if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < tutorial_list.len() {
+                    tutorial_cooldown = 0.5;
+                    tutorial_num += 1;
                 }
             }
 

@@ -7,10 +7,10 @@ Program Details:
 use crate::modules::label::Label;
 use crate::modules::player::Player;
 //use crate::modules::projectile::Projectile;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
@@ -23,7 +23,7 @@ pub async fn run(
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("wcs1".to_string());
     let mut background = StillImage::new(
@@ -79,7 +79,7 @@ pub async fn run(
     lbl_speech.with_scroll(true);
     let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut lbl_tutorial = Label::new("", 50.0, 25.0, 40);
+    let mut lbl_tutorial = Label::new("", 50.0, 40.0, 40);
     lbl_tutorial.with_colors(WHITE, None);
     lbl_tutorial.with_scroll(true);
     let mut tutorial_cooldown = 0.0;
@@ -89,7 +89,8 @@ pub async fn run(
         "Finally found this place! That took forever.. ".to_string(),
         "Come on, lets go further in. Try to keep up! ".to_string(),
     ];
-    let tutorial_list: Vec<String> = vec!["WASD to move ".to_string(), "SHIFT to dash ".to_string()];
+    let tutorial_list: Vec<String> = vec!["WASD to move ".to_string(), "SHIFT to dash ".to_string(), "TAB to open inventory ".to_string(), "ESC to open pause menu ".to_string()];
+    lbl_tutorial.with_scroll_speed(0.1);
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
     lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
 
@@ -119,7 +120,7 @@ pub async fn run(
             if (current_time - time_dif) > 0.1 {
                 time_dif = current_time;
 
-                if player.get_cleared() < 3{
+                if player.get_cleared() < 3 {
                     if speech_cooldown > 0.0 {
                         speech_cooldown -= 0.1;
                         if speech_cooldown <= 0.0 {
@@ -147,7 +148,7 @@ pub async fn run(
                     speech_num += 1;
                 }
                 if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < tutorial_list.len() - 1 && tutorial_cooldown <= 0.0 {
-                    tutorial_cooldown = 1.5;
+                    tutorial_cooldown = 1.0;
                     tutorial_num += 1;
                 }
             }
@@ -157,30 +158,34 @@ pub async fn run(
             if save {
                 println!("Saving game...");
                 player.update_save_data(records, client, last_scene).await;
-            } if exit {
+            }
+            if exit {
                 return "title_screen".to_string();
             }
 
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             player.draw();
-                cyric.draw();
-                if lbl_speech.get_text() != "" {
-                    speech_box.draw();
-                    name_box.draw();
-                }
-                if speech_num != speech_list.len() {
-                    lbl_speech.scrolling_text_draw();
-                } else {
-                    lbl_speech.draw();
-                }
-                if tutorial_num != tutorial_list.len() {
-                    lbl_tutorial.scrolling_text_draw();
-                } else {
-                    lbl_tutorial.draw();
-                }
-            
+            cyric.draw();
+            if lbl_speech.get_text() != "" {
+                speech_box.draw();
+                name_box.draw();
+            }
+            if speech_num != speech_list.len() {
+                lbl_speech.scrolling_text_draw();
+            } else {
+                lbl_speech.draw();
+            }
+            if tutorial_num != tutorial_list.len() {
+                lbl_tutorial.scrolling_text_draw();
+            } else {
+                lbl_tutorial.draw();
+            }
+
             if player.get_y() > virtual_height {
+                if player.get_cleared() == 0 {
+                    player.add_cleared();
+                }
                 return "wcs2".to_string();
             }
             if player.get_y() < 10.0 && player.get_cleared() >= 3 {

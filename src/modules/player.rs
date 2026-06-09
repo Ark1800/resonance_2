@@ -19,8 +19,7 @@ use std::f32::consts::PI;
 
 
 //questions
-//2. hitboxes for minislimes?
-//3. wcs3?
+
 
 //STILL TO DOOOOOO
 //1. add note that player needs to equip their weapons after loading a save (cant be fixed)
