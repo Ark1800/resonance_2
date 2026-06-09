@@ -169,7 +169,7 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 100.0,
+            mledmg: 3.0,
             rngdmg: 5.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
@@ -1511,8 +1511,8 @@ impl Player {
 
     pub fn update_stats(&mut self) {
         // Reset stats to base values
-        self.mledmg = 100.0;
-        self.rngdmg = 2.0;
+        self.mledmg = 3.0;
+        self.rngdmg = 5.0;
         self.movespeedmult = 1.0;
         self.cooldownmult = 1.0;
         self.maxhealth = 100.0;

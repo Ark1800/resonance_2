@@ -198,7 +198,7 @@ pub async fn run(
             player.add_cleared();
             item_valid = true;
             choose_open = true;
-            map.change_map(vec![0, 0], vec![vec![0, 5], vec![0, 6]]);
+            map.change_map(vec![0, 0], vec![vec![0, 4], vec![0, 5]]);
             player.add_health(30.0);
         }
         player.draw();
