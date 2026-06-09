@@ -280,7 +280,7 @@ impl Musicdisc {
         }
         if self.thickofitvalid == false {
             self.thickofit_cct = get_time() - self.thickofitcooldown;
-            if self.thickofit_cct >= 60.0 * player.get_cooldownmult() as f64{
+            if self.thickofit_cct >= 60.0 * player.get_cooldownmult() as f64 {
                 self.thickofitvalid = true;
                 self.thickofit_cct = 0.0;
             }
@@ -303,7 +303,7 @@ impl Musicdisc {
         }
         if self.pandemonium_valid == false {
             self.pandemonium_cct = get_time() - self.pandemonium_cooldown;
-            if self.pandemonium_cct >= 100.0 * player.get_cooldownmult() as f64{
+            if self.pandemonium_cct >= 100.0 * player.get_cooldownmult() as f64 {
                 self.pandemonium_valid = true;
                 self.pandemonium_hit = false;
                 self.pandemonium_cct = 0.0;
@@ -311,7 +311,7 @@ impl Musicdisc {
         }
         if self.sixhundredstrike_valid == false {
             self.sixhundredstrike_cct = get_time() - self.sixhundredstrike_cooldown;
-            if self.sixhundredstrike_cct >= 70.0 * player.get_cooldownmult() as f64{
+            if self.sixhundredstrike_cct >= 70.0 * player.get_cooldownmult() as f64 {
                 self.sixhundredstrike_valid = true;
                 self.sixhundredstrike_hit = false;
                 self.sixhundredstrike_cct = 0.0;
@@ -319,7 +319,7 @@ impl Musicdisc {
         }
         if self.sodapop_valid == false {
             self.sodapop_cct = get_time() - self.sodapop_cooldown;
-            if self.sodapop_cct >= 70.0 * player.get_cooldownmult() as f64{
+            if self.sodapop_cct >= 70.0 * player.get_cooldownmult() as f64 {
                 self.sodapop_valid = true;
                 self.sodapop_hit = false;
                 self.sodapop_cct = 0.0;
@@ -327,7 +327,7 @@ impl Musicdisc {
         }
         if self.greatestshow_valid == false {
             self.greatestshow_cct = get_time() - self.greatestshow_cooldown;
-            if self.greatestshow_cct >= 80.0 * player.get_cooldownmult() as f64{
+            if self.greatestshow_cct >= 80.0 * player.get_cooldownmult() as f64 {
                 self.greatestshow_valid = true;
                 self.greatestshow_hit = false;
                 self.greatestshow_cct = 0.0;
@@ -402,6 +402,8 @@ impl Musicdisc {
                     self.thickofit = true;
                     if time < 30.0 {
                         for i in 0..enemies.len() {
+                            let mut healthbar = enemies[i].set_healthbar();
+                            healthbar.draw();
                             enemies[i].draw();
                             let enemy_old_pos = enemies[i].get_pos();
                             enemies[i].reversereverse(player.get_x(), player.get_y(), &map, enemy_old_pos);
@@ -452,6 +454,8 @@ impl Musicdisc {
                     self.pandemonium = true;
                     if time < 15.0 {
                         for i in 0..enemies.len() {
+                            let mut healthbar = enemies[i].set_healthbar();
+                            healthbar.draw();
                             enemies[i].draw();
                             let mut enemy_healthlist: Vec<i32> = vec![];
                             for j in 0..enemies.len() {
@@ -473,7 +477,11 @@ impl Musicdisc {
                                     }
                                 }
                                 if enemies[i].get_enemy_view_type() == "animated" {
-                                    if check_collision(enemies[i].view_enemy_animated(), enemies[highesthealthenemyindex].view_enemy_animated(), 1) {
+                                    if check_collision(
+                                        enemies[i].view_enemy_animated(),
+                                        enemies[highesthealthenemyindex].view_enemy_animated(),
+                                        1,
+                                    ) {
                                         println!("Hit enemy with Pandemonium for 1 damage!");
                                         enemies[highesthealthenemyindex].dmg_enemy(1.0);
                                         enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
@@ -547,6 +555,8 @@ impl Musicdisc {
                     self.sodapop = true;
                     if time < 20.0 {
                         for i in 0..enemies.len() {
+                            let mut healthbar = enemies[i].set_healthbar();
+                            healthbar.draw();
                             enemies[i].draw();
                             enemies[i].sodapop(self.sodapopposlist[i], map);
                         }
@@ -617,7 +627,14 @@ impl Musicdisc {
             }
             _ => {}
         }
-        if self.backinblack_valid == false && self.thickofitvalid == false  && self.pandemonium_valid == false && self.sixhundredstrike_valid == false && self.sodapop_valid == false && self.howitsdone_valid == false && self.greatestshow_valid == false {
+        if self.backinblack_valid == false
+            && self.thickofitvalid == false
+            && self.pandemonium_valid == false
+            && self.sixhundredstrike_valid == false
+            && self.sodapop_valid == false
+            && self.howitsdone_valid == false
+            && self.greatestshow_valid == false
+        {
             if player.get_health() < 0.0 {
                 if self.imstillstanding_hit == false {
                     discmatch = "I'm Still Standing";

@@ -55,7 +55,7 @@ pub async fn run(
     .await;
     background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
     map.create_map_array(0, 1, 0, vec![4]).await;
-    let map_row_len = map.get_map_array().len();
+    let map_row_len = map.get_map_rows().len();
     let map_column_len = map.get_map_columns().len();
     let mut wall_places: Vec<Vec<i32>> = vec![];
     let mut walls: Vec<i32> = vec![];

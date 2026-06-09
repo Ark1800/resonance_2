@@ -20,7 +20,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
-    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
     client: &DatabaseClient,
 ) -> String {
@@ -97,14 +97,6 @@ pub async fn run(
         "You can still leave if you want your life, I don't want to kill you. But if you stay, I will be forced to take your life. ".to_string(),
         ".... ".to_string(),
         "You always were stubborn. I'm sorry, my friend. ".to_string(),
-    ]; 
-    let speech_list: Vec<String> = vec![
-        "Agh ".to_string(),
-        "I'm sorry it had to be this way, friend, but its what is required. ".to_string(),
-        "These disks can do so much, they're wasted being in an unguarded cave. ".to_string(),
-        "You can still leave if you want your life, I don't want to kill you. But if you stay, I will be forced to take your life. ".to_string(),
-        ".... ".to_string(),
-        "You always were stubborn. I'm sorry, my friend. ".to_string(),
     ];
 
     let mut speech_box = StillImage::new(
@@ -126,69 +118,113 @@ pub async fn run(
     if player.get_cleared() < 17 {
         speech_done = true;
     }
+
+    let mut cyric_img_heart = StillImage::new(
+        "",
+        100.0,                 // width
+        50.0,                  // height
+        60.0,                  // x position //offset as drawn from center
+        virtual_height - 50.0, // y position
+        true,                  // Enable stretching
+        1.0,                   // Normal zoom (100%)
+    )
+    .await;
+    cyric_img_heart.set_preload(tm.get_preload("assets/player_files/heart.png").unwrap());
+    let mut lbl_cyric_healthbar = Label::new("", 120.0, virtual_height - 10.0, 30);
+    lbl_cyric_healthbar.with_fixed_size(800.0, 25.0);
+    lbl_cyric_healthbar.with_colors(WHITE, Some(PURPLE));
+    lbl_cyric_healthbar.with_border(BLACK, 2.0);
+    let mut lbl_cyric_healthbarbg = Label::new("", 120.0, virtual_height - 10.0, 30);
+    lbl_cyric_healthbarbg.with_fixed_size(800.0, 25.0);
+    lbl_cyric_healthbarbg.with_colors(WHITE, Some(WHITE));
+    lbl_cyric_healthbarbg.with_border(BLACK, 2.0);
+    let mut lbl_cyric_healthnum = Label::new("1000", 90.0, virtual_height - 20.0, 30);
+    let mut lbl_cyric_name = Label::new("cyric The Betrayer", 135.0, virtual_height - 45.0, 30);
+    lbl_cyric_name.with_colors(BLACK, Some(RED));
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
 
         if player.get_cleared() < 17 {
-        current_time = get_time();
-        if (current_time - time_dif) > 0.1 {
-            time_dif = current_time;
+            current_time = get_time();
+            if (current_time - time_dif) > 0.1 {
+                time_dif = current_time;
 
-            if player.get_cleared() < 3 {
-                if speech_cooldown > 0.0 {
-                    speech_cooldown -= 0.1;
-                    if speech_cooldown <= 0.0 {
-                        speech_cooldown = 0.0;
-                        if speech_num == speech_list.len() {
-                            lbl_speech.set_text("");
-
-                        } else {
-                            lbl_speech.set_scrolling_text(speech_list[speech_num].to_string());
+                if player.get_cleared() < 3 {
+                    if speech_cooldown > 0.0 {
+                        speech_cooldown -= 0.1;
+                        if speech_cooldown <= 0.0 {
+                            speech_cooldown = 0.0;
+                            if speech_num == speech_list.len() {
+                                lbl_speech.set_text("");
+                            } else {
+                                lbl_speech.set_scrolling_text(speech_list[speech_num].to_string());
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if player.get_cleared() < 17 {
-            if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() && speech_cooldown <= 0.0 {
-                speech_cooldown = 1.0;
-                speech_num += 1;
+            if player.get_cleared() < 17 {
+                if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() && speech_cooldown <= 0.0 {
+                    speech_cooldown = 1.0;
+                    speech_num += 1;
+                }
             }
-        }
-    } else if speech_done {
-        player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
-        if save {
-            println!("Saving game...");
-            player.update_save_data(records, client, last_scene).await;
-        }
-        if exit {
-            return "title_screen".to_string();
-        }
-        player.handle_keypresses(pause, _musicdiscfunctions).await;
-        let old_pos = player.get_oldpos();
-        player.move_player(&map, old_pos, &vec![]);
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        } else if speech_done {
+            player.handle_inventory();
+            let (save, exit) = player.handle_save_menu().await;
+            if save {
+                println!("Saving game...");
+                player.update_save_data(records, client, last_scene).await;
+            }
+            if exit {
+                return "title_screen".to_string();
+            }
+            player.handle_keypresses(pause, musicdiscfunctions).await;
+            let old_pos = player.get_oldpos();
+            player.move_player(&map, old_pos, &vec![]);
+            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+            player.set_player_activedisc(activedisc);
+let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
-
-        if player.get_cleared() < 17 {
-            if enemies[0].get_health() <= 0.0 {
-                player.addcoins(99999 - player.get_musicoins());
-                player.add_cleared();
-                enemies[0].set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
-                map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
-                player.set_health(player.get_maxhealth());
-            } else {
-                enemies[0].cyric_action(player, tm, _musicdiscfunctions).await;
-            }
-            enemies[0].draw_bullet(player, _musicdiscfunctions);
+        if mlehit {
+            enemies[index].dmg_enemy(player.get_meleedmg());
+            enemies[index].knockback(player, "enemy");
         }
-    }
-        
+        if rnghit {
+            enemies[index].dmg_enemy(player.get_rngdmg());
+            enemies[index].knockback(player, "enemy");
+        }
+            if player.get_cleared() < 17 {
+                if enemies[0].get_health() <= 0.0 {
+                    player.addcoins(99999 - player.get_musicoins());
+                    player.add_cleared();
+                    enemies[0].set_preload(tm.get_preload("assets/cyric_files/cyric_dead").unwrap());
+                    map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
+                    player.set_health(player.get_maxhealth());
+                } else {
+                    enemies[0].cyric_action(player, tm, musicdiscfunctions).await;
+                }
+                enemies[0].draw_bullet(player, musicdiscfunctions);
+            }
+        }
+
         enemies[0].draw();
+        let mut new_width = enemies[0].get_health() as f32 * 4.0; // Assuming 100 health corresponds to 400 width
+        let max_width = 200 as f32 * 4.0; // Maximum width based on max health
+        if new_width < 0.0 {
+            new_width = 0.0; // Prevent negative width
+        }
+        lbl_cyric_healthbarbg.with_fixed_size(max_width, 25.0); //update healthbar size based on health
+        lbl_cyric_healthbar.with_fixed_size(new_width, 25.0); //update healthbar size based on health
+        lbl_cyric_healthbarbg.draw();
+        lbl_cyric_healthbar.draw();
+        cyric_img_heart.draw();
+        lbl_cyric_healthnum.set_text(enemies[0].get_health().to_string());
+        lbl_cyric_healthnum.draw();
         player.draw();
         map.draw_map(&tm).await;
         if lbl_speech.get_text() != "" && player.get_cleared() < 17 {
@@ -200,7 +236,7 @@ pub async fn run(
         } else {
             lbl_speech.draw();
         }
-        let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
+        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();

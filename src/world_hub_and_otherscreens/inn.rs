@@ -86,7 +86,6 @@ pub async fn run(
         } if exit {
             return "title_screen".to_string();
         }
-        player.handle_playerdamaging(&enemies, musicdiscfunctions);
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         player.draw();

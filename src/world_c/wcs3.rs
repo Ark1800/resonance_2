@@ -7,11 +7,11 @@ Program Details:
 use crate::modules::label::Label;
 use crate::modules::player::Player;
 //use crate::modules::projectile::Projectile;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
+use crate::modules::grid::draw_grid;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
-use crate::modules::grid::draw_grid;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
@@ -157,10 +157,7 @@ pub async fn run(
     lbl_interact.with_colors(WHITE, None);
     let mut can_interact = true;
 
-
     lbl_speech.set_scrolling_text(script_list[script_num][speech_num].clone());
-
-    
 
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -180,12 +177,12 @@ pub async fn run(
                             if speech_num == script_list[script_num].len() {
                                 lbl_speech.set_text("");
                                 if script_num == 1 {
-                                cutscene_going = false;
-                            }
-                            if script_num == 2 {
-                                player.add_cleared();
-                                return "wcs2".to_string();
-                            }
+                                    cutscene_going = false;
+                                }
+                                if script_num == 2 {
+                                    player.add_cleared();
+                                    return "wcs2".to_string();
+                                }
                             } else {
                                 lbl_speech.set_scrolling_text(script_list[script_num][speech_num].to_string());
                                 println!("Script num: {}, Speech num: {}", script_num, speech_num);
@@ -199,7 +196,7 @@ pub async fn run(
                     speech_cooldown = 1.0;
                     speech_num += 1;
                     if script_num == 2 {
-                        cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_b.png").unwrap());
+                        cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_f.png").unwrap());
                         speech_cooldown = 2.0;
                     }
                 }
@@ -271,19 +268,20 @@ pub async fn run(
             }
             if first_time {
                 if lbl_speech.get_text() != "" {
-                speech_box.draw();
-                name_box.draw();
+                    speech_box.draw();
+                    name_box.draw();
                 }
                 lbl_speech.scrolling_text_draw();
                 cyric.draw();
             }
-        let (save, exit) = player.handle_save_menu().await;
-        if save {
-            println!("Saving game...");
-            player.update_save_data(records, client, last_scene).await;
-        } if exit {
-            return "title_screen".to_string();
-        }
+            let (save, exit) = player.handle_save_menu().await;
+            if save {
+                println!("Saving game...");
+                player.update_save_data(records, client, last_scene).await;
+            }
+            if exit {
+                return "title_screen".to_string();
+            }
             draw_grid(50.0, BROWN);
             next_frame().await;
         }

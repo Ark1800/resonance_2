@@ -33,7 +33,7 @@ pub async fn run(
         "armour".to_string(),                                                  // Type
         0,                                                                     // Melee
         0,                                                                     // Ranged
-        0.9,                                                                   // Move speed mult
+        0.8,                                                                   // Move speed mult
         0.0,                                                                   // Cooldown mult
         50,                                                                    // Health
         20,                                                                    // Armour
@@ -46,7 +46,7 @@ pub async fn run(
         "Time Sword".to_string(),                                            // Name
         "A weapon made to slice through time itself".to_string(),            // Description
         "attack".to_string(),                                                // Type
-        25,                                                                  // Melee
+        30,                                                                  // Melee
         0,                                                                   // Ranged
         1.0,                                                                 // Move speed mult
         -0.1,                                                                // Cooldown mult
@@ -96,7 +96,7 @@ pub async fn run(
     shop_view.with_colors(WHITE, None, Some(LIGHTGRAY));
     let mut lbl_desc = Label::new("", 50.0, 300.0, 30);
     lbl_desc.with_colors(WHITE, None);
-    let item_price = vec![25, 500, 500, 750, 9999];
+    let item_price = vec![50, 80, 80, 25];
     let mut lbl_price = Label::new("", 250.0, 450.0, 40);
     lbl_price.with_colors(WHITE, None);
     let mut btn_buy = TextButton::new(100.0, 200.0, 200.0, 60.0, "Buy", BLUE, GREEN, 30);

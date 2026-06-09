@@ -187,7 +187,7 @@ pub async fn run(
             player.add_health(30.0);
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
         }
-        player.handle_playerdamaging(&enemies, musicdiscfunctions);
+       
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);

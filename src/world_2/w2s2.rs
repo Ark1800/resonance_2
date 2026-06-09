@@ -19,7 +19,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
-    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
     client: &DatabaseClient
 ) -> String {
@@ -74,7 +74,7 @@ pub async fn run(
     let mut choose_open = false;
     let mut item_valid = false;
     loop {
-        player.handle_keypresses(pause, _musicdiscfunctions).await;
+        player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -86,7 +86,7 @@ pub async fn run(
         } if exit {
             return "title_screen".to_string();
         }
-        let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
+        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
@@ -100,14 +100,18 @@ pub async fn run(
             //enemy loop
             if player.get_cleared() == 9 {
                 for i in 0..enemies.len() {
+                    if musicdiscfunctions.get_thickofit_active() == false
+                        && musicdiscfunctions.get_pandemonium_active() == false
+                        && musicdiscfunctions.get_sodapop_active() == false
+                    {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     match enemies[i].get_enemy_type() {
                         "archer" => {
-                            enemies[i].archer_action(tm, player, _musicdiscfunctions).await;
-                            enemies[i].draw_bullet(player, _musicdiscfunctions);
+                            enemies[i].archer_action(tm, player, musicdiscfunctions).await;
+                            enemies[i].draw_bullet(player, musicdiscfunctions);
                         }
                         "slime" => {
-                            enemies[i].slime_action(player, _musicdiscfunctions);
+                            enemies[i].slime_action(player, musicdiscfunctions);
                         }
                         "summoner" => {
                             let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
@@ -118,27 +122,27 @@ pub async fn run(
                             }
                         }
                         "mage" => {
-                            enemies[i].mage_action(tm, player, _musicdiscfunctions).await;
-                            enemies[i].draw_bullet(player, _musicdiscfunctions);
+                            enemies[i].mage_action(tm, player, musicdiscfunctions).await;
+                            enemies[i].draw_bullet(player, musicdiscfunctions);
                         }
                         "large_slime" => {
-                            enemies[i].large_slime_action(tm, player, _musicdiscfunctions).await;
+                            enemies[i].large_slime_action(tm, player, musicdiscfunctions).await;
                         }
                         _ => {}
                     }
                     enemies[i].draw();
                 }
             }
-        }
+        }}
         player.draw();
-        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
             if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, _musicdiscfunctions).await;
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, musicdiscfunctions).await;
                     if split {
                         enemies.push(slime1);
                         enemies.push(slime2);
@@ -152,7 +156,7 @@ pub async fn run(
             enemies[index].dmg_enemy(player.get_rngdmg());
             if enemies[index].get_health() <= 0.0 {
                 if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, _musicdiscfunctions).await;
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, musicdiscfunctions).await;
                     if split {
                         enemies.push(slime1);
                         enemies.push(slime2);

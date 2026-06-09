@@ -41,8 +41,8 @@ pub async fn run(
     let btn_back = TextButton::new(virtual_width / 2.0 - 100.0, 500.0, 200.0, 60.0, "Back to menu", BLUE, GREEN, 30);
     let btn_start = TextButton::new(virtual_width / 2.0 - 100.0, 400.0, 200.0, 60.0, "Start Game", BLUE, GREEN, 30);
     let btn_exit = TextButton::new(virtual_width / 2.0 - 100.0, 600.0, 200.0, 60.0, "Leave game", BLUE, GREEN, 30);
-    let mut lbl_title = Label::new("Resonance", virtual_width / 2.0, 200.0, 80);
-    let mut lbl_team = Label::new("Made by Team Berry", virtual_width / 2.0, 250.0, 50);
+    let mut lbl_title = Label::new("Resonance", (virtual_width / 2.0) - 80.0, 200.0, 80);
+    let mut lbl_team = Label::new("Made by Team Berry", (virtual_width / 2.0) - 100.0, 250.0, 50);
     let mut lbl_start = Label::new("Click to start", virtual_width / 2.0, 980.0, 30);
     let mut txt_username = TextInput::new(virtual_width / 2.0 - 150.0, 200.0, 300.0, 40.0, 25.0);
     txt_username.set_prompt("Username");
@@ -99,7 +99,7 @@ pub async fn run(
                 if new_load == "New" {
                     let mut proceed = true;
                     for i in 0..records.len() {
-                        if records[i].user_password == txt_password.get_text() {
+                        if records[i].user_name == txt_username.get_text() {
                             proceed = false;
                             break;
                         }

@@ -260,7 +260,7 @@ pub async fn run(
                                     jeff_attackcount += 1;
                                 }
                                 let time = get_time() - jeff_attacktime;
-                                if time >= 1.0 && time < 10.0 {
+                                if time >= 2.0 && time < 11.0 {
                                     if jeff_attackcount == 2 {
                                     jeff_drawvalid = false;
                                     jeff_attackcount += 1;
@@ -321,6 +321,11 @@ pub async fn run(
             player.addcoins(100);
             enemies[0].set_position(60.0, 40.0);
             enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_sad.gif").unwrap(), true);
+        }
+        if player.get_cleared() > 7 {
+            enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_sad.gif").unwrap(), true);
+            enemies[0].set_position(60.0, 40.0);
+            enemies[0].draw();
         }
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);

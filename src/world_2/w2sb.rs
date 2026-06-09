@@ -14,6 +14,7 @@ use crate::modules::scale::use_virtual_resolution;
 use crate::modules::text_button::TextButton;
 use crate::modules::still_image::StillImage;
 use crate::modules::database::{DatabaseClient, DatabaseTable};
+use crate::modules::progressbar::ProgressBar;
 
 use macroquad::prelude::*;
 pub async fn run(
@@ -23,7 +24,7 @@ pub async fn run(
     tm: &TextureManager,
     pause: &mut bool,
     last_scene: &mut String,
-    _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
+    musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
     client: &DatabaseClient
 ) -> String {
@@ -58,7 +59,7 @@ pub async fn run(
     .await;
 
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
-    let mut boss = Enemy::new("", 100.0, 100.0, 100.0, 120.0, true, 1.0, 15.0, 3.0, "", "").await;
+    let mut boss = Enemy::new("", 100.0, 100.0, 100.0, 120.0, true, 1.0, 400.0, 50.0, "", "").await;
     boss.set_preload_gif(tm.get_preloaded_animated_gif("assets/world2_boss/boss_idleR.gif").unwrap(), true);
     boss.set_projectile_preload(tm.get_preload("assets/world2_boss/slime_ball.png").unwrap());
     let mut attack =true;
@@ -73,23 +74,27 @@ pub async fn run(
     }
     let mut choose_open = false;
     let mut item_valid = false;
-    let btn_skip = TextButton::new(
-        0.0,
-        0.0,
-        200.0,
-        200.0,
-        "Skip",
-        BLUE,
-        GREEN,
-        30
-    ); 
-    loop {
-        player.handle_keypresses(pause, _musicdiscfunctions).await;
+   
+     let mut healthbar = ProgressBar::new(
+        120.0, virtual_height - 50.0,      // Position (x, y)
+        800.0, 90.0,       // Size (width, height)
+        0.0, 400.0,        // Range (min, max)
+        400.0                // Initial value
+    );
+    
+     healthbar.with_animation(true, 2.0);
+     healthbar.with_colors(RED, PURPLE, WHITE);
+     healthbar.with_border(true, BLACK, 2.0);
+        loop {
+        player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-        boss.plant_boss_action(player, &tm, &mut attack,&mut timer,&mut shoot,&mut chomp, &mut attack_choice, &mut dig, _musicdiscfunctions).await;
-        boss.draw_bullet(player, _musicdiscfunctions);
+        boss.plant_boss_action(player, &tm, &mut attack,&mut timer,&mut shoot,&mut chomp, &mut attack_choice, &mut dig, musicdiscfunctions).await;
+        boss.draw_bullet(player, musicdiscfunctions);
+        healthbar.set_value(boss.get_health());
+       
+
 
 
 
@@ -105,7 +110,7 @@ pub async fn run(
         } if exit {
             return "title_screen".to_string();
         }
-        let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
+        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
@@ -121,9 +126,12 @@ pub async fn run(
             boss.draw();
         }
         player.draw();
-        let (mlehit, rnghit, _index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+        let (mlehit, rnghit, _index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        player.set_player_activedisc(activedisc);
         if mlehit {
             boss.dmg_enemy(player.get_meleedmg());
+            
         }
         if rnghit {
             boss.dmg_enemy(player.get_rngdmg());
@@ -135,12 +143,7 @@ pub async fn run(
             choose_open = true;
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
         }
-        if btn_skip.click() {
-            player.add_cleared();
-            item_valid = true;
-            choose_open = true;
-            map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
-        }
+       
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Left".to_string();
             return "w2s3".to_string();
@@ -152,6 +155,7 @@ pub async fn run(
         }
         player.draw();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
+         healthbar.draw();
         next_frame().await;
     }
 }

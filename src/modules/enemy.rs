@@ -481,10 +481,15 @@ impl Enemy {
         let collision = check_collision(self.view_enemy(), player.view_player(), 1);
 
         if collision {
+          
+                
+            
             let issactive = musicdiscfunctions.get_imstillstanding_active();
             player.dmgplayer(self.get_dmg(), issactive);
             self.knockback(player, "player");
             self.knockback(player, "enemy");
+            
+            
         }
         // Apply movement based on frame time
     }
@@ -1446,8 +1451,7 @@ impl Enemy {
             self.knockback(player, "player");
         }
 
-        let mut healthbar = self.set_healthbar();
-        healthbar.draw();
+        
     }
 
     pub async fn plant_boss_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str, shoot: &mut bool, dig: &mut bool, timer: &mut f64) {
@@ -1474,7 +1478,6 @@ impl Enemy {
     }
 
     pub async fn plant_boss_chomp(&mut self, player: &mut Player, tm: &TextureManager, way: &str, chomp: &mut bool, dig: &mut bool, timer: &mut f64) {
-        println!("Plant Boss used Chomp!");
         if *chomp == false {
             self.cooldown2 = get_time();
 
@@ -1482,7 +1485,6 @@ impl Enemy {
         }
         self.plant_boss_dig_bite(player, tm, way, dig, timer).await;
         if get_time() > self.cooldown2 + 2.0 && get_time() < self.cooldown2 + 2.1 {
-            println!("Plant Boss used Chomp!");
             self.set_preload_gif(
                 tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_bite{}.gif", way).as_str())
                     .unwrap(),
@@ -1492,7 +1494,6 @@ impl Enemy {
     }
 
     pub async fn plant_boss_dig_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str, dig: &mut bool, timer: &mut f64) {
-           println!("Plant Boss used Dig(Shoot)!");
         if *dig == false {
             *timer = get_time();
             *dig = true;
@@ -1519,7 +1520,6 @@ impl Enemy {
         }
     }
     pub async fn plant_boss_dig_bite(&mut self, player: &mut Player, tm: &TextureManager, way: &str, dig: &mut bool, timer: &mut f64) {
-        println!("Plant Boss used Dig(Bite)!");
         if *dig == false {
             *timer = get_time();
             *dig = true;

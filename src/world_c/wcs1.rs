@@ -43,9 +43,12 @@ pub async fn run(
         vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
+println!("Cleared: {}", player.get_cleared());
     if player.get_cleared() >= 3 {
+        println!("Two doors");
         map.create_map_array(0, 2, 0, vec![1, 3]).await;
     } else {
+        println!("One door");
         map.create_map_array(0, 1, 0, vec![3]).await;
     }
     if last_scene == "Left" {
@@ -89,7 +92,12 @@ pub async fn run(
         "Finally found this place! That took forever.. ".to_string(),
         "Come on, lets go further in. Try to keep up! ".to_string(),
     ];
-    let tutorial_list: Vec<String> = vec!["WASD to move ".to_string(), "SHIFT to dash ".to_string(), "TAB to open inventory ".to_string(), "ESC to open pause menu ".to_string()];
+    let tutorial_list: Vec<String> = vec![
+        "WASD to move ".to_string(),
+        "SHIFT to dash ".to_string(),
+        "TAB to open inventory ".to_string(),
+        "ESC to open pause menu ".to_string(),
+    ];
     lbl_tutorial.with_scroll_speed(0.1);
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
     lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
@@ -120,7 +128,7 @@ pub async fn run(
             if (current_time - time_dif) > 0.1 {
                 time_dif = current_time;
 
-                if player.get_cleared() < 3 {
+                if player.get_cleared() == 0 {
                     if speech_cooldown > 0.0 {
                         speech_cooldown -= 0.1;
                         if speech_cooldown <= 0.0 {

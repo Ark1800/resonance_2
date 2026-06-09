@@ -9,8 +9,8 @@ use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 //use crate::modules::projectile::Projectile;
-use crate::modules::scale::use_virtual_resolution;
 use crate::modules::database::{DatabaseClient, DatabaseTable};
+use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
@@ -23,7 +23,7 @@ pub async fn run(
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("wcs2".to_string());
     let mut background = StillImage::new(
@@ -43,7 +43,7 @@ pub async fn run(
         vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
-    if player.get_cleared() >= 2 {
+    if player.get_cleared() == 1 {
         map.create_map_array(0, 1, 0, vec![1]).await;
     } else {
         map.create_map_array(0, 2, 0, vec![1, 3]).await;
@@ -80,16 +80,20 @@ pub async fn run(
     let mut tutorial_cooldown = 0.0;
     let mut tutorial_num = 0;
     let speech_list: Vec<String> = vec!["Woah, bogie alert!".to_string(), "You take them, you have the sword!".to_string()];
-    let tutorial_list: Vec<String> = vec!["Press UP ARROW to use your melee attack\nPress DOWN ARROW to use your ranged attack".to_string(), "If you get music disks, you can use them using Q, E, and X".to_string()];
+    let tutorial_list: Vec<String> = vec![
+        "Press UP ARROW to use your melee attack\nPress DOWN ARROW to use your ranged attack".to_string(),
+        "If you get music disks, you can use them using Q, E, and X".to_string(),
+    ];
 
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
     lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
 
     let mut enemies: Vec<Enemy> = vec![];
-    let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20.0, 10.0, "", "large_slime").await;
-    large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
-    enemies.push(large_slime);
-
+    if player.get_cleared() < 2 {
+        let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20.0, 10.0, "", "large_slime").await;
+        large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        enemies.push(large_slime);
+    }
     let mut speech_box = StillImage::new(
         "",
         virtual_width - 50.0, // width
@@ -109,7 +113,7 @@ pub async fn run(
         background.draw();
         map.draw_map(&tm).await;
 
-        if player.get_cleared() < 2 && enemies.len() == 0 {
+        if player.get_cleared() == 1 && enemies.len() == 0 {
             map.create_map_array(0, 2, 0, vec![1, 3]).await;
         }
 
@@ -223,15 +227,16 @@ pub async fn run(
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         player.handle_inventory();
         if player.get_y() > virtual_height - 10.0 {
             if player.get_cleared() == 1 {
                 player.add_cleared();
-        }
-            *last_scene = "Up".to_string();
+            }
+            *last_scene = "Down".to_string();
             return "wcs3".to_string();
         }
 
@@ -239,23 +244,23 @@ pub async fn run(
             map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
         }
         if player.get_y() < 10.0 {
-            *last_scene = "Down".to_string();
+            *last_scene = "Top".to_string();
             return "wcs1".to_string();
         }
         player.draw();
-        if lbl_speech.get_text() != "" && player.get_cleared() < 2 {
+        if lbl_speech.get_text() != "" && player.get_cleared() == 1 {
             speech_box.draw();
             name_box.draw();
         }
         lbl_speech.scrolling_text_draw();
         lbl_tutorial.scrolling_text_draw();
 
-    let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
+        let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "wcs1".to_string();
-            
-        } if quit {
+        }
+        if quit {
             return "main_screen".to_string();
         }
         next_frame().await;

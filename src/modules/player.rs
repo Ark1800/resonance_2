@@ -70,7 +70,6 @@ player.move_player();
 player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
 player.handle_inventory();
 player.handle_save_menu();
-player.handle_playerdamaging(&enemies);
 player.draw();
 let activedisc = musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc(););
 musicdiscfunctions.handle_musicdisccooldowns(player.get_player_activedisc());
@@ -592,15 +591,6 @@ impl Player {
         }
         self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
         self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
-    }
-
-    pub fn handle_playerdamaging(&mut self, enemies: &Vec<Enemy>, musicdiscfunctions: &mut Musicdisc) {
-        for enemy in enemies.iter() {
-            if check_collision(self.view_player(), enemy.view_enemy(), 1) {
-                let issactive = musicdiscfunctions.get_imstillstanding_active();
-                self.dmgplayer(enemy.get_dmg(), issactive);
-            }
-        }
     }
 
     pub fn get_player_activedisc(&self) -> String {
