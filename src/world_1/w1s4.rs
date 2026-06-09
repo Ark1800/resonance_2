@@ -54,7 +54,7 @@ pub async fn run(
     )
     .await;
     background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
-    map.create_map_array(0, 2, 0, vec![2, 4]).await;
+    map.create_map_array(0, 1, 0, vec![4]).await;
     let map_row_len = map.get_map_array().len();
     let map_column_len = map.get_map_columns().len();
     let mut wall_places: Vec<Vec<i32>> = vec![];
@@ -96,7 +96,7 @@ pub async fn run(
         map.draw_map(&tm).await;
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
-        if player.get_cleared() == 6 {
+        if player.get_cleared() <= 6 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
@@ -179,7 +179,7 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
-        if enemies.is_empty() && player.get_cleared() == 6 {
+        if enemies.is_empty() && player.get_cleared() <= 6 {
             player.add_cleared();
             item_valid = true;
             choose_open = true;

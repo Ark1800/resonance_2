@@ -102,6 +102,7 @@ pub async fn run(
     let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
     name_box.with_colors(WHITE, None);
     let mut enemies: Vec<Enemy> = vec![];
+    player.add_health(30.0);
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);

@@ -294,7 +294,7 @@ impl Enemy {
     ) -> Enemy {
         Enemy {
             view: Enemy::make_view(asset_path, width, height, x, y, stretch_enabled, zoom_level).await,
-            move_speed: 100.0, // Default speed
+            move_speed: 150.0, // Default speed
             movement: Vec2::ZERO,
             health,
             max_health: health,
@@ -309,6 +309,10 @@ impl Enemy {
 
     pub fn get_enemy_type(&self) -> &str {
         &self.enemy_type
+    }
+
+    pub fn set_move_speed(&mut self, speed: f32) {
+        self.move_speed = speed;
     }
 
     #[allow(unused)]
@@ -788,7 +792,7 @@ impl Enemy {
             self.summoner_img_change(player.get_x(), self.get_x(), "ready", &tm).await;
         }
 
-        if get_time() - self.cooldown > 5.0 {
+        if get_time() - self.cooldown > 15.0 {
             self.cooldown = get_time();
 
             slime1.set_preload(tm.get_preload("assets/slime.png").unwrap());
@@ -1101,12 +1105,10 @@ impl Enemy {
 
     pub fn jeff_checkhit(&self, player: &mut Player, jeff_valid: bool, jeff_attackvalid: bool) -> (bool, bool) {
         let mut hit = jeff_valid;
-        let mut jeff_attackvalid = jeff_attackvalid;
         if check_collision(self.view_enemy_animated(), player.view_player(), 1) {
             hit = true;
-            jeff_attackvalid == true;
         }
-        (hit, jeff_attackvalid)
+        (hit, hit)
     }
 
     pub fn jeff_choose_attack(&mut self) -> i32 {
@@ -1178,6 +1180,42 @@ impl Enemy {
             self.knockback(player, "player");
             let issactive = musicdiscfunctions.get_imstillstanding_active();
             player.dmgplayer(20.0, issactive);
+            if player.get_x() < self.get_x() && player.get_y() < self.get_y() {
+                player.set_position(player.get_x() - 150.0, player.get_y()-150.0);
+                if player.get_x() < 70.0 {
+                    player.set_x(400.0);
+                }
+                if player.get_y() < 50.0 {
+                    player.set_y(400.0);
+                }
+            }
+            else if player.get_x() < self.get_x() && player.get_y() > self.get_y() {
+                player.set_position(player.get_x() - 150.0, player.get_y()+150.0);
+                if player.get_x() < 70.0 {
+                    player.set_x(400.0);
+                }
+                if player.get_y() > 600.0 {
+                    player.set_y(300.0);
+                }
+            }
+            else if player.get_x() > self.get_x() && player.get_y() < self.get_y() {
+                player.set_position(player.get_x() + 150.0, player.get_y()-150.0);
+                if player.get_x() > 930.0 {
+                    player.set_x(500.0);
+                }
+                if player.get_y() < 50.0 {
+                    player.set_y(400.0);
+                }
+            }
+            else {
+                player.set_position(player.get_x() + 150.0, player.get_y()+150.0);
+                if player.get_x() > 930.0 {
+                    player.set_x(500.0);
+                }
+                if player.get_y() > 600.0 {
+                    player.set_y(300.0);
+                }
+            }
         }
         if self.get_x() < -100.0 || self.get_x() > VIRTUAL_WIDTH + 100.0 || self.get_y() < -100.0 || self.get_y() > VIRTUAL_HEIGHT + 100.0 {
             attackend = true;
@@ -1187,19 +1225,21 @@ impl Enemy {
 
     pub fn jeff_normalidle(&mut self, player: &mut Player, tm: &TextureManager) {
         if self.get_x() < player.get_x() {
-            self.set_preload_gif(tm.get_preloaded_animated_gif("assets/jeff_files/jeff_idleR.gif").unwrap(), true);
+            self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idleR.gif").unwrap(), true);
         } else if self.get_x() > player.get_x() {
-            self.set_preload_gif(tm.get_preloaded_animated_gif("assets/jeff_files/jeff_idleL.gif").unwrap(), true);
+            self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idleL.gif").unwrap(), true);
         }
     }
 
     pub async fn jeff_cooldown(&mut self, tm: &TextureManager) -> (f64, AnimatedImage) {
         let cooldown = get_time();
         self.set_position(VIRTUAL_WIDTH / 2.0, VIRTUAL_HEIGHT / 2.0);
-        let mut jeff_zzz = AnimatedImage::from_gif("", self.get_x() + 75.0, self.get_y(), 50.0, 100.0, true).await;
-        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/world1_boss/jeff_zzz.gif") {
+        let mut jeff_zzz = AnimatedImage::from_gif("", self.get_x() - 50.0, self.get_y() - 130.0, 50.0, 100.0, true).await;
+        if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/world1_boss/jeff_zzz3.gif") {
             jeff_zzz.set_preloaded_gif(preloaded, true);
         }
+        self.set_position((VIRTUAL_WIDTH / 2.0) - 75.0, (VIRTUAL_HEIGHT / 2.0) - 75.0);
+        self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_tired.gif").unwrap(), true);
         (cooldown, jeff_zzz)
     }
 
@@ -1211,16 +1251,16 @@ impl Enemy {
             1 => {
                 //left
                 self.set_position(100.0, (VIRTUAL_HEIGHT / 2.0) - 75.0);
-                self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_openmouth2L.gif").unwrap(), true);
-                lbl_warninglabel.set_position(self.get_x() + 150.0, 0.0);
-                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+                self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_openmouth2R.gif").unwrap(), true);
+                lbl_warninglabel.set_position(self.get_x() + 150.0, 250.0);
+                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH, VIRTUAL_HEIGHT-420.0);
             }
             2 => {
                 //right
-                self.set_position(VIRTUAL_WIDTH - 100.0, (VIRTUAL_HEIGHT / 2.0) - 75.0);
-                self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_openmouth2R.gif").unwrap(), true);
-                lbl_warninglabel.set_position(-100.0, 0.0);
-                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH + 100.0, 150.0);
+                self.set_position(VIRTUAL_WIDTH - 200.0, (VIRTUAL_HEIGHT / 2.0) - 75.0);
+                self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_openmouth2L.gif").unwrap(), true);
+                lbl_warninglabel.set_position(-20.0, 250.0);
+                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH - 200.0 , VIRTUAL_HEIGHT-420.0);
             }
             _ => {}
         }
@@ -1260,20 +1300,93 @@ impl Enemy {
         whirlpool_hitbox: &mut StillImage,
         map: &mut map::Map,
         whirlpool_direction: Vec2,
+        musicdiscfunctions: &mut Musicdisc,
     ) -> Vec2 {
         let mut direction = whirlpool_direction;
-        let move_speed = 200.0;
+        let move_speed = 400.0;
         let movement = direction * move_speed * get_frame_time();
+        let whirlpool_old_pos = vec2(whirlpool.get_x(), whirlpool.get_y());
+        let whirlpool_hitbox_old_pos = vec2(whirlpool_hitbox.get_x(), whirlpool_hitbox.get_y());
+        let candidates = [
+            vec2(1.0, 0.0),
+            vec2(-1.0, 0.0),
+            vec2(0.0, 1.0),
+            vec2(0.0, -1.0),
+            vec2(1.0, 1.0),
+            vec2(1.0, -1.0),
+            vec2(-1.0, 1.0),
+            vec2(-1.0, -1.0),
+        ];
+        let mut bounced = false;
         whirlpool.set_x(whirlpool.get_x() + movement.x);
         whirlpool_hitbox.set_x(whirlpool_hitbox.get_x() + movement.x);
         if map.map_collision(whirlpool_hitbox).0 {
-            direction.x = -direction.x;
+            bounced = true;
+            whirlpool.set_x(whirlpool_old_pos.x);
+            whirlpool_hitbox.set_x(whirlpool_hitbox_old_pos.x);
         }
         whirlpool.set_y(whirlpool.get_y() + movement.y);
         whirlpool_hitbox.set_y(whirlpool_hitbox.get_y() + movement.y);
         if map.map_collision(whirlpool_hitbox).0 {
-            direction.y = -direction.y;
+            bounced = true;
+            whirlpool.set_y(whirlpool_old_pos.y);
+            whirlpool_hitbox.set_y(whirlpool_hitbox_old_pos.y);
         }
+        if bounced {
+            for _ in 0..candidates.len() * 2 {
+                let candidate = candidates[rand::gen_range(0, candidates.len() as i32) as usize];
+                let candidate_movement = candidate * move_speed * get_frame_time();
+                let mut candidate_hitbox = whirlpool_hitbox.clone();
+                candidate_hitbox.set_x(whirlpool_old_pos.x + candidate_movement.x);
+                candidate_hitbox.set_y(whirlpool_old_pos.y + candidate_movement.y);
+                if !map.map_collision(&candidate_hitbox).0 {
+                    direction = candidate;
+                    break;
+                }
+            }
+        }
+        if check_collision(whirlpool_hitbox, player.view_player(), 1) {
+            self.knockback(player, "player");
+            let issactive = musicdiscfunctions.get_imstillstanding_active();
+            player.dmgplayer(20.0, issactive);
+            if player.get_x() < self.get_x() && player.get_y() < self.get_y() {
+                player.set_position(player.get_x() - 150.0, player.get_y()-150.0);
+                if player.get_x() < 70.0 {
+                    player.set_x(400.0);
+                }
+                if player.get_y() < 50.0 {
+                    player.set_y(400.0);
+                }
+            }
+            else if player.get_x() < self.get_x() && player.get_y() > self.get_y() {
+                player.set_position(player.get_x() - 150.0, player.get_y()+150.0);
+                if player.get_x() < 70.0 {
+                    player.set_x(400.0);
+                }
+                if player.get_y() > 600.0 {
+                    player.set_y(300.0);
+                }
+            }
+            else if player.get_x() > self.get_x() && player.get_y() < self.get_y() {
+                player.set_position(player.get_x() + 150.0, player.get_y()-150.0);
+                if player.get_x() > 930.0 {
+                    player.set_x(500.0);
+                }
+                if player.get_y() < 50.0 {
+                    player.set_y(400.0);
+                }
+            }
+            else {
+                player.set_position(player.get_x() + 150.0, player.get_y()+150.0);
+                if player.get_x() > 930.0 {
+                    player.set_x(500.0);
+                }
+                if player.get_y() > 600.0 {
+                    player.set_y(300.0);
+                }
+            }
+        }
+        whirlpool.draw();
         direction
     }
 

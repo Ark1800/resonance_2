@@ -54,8 +54,7 @@ pub async fn run(
         ],
     )
     .await;
-    map.create_map_array(0, 2, 0, vec![3, 1]).await;
-    println!("HAI!");
+    map.create_map_array(0, 1, 0, vec![3]).await;
     let mut enemies: Vec<Enemy> = vec![];
     let mut mage = Enemy::new(
         "",
@@ -98,7 +97,7 @@ pub async fn run(
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
-         if player.get_cleared() == 4 {
+         if player.get_cleared() <= 4 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
@@ -181,11 +180,12 @@ pub async fn run(
         } if quit {
             return "main_screen".to_string();
         }
-        if enemies.is_empty() && player.get_cleared() == 4 {
+        if enemies.is_empty() && player.get_cleared() <= 4 {
             player.add_cleared();
             item_valid = true;
             choose_open = true;
             player.add_health(30.0);
+            map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
         }
         player.handle_playerdamaging(&enemies, musicdiscfunctions);
         player.handle_keypresses(pause, musicdiscfunctions).await;

@@ -19,7 +19,6 @@ use std::f32::consts::PI;
 
 
 //questions
-//1. what should we do about weapon hitbox? image must be used.
 //2. hitboxes for minislimes?
 //3. wcs3?
 
@@ -48,6 +47,7 @@ Move Down - S
 Move Left - A
 Move Right - D
 Open/Close Inventory - Tab
+Save Menu - Escape
 Disc 1 - Q
 Disc 2 - E
 Disc 3 - X
@@ -169,7 +169,7 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 3.0,
+            mledmg: 100.0,
             rngdmg: 5.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
@@ -199,7 +199,7 @@ impl Player {
             ranged_movespeeds: Vec::new(),
             arrows: Vec::new(),
             activedisc: "none".to_string(),
-            cleared: 7,
+            cleared: 3,
             death_screen,
             death_screen_open: false,
             name: String::new(),
@@ -1054,12 +1054,22 @@ impl Player {
                 continue; //skip collision check if arrow is removed for being out of bounds
             }
             for j in 0..enemies.len() {
-                if check_collision(&self.arrows[idx], enemies[j].view_enemy(), 1) {
-                    //ENEMY DAMAGE: mark hit and remove arrow
-                    rnghit = true;
-                    self.arrows.remove(idx);
-                    self.ranged_movespeeds.remove(idx);
-                    break; //break to prevent multiple enemies being damaged by one arrow
+                let enemy_view_type = enemies[i].get_enemy_view_type();
+                if enemy_view_type == "still" {
+                    if check_collision(&self.arrows[idx], enemies[j].view_enemy(), 1) {
+                        rnghit = true;
+                        self.arrows.remove(idx);
+                        self.ranged_movespeeds.remove(idx);
+                        break; //break to prevent multiple enemies being damaged by one arrow
+                    }
+                }
+                else if enemy_view_type == "animated" {
+                    if check_collision(&self.arrows[idx], enemies[j].view_enemy_animated(), 1) {
+                        rnghit = true;
+                        self.arrows.remove(idx);
+                        self.ranged_movespeeds.remove(idx);
+                        break; //break to prevent multiple enemies being damaged by one arrow
+                    }
                 }
             }
         }
@@ -1501,7 +1511,7 @@ impl Player {
 
     pub fn update_stats(&mut self) {
         // Reset stats to base values
-        self.mledmg = 3.0;
+        self.mledmg = 100.0;
         self.rngdmg = 2.0;
         self.movespeedmult = 1.0;
         self.cooldownmult = 1.0;
@@ -1642,7 +1652,7 @@ impl Player {
 
     pub fn add_health(&mut self, health: f32) {
         self.health += health;
-        if health > self.maxhealth {
+        if self.health > self.maxhealth {
             self.health = self.maxhealth;
         }
         let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width

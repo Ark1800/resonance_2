@@ -85,7 +85,7 @@ pub async fn run(
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop
-            if player.get_cleared() == 3 {
+            if player.get_cleared() <= 3 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
@@ -155,7 +155,6 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
-        player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
 
         if save {
@@ -169,7 +168,7 @@ pub async fn run(
             *last_scene = "Right".to_string();
             return "w1sp".to_string();
         }
-        if enemies.is_empty() && player.get_cleared() == 3 {
+        if enemies.is_empty() && player.get_cleared() <= 3 {
             player.add_cleared();
             choose_open = true;
             item_valid = true;
@@ -177,7 +176,7 @@ pub async fn run(
             player.add_health(30.0);
         }
         if player.get_y() < 10.0 && player.get_cleared() >= 4 {
-            *last_scene = "Top".to_string();
+            *last_scene = "Up".to_string();
             println!("Returning w1s2");
             return "w1s2".to_string();
         }
@@ -190,5 +189,6 @@ pub async fn run(
             return "main_screen".to_string();
         }
     (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
+    player.handle_inventory();
         next_frame().await;
 }}

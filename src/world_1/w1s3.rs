@@ -54,7 +54,7 @@ pub async fn run(
     } else if *last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
     }
-    map.create_map_array(0, 2, 0, vec![2, 3]).await;
+    map.create_map_array(0, 1, 0, vec![3]).await;
     let mut enemies: Vec<Enemy> = vec![];
     let mut large_slime = Enemy::new(
     "",
@@ -108,7 +108,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-        if player.get_cleared() == 5 {
+        if player.get_cleared() <= 5 {
                 for i in 0..enemies.len() {
                     //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
                     if musicdiscfunctions.get_thickofit_active() == false
@@ -194,11 +194,11 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
-        if enemies.is_empty() && player.get_cleared() == 5 {
+        if enemies.is_empty() && player.get_cleared() <= 5 {
             player.add_cleared();
             item_valid = true;
             choose_open = true;
-            map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+            map.change_map(vec![0, 0], vec![vec![0, 5], vec![0, 6]]);
             player.add_health(30.0);
         }
         player.draw();

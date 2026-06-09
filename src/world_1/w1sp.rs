@@ -73,7 +73,7 @@ pub async fn run(
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
     } else if last_scene == "Up" {
-        player.set_position((virtual_width / 2.0) - 20.0, 80.0);
+        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
