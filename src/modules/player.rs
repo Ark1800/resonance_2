@@ -2,6 +2,7 @@ use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
 use crate::modules::database::DatabaseTable;
 use crate::modules::database::DatabaseClient;
+use crate::modules::enemy;
 use crate::modules::enemy::Enemy;
 use crate::modules::item::Item;
 use miniquad::date;
@@ -37,7 +38,6 @@ use std::f32::consts::PI;
 //2. add tmos rapier
 //3. add rest of items
 //4. add roman numerals to worlds
-//5. fix jeff boss fight
 
 
 //Keypresses:
@@ -554,7 +554,7 @@ impl Player {
         self.musicoins += coins;
     }
 
-    pub fn dmgplayer(&mut self, dmg: f32, issactive: bool) {
+    pub fn dmgplayer(&mut self, dmg: f32, issactive: bool, enemy: &mut Enemy) {
         if issactive == false {
             let mut dmg = dmg - self.armor as f32;
             if dmg < 0.0 {
@@ -569,7 +569,7 @@ impl Player {
             self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
             self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
             if self.inventory.1[2].get_filename() == "assets/item_files/armour/helmet_of_thorns.png" {
-
+                enemy.dmg_enemy(dmg);
             }
         }
     }
@@ -1104,6 +1104,11 @@ impl Player {
                     if check_collision(&self.hitboximg, enemies[i].view_enemy_animated(), 1) {
                         mlehit = true;
                         index = i;
+                    }
+                }
+                if self.inventory.1[5].get_filename() == "assets/item_files/weapons/mosquito_rapier.png" {
+                    if mlehit == true {
+                        self.healplayer(3.0);
                     }
                 }
             }
@@ -1760,7 +1765,7 @@ impl Player {
     lbl_item1_title.with_colors(BLACK, None);
     lbl_item1_title.with_fixed_size(250.0, 75.0);
     lbl_item1_title.with_alignment(modules::label::TextAlign::Center);
-    let mut lbl_item1_desc = Label::new(format!("This is a description of item 1. yaorg3grwg wgrwiohwgogwhogwe we ioghogwhogw io  ghr hwogi hiowg hio g iohwh iowgioh ghoi gw"), 50.0, 350.0, 30);
+    let mut lbl_item1_desc = Label::new(format!("This is a description of item 1."), 50.0, 350.0, 30);
     lbl_item1_desc.with_colors(BLACK, None);
     lbl_item1_desc.with_fixed_size(250.0, 700.0);
     lbl_item1_desc.with_alignment(modules::label::TextAlign::Left);
@@ -1784,11 +1789,11 @@ impl Player {
         1.0,    // Normal zoom (100%)
     ).await;
     img_item2.set_preload(tm.get_preload("assets/arrow.png").unwrap());
-     let mut lbl_item2_title = Label::new(format!("Item 2"), 400.0, 300.0, 60);
+     let mut lbl_item2_title = Label::new(format!("Item 2"), 400.0, 300.0, 40);
     lbl_item2_title.with_colors(BLACK, None);
     lbl_item2_title.with_fixed_size(250.0, 75.0);
     lbl_item2_title.with_alignment(modules::label::TextAlign::Center);
-    let mut lbl_item2_desc = Label::new(format!("This is a description of item 2. yaorg3grwg wgrwiohwgogwhogwe we ioghogwhogw io  ghr hwogi hiowg hio g iohwh iowgioh ghoi gw"), 400.0, 350.0, 30);
+    let mut lbl_item2_desc = Label::new(format!("This is a description of item 2."), 400.0, 350.0, 20);
     lbl_item2_desc.with_colors(BLACK, None);
     lbl_item2_desc.with_fixed_size(250.0, 700.0);
     lbl_item2_desc.with_alignment(modules::label::TextAlign::Left);
@@ -1816,7 +1821,7 @@ impl Player {
     lbl_item3_title.with_colors(BLACK, None);
     lbl_item3_title.with_fixed_size(250.0, 75.0);
     lbl_item3_title.with_alignment(modules::label::TextAlign::Center);
-    let mut lbl_item3_desc = Label::new(format!("This is a description of item 3. yaorg3grwg wgrwiohwgogwhogwe we ioghogwhogw io  ghr hwogi hiowg hio g iohwh iowgioh ghoi gw"), 750.0, 350.0, 30);
+    let mut lbl_item3_desc = Label::new(format!("This is a description of item 3."), 750.0, 350.0, 30);
     lbl_item3_desc.with_colors(BLACK, None);
     lbl_item3_desc.with_fixed_size(250.0, 700.0);
     lbl_item3_desc.with_alignment(modules::label::TextAlign::Left);
@@ -2003,6 +2008,7 @@ impl Player {
         )
         .await;
         possible_items.push(greatestshowitem);
+        //sword 1
         let time_sword = Item::new(
             tm.get_preload("assets/item_files/weapons/time_sword.png").unwrap(),
             "assets/item_files/weapons/time_sword.png".to_string(),
@@ -2018,6 +2024,7 @@ impl Player {
         )
         .await;
         possible_items.push(time_sword);
+        //bow 1
         let future_bow = Item::new(
             tm.get_preload("assets/item_files/weapons/future_bow.png").unwrap(),
             "assets/item_files/weapons/future_bow.png".to_string(),
@@ -2033,6 +2040,7 @@ impl Player {
         )
         .await;
         possible_items.push(future_bow);
+        //bodyarmor 1
         let diamond_armor = Item::new(
             tm.get_preload("assets/item_files/armour/diamond_armor.png").unwrap(),
             "assets/item_files/armour/diamond_armor.png".to_string(),
@@ -2048,6 +2056,7 @@ impl Player {
         )
         .await;
         possible_items.push(diamond_armor);
+        //boots 1
         let hermes_boots = Item::new(
             tm.get_preload("assets/item_files/armour/hermes_boots.png").unwrap(),
             "assets/item_files/armour/hermes_boots.png".to_string(),
@@ -2063,6 +2072,7 @@ impl Player {
         )
         .await;
         possible_items.push(hermes_boots);
+        //helmet 1
         let helmet_of_thorns: Item = Item::new(
             tm.get_preload("assets/item_files/armour/helmet_of_thorns.png").unwrap(),
             "assets/item_files/armour/helmet_of_thorns.png".to_string(),
@@ -2078,13 +2088,14 @@ impl Player {
         )
         .await;
         possible_items.push(helmet_of_thorns);
-        let tempitem_15 = Item::new(
-            tm.get_preload("assets/player_files/invslot.png").unwrap(),
-            "assets/player_files/invslot.png".to_string(),
-            "Test Item 3".to_string(),
-            "This is yet another test item used for debugging, it also does nothing".to_string(),
-            "helmet".to_string(),
-            0,
+        //sword 2
+        let tmos_rapier = Item::new(
+            tm.get_preload("assets/item_files/weapons/mosquito_rapier.png").unwrap(),
+            "assets/item_files/weapons/mosquito_rapier.png".to_string(),
+            "TMos Rapier".to_string(),
+            "A legendary rapier forged from the beak of a moquisto once wielded by a group of teenagers to fight ominent, decreases attack but adds lifesteal".to_string(),
+            "melee".to_string(),
+            -2,
             0,
             0.0,
             0.0,
@@ -2092,7 +2103,7 @@ impl Player {
             0,
         )
         .await;
-        possible_items.push(tempitem_15);
+        possible_items.push(tmos_rapier);
         let tempitem_16 = Item::new(
             tm.get_preload("assets/player_files/invslot.png").unwrap(),
             "assets/player_files/invslot.png".to_string(),

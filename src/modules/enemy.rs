@@ -485,7 +485,7 @@ impl Enemy {
                 
             
             let issactive = musicdiscfunctions.get_imstillstanding_active();
-            player.dmgplayer(self.get_dmg(), issactive);
+            player.dmgplayer(self.get_dmg(), issactive, self);
             self.knockback(player, "player");
             self.knockback(player, "enemy");
             
@@ -676,7 +676,7 @@ impl Enemy {
             self.projectiles[projectile].move_projectiles(player.get_oldpos());
             if collision {
                 let issactive = musicdiscfunctions.get_imstillstanding_active();
-                player.dmgplayer(dmg, issactive);
+                player.dmgplayer(dmg, issactive, self);
                 self.knockback(player, "player");
 
                 self.projectiles.remove(projectile);
@@ -1184,7 +1184,7 @@ impl Enemy {
         if check_collision(self.view_enemy_animated(), player.view_player(), 1) {
             self.knockback(player, "player");
             let issactive = musicdiscfunctions.get_imstillstanding_active();
-            player.dmgplayer(20.0, issactive);
+            player.dmgplayer(20.0, issactive, self);
             if player.get_x() < self.get_x() && player.get_y() < self.get_y() {
                 player.set_position(player.get_x() - 150.0, player.get_y()-150.0);
                 if player.get_x() < 70.0 {
@@ -1293,7 +1293,7 @@ impl Enemy {
         bubblebeam.set_preload(tm.get_preload("assets/world1_boss/jeff_bubblebeam.png").unwrap());
         if check_collision(&bubblebeam, player.view_player(), 1) {
             let issactive = musicdiscfunctions.get_imstillstanding_active();
-            player.dmgplayer(30.0, issactive);
+            player.dmgplayer(30.0, issactive, self);
         }
         bubblebeam
     }
@@ -1353,7 +1353,7 @@ impl Enemy {
         if check_collision(whirlpool_hitbox, player.view_player(), 1) {
             self.knockback(player, "player");
             let issactive = musicdiscfunctions.get_imstillstanding_active();
-            player.dmgplayer(20.0, issactive);
+            player.dmgplayer(20.0, issactive, self);
             if player.get_x() < self.get_x() && player.get_y() < self.get_y() {
                 player.set_position(player.get_x() - 150.0, player.get_y()-150.0);
                 if player.get_x() < 70.0 {
@@ -1447,7 +1447,7 @@ impl Enemy {
         let collision = check_collision(&hitbox, player.view_player(), 1);
         if collision {
             let issactive = musicdiscfunctions.get_imstillstanding_active();
-            player.dmgplayer(self.get_dmg(), issactive);
+            player.dmgplayer(self.get_dmg(), issactive, self);
             self.knockback(player, "player");
         }
 
