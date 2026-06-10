@@ -58,7 +58,7 @@ println!("Cleared: {}", player.get_cleared());
     } else if last_scene == "Top" {
         player.set_position(virtual_width / 2.0, virtual_height - 80.0);
     } else if last_scene == "down" {
-        player.set_position(virtual_width / 2.0, 80.0);
+        player.set_position((virtual_width / 2.0) - 60.0, 80.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
