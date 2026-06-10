@@ -235,7 +235,7 @@ pub async fn run(
                     lbl_speech.with_scroll_speed(0.25);
                     lbl_speech.set_scrolling_text(script_list[script_num][speech_num].clone());
                 } else {
-                    *last_scene = "Top".to_string();
+                    *last_scene = "Down".to_string();
                     return "wcs2".to_string();
                 }
             }

@@ -13,16 +13,15 @@ use crate::modules::still_image::StillImage;
 use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::enemy::Enemy;
-use crate::modules::grid::draw_grid;
 
 pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::modules::player::Player, tm: &TextureManager, pause: &mut bool, last_scene: &mut String, _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc, records: &Vec<DatabaseTable>,
     client: &DatabaseClient) -> String {
     player.set_currentscreen("w3sp".to_string());
     let mut background1 = StillImage::new(
         "",
-        virtual_width/2.0,  // width
+        virtual_width,  // width
         virtual_height, // height
-        virtual_width/2.0,            // x position
+        0.0,            // x position
         0.0,            // y position
         true,           // Enable stretching
         1.0,            // Normal zoom (100%)
@@ -49,14 +48,10 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
     if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/world1/red_portal.gif") {
         red_portal.set_preloaded_gif(preloaded, true);
     }
-    if last_scene == "Right" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Left" {
-        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
-    } else if last_scene == "Down" {
-        player.set_position((virtual_width / 2.0)-20.0, virtual_height - 80.0);
-    } else if last_scene == "Top" {
+    if last_scene == "Down" {
         player.set_position((virtual_width / 2.0)-20.0, 80.0);
+    } else if last_scene == "Top" {
+        player.set_position((virtual_width / 2.0)-20.0, virtual_height - 10.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
@@ -124,6 +119,7 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         let mut enemies: Vec<Enemy> = vec![];
         //backgrounds
         background1.draw();
+        map.draw_map(tm).await;
         if player.get_cleared() >= 12 {
         red_portal.draw();
         }
@@ -154,7 +150,6 @@ pub async fn run(virtual_width: f32, virtual_height: f32, player: &mut crate::mo
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects); 
         player.draw();
-        draw_grid(50.0, BLACK);
         next_frame().await;
     }
 }

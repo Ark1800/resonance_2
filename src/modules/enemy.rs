@@ -1406,6 +1406,7 @@ impl Enemy {
         attack_choice: &mut i32,
         dig: &mut bool,
         musicdiscfunctions: &mut Musicdisc,
+        hit : &mut bool,
     ) {
         let mut way = "";
         if player.get_x() < self.get_x() {
@@ -1418,10 +1419,12 @@ impl Enemy {
             self.cooldown = get_time();
         }
         if get_time() > self.cooldown + 5.0 {
-     
+           
             if get_time() >= self.cooldown + 5.1 && get_time() < self.cooldown + 5.2 {
                 rand::srand(date::now() as u64);
-                *attack_choice = rand::gen_range(0, 2);
+                *attack_choice = rand::gen_range(0, 2); 
+                *hit = false;
+     
             }
 
             if *attack_choice == 0 {
@@ -1440,16 +1443,23 @@ impl Enemy {
                 *dig = false;
                 *shoot = false;
                 *chomp = false;
+
             }
         }
        *attack=false;
 
         let collision = check_collision(self.view_enemy_animated(), player.view_player(), 1);
-        if collision {
+        if collision && *hit == false {
             let issactive = musicdiscfunctions.get_imstillstanding_active();
+<<<<<<< HEAD
             player.dmgplayer(self.get_dmg(), issactive, self);
             self.knockback(player, "player");
              
+=======
+            player.dmgplayer(self.get_dmg(), issactive);
+            self.knockback(player, "enemy");
+            *hit = true;
+>>>>>>> 8cae0c5 (commit 7.1.5)
         }
 
         

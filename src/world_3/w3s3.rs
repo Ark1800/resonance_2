@@ -210,7 +210,7 @@ true, //stretching
             return "inn".to_string();
             
         } if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
         }
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         next_frame().await;

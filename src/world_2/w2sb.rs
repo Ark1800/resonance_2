@@ -68,6 +68,7 @@ pub async fn run(
     let mut dig = false;
     let mut attack_choice = 0;
     let mut timer=0.0;
+    let mut hit = false;
     map.create_map_array(0, 1, 0, vec![2]).await;
     if player.get_cleared() == 8 {
         map.create_map_array(0, 2, 0, vec![2, 1]).await;
@@ -90,8 +91,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-        boss.plant_boss_action(player, &tm, &mut attack,&mut timer,&mut shoot,&mut chomp, &mut attack_choice, &mut dig, musicdiscfunctions).await;
-        boss.draw_bullet(player, musicdiscfunctions);
+        
         healthbar.set_value(boss.get_health());
        
 
@@ -116,10 +116,12 @@ pub async fn run(
             return "inn".to_string();
         }
         if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
         }
         map.draw_map(&tm).await;
         if *pause == false {
+            boss.plant_boss_action(player, &tm, &mut attack,&mut timer,&mut shoot,&mut chomp, &mut attack_choice, &mut dig, musicdiscfunctions, &mut hit).await;
+        boss.draw_bullet(player, musicdiscfunctions);
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop

@@ -202,9 +202,9 @@ pub async fn run(
                 return "w3sb".to_string();
             }
 
-            if player.get_y() > virtual_height - 10.0 {
-                *last_scene = "Down".to_string();
-                return "w3s4".to_string();
+            if player.get_x() < 10.0 {
+                *last_scene = "Left".to_string();
+                return "w3s3".to_string();
             }
         }
         let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
@@ -213,7 +213,7 @@ pub async fn run(
             return "inn".to_string();
         }
         if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
         }
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         next_frame().await;

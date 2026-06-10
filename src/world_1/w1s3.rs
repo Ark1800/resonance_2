@@ -160,7 +160,7 @@ pub async fn run(
             *last_scene = "None".to_string();
             return "inn".to_string();
         } if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
         }
         player.move_player(&map, old_pos, &vec![]);
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame

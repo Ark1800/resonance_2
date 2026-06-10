@@ -144,7 +144,7 @@ pub async fn run(
             *last_scene = "None".to_string();
             return "inn".to_string();
         } if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
         }
         player.handle_keypresses(pause, musicdiscfunctions).await;
         if player.get_cleared() <= 7 {

@@ -5,7 +5,6 @@ Program Details:
 */
 
 use crate::modules::enemy::Enemy;
-use crate::modules::grid::draw_grid;
 use crate::modules::map::Map;
 use crate::modules::musicdisc::Musicdisc;
 use crate::modules::preload_image::TextureManager;
@@ -33,21 +32,18 @@ pub async fn run(
     )
     .await;
 
-    let mut collidable_objects = vec![
-        StillImage::new("", 0.0, -10.0, virtual_width, 10.0, true, 1.0).await,
-        StillImage::new("", -10.0, 0.0, 10.0, virtual_height, true, 1.0).await,
-        StillImage::new("", virtual_width, 0.0, 10.0, virtual_height, true, 1.0).await,
-        StillImage::new("", 300.0, virtual_height, virtual_width, 10.0, true, 1.0).await,
+    let mut collidable_objects: Vec<StillImage> = vec![
+        StillImage::new("", 0.0, -50.0, virtual_width, 50.0, true, 1.0).await,
+        StillImage::new("", -50.0, 0.0, 50.0, virtual_height, true, 1.0).await,
+        StillImage::new("", virtual_width, 0.0, 50.0, virtual_height, true, 1.0).await,
+        StillImage::new("", 300.0, virtual_height, virtual_width, 50.0, true, 1.0).await,
     ];
-    for obj in 0..3 {
+    for obj in 0..collidable_objects.len() {
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
-    } for obj in 4..5 {
-        collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/circle.png").unwrap());
-        
     }
     
     if last_scene == "Top" {
-        player.set_position(virtual_width - 50.0, 150.0);
+        player.set_position(50.0, virtual_height - 50.0);
     } else {
         player.set_position(225.0, 140.0);
     }
@@ -76,7 +72,6 @@ pub async fn run(
         }
         
         background.draw();
-        draw_grid(50.0, BLACK);
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
@@ -89,7 +84,6 @@ pub async fn run(
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
         player.draw();
-        draw_grid(50.0, BLACK);
         next_frame().await;
     }
 }

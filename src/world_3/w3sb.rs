@@ -242,7 +242,10 @@ let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfun
             return "inn".to_string();
         }
         if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
+        }
+        if player.get_y() > virtual_height - 10.0 {
+            return "w3s4".to_string();
         }
         next_frame().await;
     }

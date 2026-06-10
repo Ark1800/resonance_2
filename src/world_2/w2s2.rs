@@ -91,7 +91,7 @@ pub async fn run(
             *last_scene = "None".to_string();
             return "inn".to_string();
         } if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
         }
         map.draw_map(&tm).await;
         if *pause == false {

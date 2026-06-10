@@ -11,7 +11,7 @@ use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
-use crate::modules::database::{DatabaseClient, DatabaseTable, create_database_client};
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
@@ -186,7 +186,7 @@ pub async fn run(
             *last_scene = "None".to_string();
             return "inn".to_string();
         } if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
         }
     (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
     player.handle_inventory();
