@@ -34,10 +34,7 @@ use std::f32::consts::PI;
 //Bug fixes/extras
 
 //Work
-//1. add thorns
-//2. add tmos rapier
-//3. add rest of items
-//4. add roman numerals to worlds
+//if all inventorys
 
 
 //Keypresses:
@@ -1783,11 +1780,11 @@ impl Player {
         1.0,    // Normal zoom (100%)
     ).await;
     img_item1.set_preload(tm.get_preload("assets/arrow.png").unwrap());
-    let mut lbl_item1_title = Label::new(format!("Item 1"), 50.0, 300.0, 60);
+    let mut lbl_item1_title = Label::new(format!("Item 1"), 50.0, 300.0, 40);
     lbl_item1_title.with_colors(BLACK, None);
     lbl_item1_title.with_fixed_size(250.0, 75.0);
     lbl_item1_title.with_alignment(modules::label::TextAlign::Center);
-    let mut lbl_item1_desc = Label::new(format!("This is a description of item 1."), 50.0, 350.0, 30);
+    let mut lbl_item1_desc = Label::new(format!("This is a description of item 1."), 50.0, 350.0, 20);
     lbl_item1_desc.with_colors(BLACK, None);
     lbl_item1_desc.with_fixed_size(250.0, 700.0);
     lbl_item1_desc.with_alignment(modules::label::TextAlign::Left);
@@ -1839,11 +1836,11 @@ impl Player {
         1.0,    // Normal zoom (100%)
     ).await;
     img_item3.set_preload(tm.get_preload("assets/arrow.png").unwrap());
-    let mut lbl_item3_title = Label::new(format!("Item 3"), 750.0, 300.0, 60);
+    let mut lbl_item3_title = Label::new(format!("Item 3"), 750.0, 300.0, 40);
     lbl_item3_title.with_colors(BLACK, None);
     lbl_item3_title.with_fixed_size(250.0, 75.0);
     lbl_item3_title.with_alignment(modules::label::TextAlign::Center);
-    let mut lbl_item3_desc = Label::new(format!("This is a description of item 3."), 750.0, 350.0, 30);
+    let mut lbl_item3_desc = Label::new(format!("This is a description of item 3."), 750.0, 350.0, 20);
     lbl_item3_desc.with_colors(BLACK, None);
     lbl_item3_desc.with_fixed_size(250.0, 700.0);
     lbl_item3_desc.with_alignment(modules::label::TextAlign::Left);
