@@ -90,7 +90,7 @@ pub async fn run(
 
     let mut enemies: Vec<Enemy> = vec![];
     if player.get_cleared() < 2 {
-        let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 20.0, 10.0, "", "large_slime").await;
+        let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 15.0, 10.0, "", "large_slime").await;
         large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
         enemies.push(large_slime);
     }
@@ -172,7 +172,7 @@ pub async fn run(
                         enemies[i].draw_bullet(player, _musicdiscfunctions);
                     }
                     "slime" => {
-                        enemies[i].moveing(player, _musicdiscfunctions);
+                        enemies[i].slime_action(player, _musicdiscfunctions);
                     }
                     "summoner" => {
                         let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
@@ -248,12 +248,14 @@ pub async fn run(
             return "wcs1".to_string();
         }
         player.draw();
-        if lbl_speech.get_text() != "" && player.get_cleared() == 1 {
-            speech_box.draw();
-            name_box.draw();
+        if player.get_cleared() == 1 {
+            if lbl_speech.get_text() != "" && player.get_cleared() == 1 {
+                speech_box.draw();
+                name_box.draw();
+            }
+            lbl_speech.scrolling_text_draw();
+            lbl_tutorial.scrolling_text_draw();
         }
-        lbl_speech.scrolling_text_draw();
-        lbl_tutorial.scrolling_text_draw();
 
         let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
         if restart {
@@ -261,7 +263,7 @@ pub async fn run(
             return "wcs1".to_string();
         }
         if quit {
-            return "main_screen".to_string();
+            return "title_screen".to_string();
         }
         next_frame().await;
     }

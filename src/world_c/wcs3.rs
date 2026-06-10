@@ -56,13 +56,7 @@ pub async fn run(
     )
     .await;
     cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_f.png").unwrap());
-    if last_scene == "Left" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Right" {
-        player.set_position(80.0, virtual_height / 2.0);
-    } else if last_scene == "Top" {
-        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
-    } else if last_scene == "Down" {
+    if last_scene == "Down" {
         player.set_position(virtual_width / 2.0, 80.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
@@ -232,7 +226,6 @@ pub async fn run(
 
             if player.get_y() < 10.0 {
                 if first_time && cutscene_num == 1 {
-                    *last_scene = "Top".to_string();
                     cutscene_going = true;
                     player.set_position(10000.0, 10000.0);
                     script_num = 2;
@@ -242,6 +235,7 @@ pub async fn run(
                     lbl_speech.with_scroll_speed(0.25);
                     lbl_speech.set_scrolling_text(script_list[script_num][speech_num].clone());
                 } else {
+                    *last_scene = "Top".to_string();
                     return "wcs2".to_string();
                 }
             }

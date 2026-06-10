@@ -121,7 +121,7 @@ pub async fn run(
             return "w2sp".to_string();
         } else if player.get_y() < 10.0 {
             *last_scene = "Top".to_string();
-            return "w3s1".to_string();
+            return "w3sp".to_string();
         } else if (player.get_x() > 130.0 && player.get_x() < 200.00) && (player.get_y() > 200.0 && player.get_y() < 270.00) {
             return "shop".to_string();
         } else if (player.get_x() > 700.0 && player.get_x() < 800.0) && (player.get_y() > 250.0 && player.get_y() < 300.00) {

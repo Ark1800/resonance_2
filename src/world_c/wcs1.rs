@@ -51,16 +51,16 @@ println!("Cleared: {}", player.get_cleared());
         println!("One door");
         map.create_map_array(0, 1, 0, vec![3]).await;
     }
-    if last_scene == "Left" {
-        player.set_position(virtual_width - 80.0, virtual_height / 2.0);
-    } else if last_scene == "Right" {
-        player.set_position(80.0, virtual_height / 2.0);
-    } else if last_scene == "Top" {
-        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
+    if last_scene == "Top" {
+        player.set_position((virtual_width / 2.0) - 10.0, virtual_height - 80.0);
     } else if last_scene == "down" {
+<<<<<<< HEAD
         player.set_position((virtual_width / 2.0) - 60.0, 80.0);
+=======
+        player.set_position((virtual_width / 2.0) - 10.0, 80.0);
+>>>>>>> 943a396 (Co-authored-by: lelol-barbarian <lelol-barbarian@users.noreply.github.com>)
     } else {
-        player.set_position(virtual_width / 2.0, virtual_height / 2.0);
+        player.set_position((virtual_width / 2.0) - 10.0, virtual_height / 2.0);
     }
 
     let mut cyric = StillImage::new(
@@ -178,14 +178,14 @@ println!("Cleared: {}", player.get_cleared());
                 speech_box.draw();
                 name_box.draw();
             }
-            if speech_num != speech_list.len() {
+            if speech_num != speech_list.len() && player.get_cleared() == 0 {
                 lbl_speech.scrolling_text_draw();
-            } else {
+            } else if player.get_cleared() == 0 {
                 lbl_speech.draw();
             }
-            if tutorial_num != tutorial_list.len() {
+            if tutorial_num != tutorial_list.len() && player.get_cleared() == 0 {
                 lbl_tutorial.scrolling_text_draw();
-            } else {
+            } else if player.get_cleared() == 0 {
                 lbl_tutorial.draw();
             }
 

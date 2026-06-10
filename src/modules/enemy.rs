@@ -1418,6 +1418,7 @@ impl Enemy {
             self.cooldown = get_time();
         }
         if get_time() > self.cooldown + 5.0 {
+     
             if get_time() >= self.cooldown + 5.1 && get_time() < self.cooldown + 5.2 {
                 rand::srand(date::now() as u64);
                 *attack_choice = rand::gen_range(0, 2);
@@ -1441,21 +1442,20 @@ impl Enemy {
                 *chomp = false;
             }
         }
-        *attack = false;
+       *attack=false;
 
-        let hitbox = StillImage::new("", 100.0, 100.0, self.get_x(), self.get_y(), true, 1.0).await;
-        let collision = check_collision(&hitbox, player.view_player(), 1);
+        let collision = check_collision(self.view_enemy_animated(), player.view_player(), 1);
         if collision {
             let issactive = musicdiscfunctions.get_imstillstanding_active();
             player.dmgplayer(self.get_dmg(), issactive, self);
             self.knockback(player, "player");
+             
         }
 
         
     }
 
     pub async fn plant_boss_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str, shoot: &mut bool, dig: &mut bool, timer: &mut f64) {
-        println!("Plant Boss used shoot!");
         if *shoot == false {
             self.cooldown2 = get_time();
 
@@ -1463,7 +1463,6 @@ impl Enemy {
         }
         self.plant_boss_dig_shoot(player, tm, way, dig, timer).await;
         if get_time() > self.cooldown2 + 2.0 && get_time() < self.cooldown2 + 2.1 {
-            println!("Plant Boss used shoot!");
             self.set_preload_gif(
                 tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_shoot{}.gif", way).as_str())
                     .unwrap(),

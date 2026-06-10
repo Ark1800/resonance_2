@@ -164,7 +164,7 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 3.0,
+            mledmg: 300.0,
             rngdmg: 5.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,
@@ -549,6 +549,8 @@ impl Player {
 
     pub fn addcoins(&mut self, coins: i32) {
         self.musicoins += coins;
+        self.inventory.2[2].set_text(format!("{}", self.musicoins));
+
     }
 
     pub fn dmgplayer(&mut self, dmg: f32, issactive: bool, enemy: &mut Enemy) {
@@ -1367,7 +1369,7 @@ impl Player {
             }
             self.inventory.2[0].draw();
             self.inventory.2[1].draw();
-            //self.inventory.2[2].set_text(format!("Musicoins:{}", self.musicoins));
+            self.inventory.2[2].set_text(format!("{}", self.musicoins));
             if self.inventory.3[0].click() {
                 let title = self.inventory.0[0].selected_item().unwrap();
                 for (i, item) in self.items.iter().enumerate() {

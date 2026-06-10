@@ -48,9 +48,9 @@ pub async fn run(
     .await;
     // If cleared
     if player.get_cleared() == 14 {
-        map.create_map_array(0, 1, 0, vec![4]).await;
+        map.create_map_array(0, 1, 0, vec![3]).await;
     } else {
-        map.create_map_array(0, 2, 0, vec![1, 4]).await;
+        map.create_map_array(0, 2, 0, vec![4, 3]).await;
     }
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
