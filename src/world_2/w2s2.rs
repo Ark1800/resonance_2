@@ -34,7 +34,7 @@ pub async fn run(
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
     } else if last_scene == "Right" {
-        player.set_position(80.0, virtual_height / 2.0);
+        player.set_position(80.0, virtual_height / 2.0+200.0);
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
     } else if last_scene == "Up" {
@@ -42,6 +42,8 @@ pub async fn run(
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
+
+
     let mut background = StillImage::new(
         "",
         virtual_width,  // width
@@ -56,7 +58,7 @@ pub async fn run(
 
     for _i in 0..3 {
         let mut large_slime = Enemy::new("", 75.0, 75.0, large_slimex, 100.0, true, 1.0, 65.0, 22.0, "", "large_slime").await;
-        large_slime.set_preload(tm.get_preload("assets/large_slime_files/large_slime_standL.png").unwrap());
+        large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
         large_slimex += 300.0; // Adjust the x position for the next large slime
         enemies.push(large_slime);
     }
@@ -68,7 +70,7 @@ pub async fn run(
 
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
     map.create_map_array(0, 1, 0, vec![2]).await;
-    if player.get_cleared() == 7 {
+    if player.get_cleared() >= 10 {
         map.create_map_array(0, 2, 0, vec![2, 1]).await;
     }
     let mut choose_open = false;
@@ -175,7 +177,7 @@ pub async fn run(
             player.add_health(30.0);
         }
 
-        if player.get_y() > -10.0 {
+        if player.get_y() < -10.0 {
             *last_scene = "Up".to_string();
             return "w2s3".to_string();
         }
@@ -190,3 +192,5 @@ pub async fn run(
         next_frame().await;
     }
 }
+
+// Cleared starts at 9, goes to 10

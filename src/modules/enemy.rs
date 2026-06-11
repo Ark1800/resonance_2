@@ -2,7 +2,6 @@ use core::panic;
 
 use crate::VIRTUAL_HEIGHT;
 use crate::VIRTUAL_WIDTH;
-use crate::modules;
 /*pub mod enemy;
 
 //enemy knockback on hit
@@ -556,15 +555,15 @@ impl Enemy {
 
      pub fn view_enemy_animated(&self) -> &AnimatedImage {
         match &self.view {
-            EnemyView::Still(still) => panic!("Cannot get animated image from a still enemy"),
+            EnemyView::Still(_still) => panic!("Cannot get animated image from a still enemy"),
             EnemyView::Animated(animated) => animated
         }
     }
 
     pub fn get_enemy_view_type(&self) -> String {
         match &self.view {
-            EnemyView::Still(still) => "still".into(),
-            EnemyView::Animated(animated) => "animated".into(),
+            EnemyView::Still(_still) => "still".into(),
+            EnemyView::Animated(_animated) => "animated".into(),
         }
     }
 
@@ -1408,7 +1407,7 @@ impl Enemy {
         musicdiscfunctions: &mut Musicdisc,
         hit : &mut bool,
     ) {
-        let mut way = "";
+        let way: &str;
         if player.get_x() < self.get_x() {
             way = "L";
         } else {
@@ -1451,15 +1450,9 @@ impl Enemy {
         let collision = check_collision(self.view_enemy_animated(), player.view_player(), 1);
         if collision && *hit == false {
             let issactive = musicdiscfunctions.get_imstillstanding_active();
-<<<<<<< HEAD
             player.dmgplayer(self.get_dmg(), issactive, self);
-            self.knockback(player, "player");
-             
-=======
-            player.dmgplayer(self.get_dmg(), issactive);
             self.knockback(player, "enemy");
             *hit = true;
->>>>>>> 8cae0c5 (commit 7.1.5)
         }
 
         

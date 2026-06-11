@@ -70,8 +70,8 @@ pub async fn run(
     let mut timer=0.0;
     let mut hit = false;
     map.create_map_array(0, 1, 0, vec![2]).await;
-    if player.get_cleared() == 8 {
-        map.create_map_array(0, 2, 0, vec![2, 1]).await;
+    if player.get_cleared() == 12 {
+        map.create_map_array(0, 2, 0, vec![2, 4]).await;
     }
     let mut choose_open = false;
     let mut item_valid = false;
@@ -120,13 +120,16 @@ pub async fn run(
         }
         map.draw_map(&tm).await;
         if *pause == false {
+if boss.get_health() > 0.0 {
+    
+
             boss.plant_boss_action(player, &tm, &mut attack,&mut timer,&mut shoot,&mut chomp, &mut attack_choice, &mut dig, musicdiscfunctions, &mut hit).await;
         boss.draw_bullet(player, musicdiscfunctions);
             let old_pos = player.get_oldpos();
-            player.move_player(&map, old_pos, &vec![]);
             //enemy loop
             boss.draw();
-        }
+            player.move_player(&map, old_pos, &vec![]);
+        }}
         player.draw();
         let (mlehit, rnghit, _index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
@@ -153,7 +156,7 @@ pub async fn run(
 
         if player.get_x() < 10.0 {
             *last_scene = "Up".to_string();
-            return "w2s1".to_string();
+            return "w2sp".to_string();
         }
         player.draw();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
@@ -161,3 +164,5 @@ pub async fn run(
         next_frame().await;
     }
 }
+
+// Cleared starts at 11, goes to 12

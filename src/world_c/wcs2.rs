@@ -78,10 +78,11 @@ pub async fn run(
     lbl_tutorial.with_colors(WHITE, None);
     lbl_tutorial.with_scroll(true);
     let mut tutorial_cooldown = 0.0;
+    let mut first = true;
     let mut tutorial_num = 0;
     let speech_list: Vec<String> = vec!["Woah, bogie alert!".to_string(), "You take them, you have the sword!".to_string()];
     let tutorial_list: Vec<String> = vec![
-        "Press UP ARROW to use your melee attack\nPress DOWN ARROW to use your ranged attack".to_string(),
+        "Press UP ARROW to use your melee attack\nPress RIGHT ARROW to use your ranged attack".to_string(),
         "If you get music disks, you can use them using Q, E, and X".to_string(),
     ];
 
@@ -89,7 +90,7 @@ pub async fn run(
     lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
 
     let mut enemies: Vec<Enemy> = vec![];
-    if player.get_cleared() < 2 {
+    if player.get_cleared() == 1 {
         let mut large_slime = Enemy::new("", 75.0, 75.0, 150.0, 200.0, true, 1.0, 15.0, 10.0, "", "large_slime").await;
         large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
         enemies.push(large_slime);
@@ -113,8 +114,9 @@ pub async fn run(
         background.draw();
         map.draw_map(&tm).await;
 
-        if player.get_cleared() == 1 && enemies.len() == 0 {
+        if player.get_cleared() == 1 && enemies.len() == 0 && first {
             map.create_map_array(0, 2, 0, vec![1, 3]).await;
+            first = false;
         }
 
         if *pause == false {
@@ -123,7 +125,7 @@ pub async fn run(
                 current_time = get_time();
                 if (current_time - time_dif) > 0.1 {
                     time_dif = current_time;
-                    if player.get_cleared() < 2 {
+                    if player.get_cleared() == 1 {
                         if speech_cooldown > 0.0 {
                             speech_cooldown -= 0.1;
                             if speech_cooldown <= 0.0 {
@@ -149,7 +151,7 @@ pub async fn run(
                     }
                 }
             }
-            if player.get_cleared() < 2 {
+            if player.get_cleared() == 1 {
                 if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() {
                     speech_cooldown = 0.5;
                     speech_num += 1;
@@ -268,3 +270,5 @@ pub async fn run(
         next_frame().await;
     }
 }
+
+// Cleared starts at 1, goes to 2

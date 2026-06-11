@@ -39,7 +39,7 @@ pub async fn run(
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
     } else if last_scene == "Up" {
-        player.set_position(virtual_width / 2.0, 30.0);
+        player.set_position(virtual_width / 2.0, virtual_height - 80.0);
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
@@ -68,9 +68,9 @@ pub async fn run(
         enemies.push(summoner);
     }
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
-    map.create_map_array(0, 1, 0, vec![2]).await;
-    if player.get_cleared() == 8 {
-        map.create_map_array(0, 2, 0, vec![2, 1]).await;
+    map.create_map_array(0, 1, 0, vec![3]).await;
+    if player.get_cleared() == 11 {
+        map.create_map_array(0, 2, 0, vec![3, 4]).await;
     }
     let mut choose_open = false;
     let mut item_valid = false;
@@ -177,13 +177,13 @@ pub async fn run(
         }
 
         if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Left".to_string();
-            return "w2sp".to_string();
+            *last_scene = "Right".to_string();
+            return "w2sb".to_string();
         }
 
         if player.get_x() < 10.0 {
-            *last_scene = "Up".to_string();
-            return "w2s1".to_string();
+            *last_scene = "down".to_string();
+            return "w2s2".to_string();
         }
 
         player.draw();
@@ -191,3 +191,5 @@ pub async fn run(
         next_frame().await;
     }
 }
+
+// Cleared starts at 10, goes to 11

@@ -54,7 +54,13 @@ pub async fn run(
     } else if *last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
     }
-    map.create_map_array(0, 1, 0, vec![3]).await;
+
+    if player.get_cleared() == 5 {
+           map.create_map_array(0, 1, 0, vec![3]).await;
+    } else {
+        map.create_map_array(0, 2, 0, vec![2, 3]).await;
+    }
+   
     let mut enemies: Vec<Enemy> = vec![];
     let mut large_slime = Enemy::new(
     "",
@@ -214,3 +220,4 @@ pub async fn run(
         next_frame().await;
     }
 }
+// Cleared starts at 5, goes to 6

@@ -44,6 +44,8 @@ pub async fn run(
         player.set_position(virtual_width / 2.0, 80.0);
     } else if last_scene == "Inn" {
         player.set_position(750.0, 300.0);
+    } else if last_scene == "Shop" {
+        player.set_position(200.0, 240.0);
     }else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }

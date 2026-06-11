@@ -2,7 +2,6 @@ use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
 use crate::modules::database::DatabaseTable;
 use crate::modules::database::DatabaseClient;
-use crate::modules::enemy;
 use crate::modules::enemy::Enemy;
 use crate::modules::item::Item;
 use miniquad::date;
@@ -164,7 +163,7 @@ impl Player {
             movement: vec2(0.0, 0.0),
             health: 100.0,
             maxhealth: 100.0,
-            mledmg: 300.0,
+            mledmg: 3.0,
             rngdmg: 5.0,
             movespeedmult: 1.0,
             cooldownmult: 1.0,

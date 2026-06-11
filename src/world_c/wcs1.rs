@@ -54,11 +54,7 @@ println!("Cleared: {}", player.get_cleared());
     if last_scene == "Top" {
         player.set_position((virtual_width / 2.0) - 10.0, virtual_height - 80.0);
     } else if last_scene == "down" {
-<<<<<<< HEAD
         player.set_position((virtual_width / 2.0) - 60.0, 80.0);
-=======
-        player.set_position((virtual_width / 2.0) - 10.0, 80.0);
->>>>>>> 943a396 (Co-authored-by: lelol-barbarian <lelol-barbarian@users.noreply.github.com>)
     } else {
         player.set_position((virtual_width / 2.0) - 10.0, virtual_height / 2.0);
     }
@@ -149,7 +145,7 @@ println!("Cleared: {}", player.get_cleared());
                 }
             }
 
-            if player.get_cleared() < 1 {
+            if player.get_cleared() == 0 {
                 if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() && speech_cooldown <= 0.0 {
                     speech_cooldown = 1.0;
                     speech_num += 1;
@@ -193,6 +189,7 @@ println!("Cleared: {}", player.get_cleared());
                 if player.get_cleared() == 0 {
                     player.add_cleared();
                 }
+                *last_scene = "Down".to_string();
                 return "wcs2".to_string();
             }
             if player.get_y() < 10.0 && player.get_cleared() >= 3 {
@@ -203,3 +200,5 @@ println!("Cleared: {}", player.get_cleared());
         }
     }
 }
+
+// Cleared starts at 0, goes to 1

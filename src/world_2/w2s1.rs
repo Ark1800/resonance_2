@@ -70,7 +70,7 @@ pub async fn run(
     }
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
     map.create_map_array(0, 1, 0, vec![2]).await;
-    if player.get_cleared() == 6 {
+    if player.get_cleared() >= 9 {
         map.create_map_array(0, 2, 0, vec![2, 4]).await;
     }
     let mut choose_open = false;
@@ -169,7 +169,7 @@ pub async fn run(
             }
         }
 
-        if enemies.is_empty() && player.get_cleared() == 8 {
+        if enemies.is_empty() && player.get_cleared() >= 8 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
             player.add_health(30.0);
@@ -192,3 +192,5 @@ pub async fn run(
         next_frame().await;
     }
 }
+
+// Cleared starts at 8, goes to 9

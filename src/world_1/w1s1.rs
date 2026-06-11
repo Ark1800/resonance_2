@@ -192,3 +192,4 @@ pub async fn run(
     player.handle_inventory();
         next_frame().await;
 }}
+// Cleared starts at 3, goes to 4

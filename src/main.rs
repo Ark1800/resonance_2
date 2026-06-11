@@ -90,7 +90,6 @@ async fn main() {
         records = result;
         for record in &records {
             if record.user_name == player.get_name() && record.user_password == player.get_password() {
-                current_screen = record.player_currentscreenvar.clone();
                 player.set_save_data(record);
             }
         }
@@ -121,7 +120,7 @@ async fn main() {
                 "wcs2" => world_c::wcs2::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
                 "wcs3" => world_c::wcs3::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions,&records, &client).await,
                 "town" => world_hub_and_otherscreens::town::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
-                "shop" => world_hub_and_otherscreens::shop::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut musicdiscfunctions).await,
+                "shop" => world_hub_and_otherscreens::shop::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "inn" => world_hub_and_otherscreens::inn::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
                 "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &tm, &mut musicdiscfunctions, &mut records, &mut player, &client).await,
                 _ => break,

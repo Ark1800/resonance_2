@@ -54,7 +54,13 @@ pub async fn run(
     )
     .await;
     background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
-    map.create_map_array(0, 1, 0, vec![4]).await;
+
+     if player.get_cleared() == 6 {
+          map.create_map_array(0, 1, 0, vec![4]).await;
+    } else {
+        map.create_map_array(0, 2, 0, vec![4, 2]).await;
+    }
+    
     let map_row_len = map.get_map_rows().len();
     let map_column_len = map.get_map_columns().len();
     let mut wall_places: Vec<Vec<i32>> = vec![];
@@ -183,7 +189,7 @@ pub async fn run(
             player.add_cleared();
             item_valid = true;
             choose_open = true;
-            map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+            map.change_map(vec![0, 0], vec![vec![0, 4], vec![0, 5]]);
             player.add_health(30.0);
         }
 
@@ -200,3 +206,4 @@ pub async fn run(
         next_frame().await;
     }
 }
+// Cleared starts at 6, goes to 7

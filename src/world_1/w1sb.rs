@@ -190,7 +190,7 @@ pub async fn run(
                                     enemies[0].set_move_speed(1200.0);
                                     let attackend = enemies[0].jeff_knifeattack3(player, jeff_knife_direction, musicdiscfunctions);
                                     if attackend {
-                                        jeff_attackcount += 1;;
+                                        jeff_attackcount += 1;
                                         enemies[0].jeff_normalidle(player, tm);
                                         enemies[0].set_move_speed(200.0);
                                     }
@@ -358,3 +358,5 @@ pub async fn run(
         next_frame().await;
     }
 }
+
+// Cleared starts at 7, goes to 8

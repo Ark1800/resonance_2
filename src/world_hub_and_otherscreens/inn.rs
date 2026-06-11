@@ -33,8 +33,8 @@ pub async fn run(
     .await;
 
     let mut collidable_objects: Vec<StillImage> = vec![
-        StillImage::new("", 0.0, -50.0, virtual_width, 50.0, true, 1.0).await,
-        StillImage::new("", -50.0, 0.0, 50.0, virtual_height, true, 1.0).await,
+        StillImage::new("", 0.0, 0.0, virtual_width, 10.0, true, 1.0).await,
+        StillImage::new("", 0.0, 0.0, 10.0, virtual_height, true, 1.0).await,
         StillImage::new("", virtual_width, 0.0, 50.0, virtual_height, true, 1.0).await,
         StillImage::new("", 300.0, virtual_height, virtual_width, 50.0, true, 1.0).await,
     ];
