@@ -83,7 +83,7 @@ pub async fn run(
     let speech_list: Vec<String> = vec!["Woah, bogie alert!".to_string(), "You take them, you have the sword!".to_string()];
     let tutorial_list: Vec<String> = vec![
         "Press UP ARROW to use your melee attack\nPress RIGHT ARROW to use your ranged attack".to_string(),
-        "If you get music disks, you can use them using Q, E, and X".to_string(),
+        "TAB to open inventory ".to_string(),
     ];
 
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());

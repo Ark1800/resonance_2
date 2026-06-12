@@ -43,7 +43,6 @@ pub async fn run(
     let btn_exit = TextButton::new(virtual_width / 2.0 - 100.0, 600.0, 200.0, 60.0, "Leave game", BLUE, GREEN, 30);
     let mut lbl_title = Label::new("Resonance 2", (virtual_width / 2.0) - 300.0, 200.0, 80);
     let mut lbl_team = Label::new("Made by Team Berry", (virtual_width / 2.0) - 250.0, 250.0, 50);
-    let mut lbl_start = Label::new("Click to start", virtual_width / 2.0, 980.0, 30);
     let mut txt_username = TextInput::new(virtual_width / 2.0 - 150.0, 200.0, 300.0, 40.0, 25.0);
     txt_username.set_prompt("Username");
     let mut txt_password = TextInput::new(virtual_width / 2.0 - 150.0, 300.0, 300.0, 40.0, 25.0);
@@ -52,20 +51,15 @@ pub async fn run(
     let mut load_box = MessageBox::info("Error", "Invalid username or password.");
     let mut new_box = MessageBox::info("Error", "Password already exists.");
     let mut speed = 0.0;
+    // Main Screen
     let mut start_btns_show = true;
+    // New/Load Screen
     let mut txt_inputs_show = false;
     let mut new_load = "None".to_string();
 
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         background.draw();
-        if lbl_start.get_y() >= 1000.0 {
-            speed -= 0.1;
-            lbl_start.set_position(lbl_start.get_x(), lbl_start.get_y() + speed);
-        } else {
-            speed += 0.1;
-            lbl_start.set_position(lbl_start.get_x(), lbl_start.get_y() + speed);
-        }
 
         if start_btns_show {
             if btn_new.click() {
@@ -143,6 +137,8 @@ pub async fn run(
                         let insert_results = client.insert_record("save_table", &new_record).await;
                         if let Ok(id) = insert_results {
                             // Inserted, id contains the new record's id
+                            player.set_save_data(&new_record);
+                            player.set_usernamepassword(txt_username.get_text(), txt_password.get_text());
                             return "wcs1".to_string();
                         } else {
                             println!("Error inserting records from database: {} ", insert_results.err().unwrap());

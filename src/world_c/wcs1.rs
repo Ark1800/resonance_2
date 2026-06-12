@@ -90,7 +90,6 @@ println!("Cleared: {}", player.get_cleared());
     ];
     let tutorial_list: Vec<String> = vec![
         "WASD to move ".to_string(),
-        "TAB to open inventory ".to_string(),
         "ESC to open pause menu ".to_string(),
     ];
     lbl_tutorial.with_scroll_speed(0.1);
