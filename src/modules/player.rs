@@ -711,7 +711,7 @@ impl Player {
         )
         .await;
         img_musicoin.set_preload(tm.get_preload("assets/item_files/musicoin.png").unwrap().clone());
-        img_arrow.set_preload(preloads[13].clone());
+        img_arrow.set_preload(preloads[12].clone());
         let mut lbl_arrownum = Label::new("", 427.0, 32.0, 30);
         lbl_arrownum.with_colors(BLACK, None);
         let mut img_disc1 = StillImage::new(
@@ -1171,7 +1171,7 @@ impl Player {
                 1.0,      // Normal zoom (100%)
             )
             .await;
-            rng_attack_img.set_preload(self.preloads[12].clone());
+            rng_attack_img.set_preload(self.preloads[11].clone());
             rng_attack_img.set_angle(angle);
             self.arrows.push(rng_attack_img);
             self.rangedattackimgcreated = true;
@@ -1181,7 +1181,7 @@ impl Player {
     //SAVE MENUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU:)
     async fn create_save_menu(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
         let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
-        shadow.set_preload(preloads[14].clone());
+        shadow.set_preload(preloads[13].clone());
         shadow.set_opacity(0.7);
         let mut lbl_paused = Label::new("Paused", VIRTUAL_WIDTH / 2.0 - 90.0, VIRTUAL_HEIGHT / 2.0 - 50.0, 60);
         lbl_paused.with_colors(WHITE, Some(BLACK));
@@ -1226,7 +1226,7 @@ impl Player {
     }
 async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
         let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
-        shadow.set_preload(preloads[14].clone());
+        shadow.set_preload(preloads[13].clone());
         shadow.set_opacity(0.7);
         let mut lbl_controls = Label::new("Controls", VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 - 350.0, 60);
         lbl_controls.with_colors(WHITE, Some(BLACK));
@@ -1242,7 +1242,7 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
     }
     async fn create_death_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
         let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
-        shadow.set_preload(preloads[14].clone());
+        shadow.set_preload(preloads[13].clone());
         shadow.set_opacity(0.7);
         let mut lbl_death = Label::new("You Died", VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 - 50.0, 60);
         lbl_death.with_colors(WHITE, Some(BLACK));

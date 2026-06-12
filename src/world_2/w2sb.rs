@@ -92,9 +92,9 @@ pub async fn run(
         player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
-        player.draw();
+        
         background.draw();
-
+player.draw();
         healthbar.set_value(enemies[0].get_health());
         player.handle_inventory();
             let (save, exit, controls) = player.handle_save_menu().await;

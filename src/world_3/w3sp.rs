@@ -127,6 +127,7 @@ pub async fn run(
         background1.draw();
         world_numeral.draw();
         map.draw_map(tm).await;
+        player.draw();
         if player.get_cleared() >= 12 {
             red_portal.draw();
         }
@@ -146,7 +147,7 @@ pub async fn run(
         player.handle_inventory();
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
-        player.draw();
+        
             let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

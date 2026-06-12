@@ -104,6 +104,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
+        player.draw();
         world_numeral.draw();
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
@@ -125,7 +126,7 @@ pub async fn run(
             green_portal.draw();
         }
 
-        player.draw();
+        
         map.draw_map(&tm).await;
         next_frame().await;
     }

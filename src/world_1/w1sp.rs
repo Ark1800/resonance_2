@@ -140,6 +140,7 @@ pub async fn run(
         background2.draw();
         blue_portal.draw();
         world_numeral.draw();
+        player.draw();
         //game
         if player.get_x() > virtual_width - 10.0 {
             *last_scene = "Right".to_string();
@@ -165,8 +166,8 @@ pub async fn run(
             return "title_screen".to_string();
         }
         player.move_player(&map, old_pos, &collidable_objects);
-        player.draw();
-        draw_grid(50.0, BLACK);
+        
+        
         next_frame().await;
     }
 }
