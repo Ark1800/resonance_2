@@ -253,9 +253,22 @@ impl MessageBox {
     }
 
     // Center the dialog in the screen
+    #[allow(unused)]
+    pub fn set_title(&mut self, title: impl Into<String>) -> &mut Self {
+        self.title = title.into(); //.into converts &str to String
+        self
+    }
+    #[allow(unused)]
+    pub fn set_message(&mut self, message: impl Into<String>) -> &mut Self {
+        self.message = message.into(); //.into converts &str to String (converts value to whats needed, in this case &str to String)
+        self
+    }
+
     pub fn centered(&mut self) -> &mut Self {
-        self.x = (screen_width() - self.width) / 2.0;
-        self.y = (screen_height() - self.height) / 2.0;
+        const VIRTUAL_WIDTH: f32 = 1024.0;
+        const VIRTUAL_HEIGHT: f32 = 768.0;
+        self.x = (VIRTUAL_WIDTH - self.width) / 2.0;
+        self.y = (VIRTUAL_HEIGHT - self.height) / 2.0;
         self
     }
 

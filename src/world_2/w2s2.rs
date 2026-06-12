@@ -4,12 +4,11 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
-use crate::modules::item;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 pub async fn run(
@@ -21,7 +20,7 @@ pub async fn run(
     last_scene: &mut String,
     musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("w2s2".to_string());
     let mut map = Map::new(
@@ -34,7 +33,7 @@ pub async fn run(
     if last_scene == "Left" {
         player.set_position(virtual_width - 80.0, virtual_height / 2.0);
     } else if last_scene == "Right" {
-        player.set_position(80.0, virtual_height / 2.0+200.0);
+        player.set_position(80.0, virtual_height / 2.0 + 200.0);
     } else if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, virtual_height - 80.0);
     } else if last_scene == "Up" {
@@ -42,7 +41,6 @@ pub async fn run(
     } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
-
 
     let mut background = StillImage::new(
         "",
@@ -80,19 +78,22 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
+        player.draw();
         player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
-        } if quit {
+        }
+        if quit {
             return "title_screen".to_string();
         }
         map.draw_map(&tm).await;
@@ -106,37 +107,38 @@ pub async fn run(
                         && musicdiscfunctions.get_pandemonium_active() == false
                         && musicdiscfunctions.get_sodapop_active() == false
                     {
-                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                    match enemies[i].get_enemy_type() {
-                        "archer" => {
-                            enemies[i].archer_action(tm, player, musicdiscfunctions).await;
-                            enemies[i].draw_bullet(player, musicdiscfunctions);
-                        }
-                        "slime" => {
-                            enemies[i].slime_action(player, musicdiscfunctions);
-                        }
-                        "summoner" => {
-                            let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
-                            if summoned {
-                                enemies.push(slime1);
-                                enemies.push(slime2);
-                                enemies.push(slime3);
+                        //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                        match enemies[i].get_enemy_type() {
+                            "archer" => {
+                                enemies[i].archer_action(tm, player, musicdiscfunctions).await;
+                                enemies[i].draw_bullet(player, musicdiscfunctions);
                             }
+                            "slime" => {
+                                enemies[i].slime_action(player, musicdiscfunctions);
+                            }
+                            "summoner" => {
+                                let (slime1, slime2, slime3, summoned) = enemies[i].summoner_action(tm, player).await;
+                                if summoned {
+                                    enemies.push(slime1);
+                                    enemies.push(slime2);
+                                    enemies.push(slime3);
+                                }
+                            }
+                            "mage" => {
+                                enemies[i].mage_action(tm, player, musicdiscfunctions).await;
+                                enemies[i].draw_bullet(player, musicdiscfunctions);
+                            }
+                            "large_slime" => {
+                                enemies[i].large_slime_action(tm, player, musicdiscfunctions).await;
+                            }
+                            _ => {}
                         }
-                        "mage" => {
-                            enemies[i].mage_action(tm, player, musicdiscfunctions).await;
-                            enemies[i].draw_bullet(player, musicdiscfunctions);
-                        }
-                        "large_slime" => {
-                            enemies[i].large_slime_action(tm, player, musicdiscfunctions).await;
-                        }
-                        _ => {}
+                        enemies[i].draw();
                     }
-                    enemies[i].draw();
                 }
             }
-        }}
-        player.draw();
+        }
+
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
@@ -187,7 +189,6 @@ pub async fn run(
             return "w2s1".to_string();
         }
 
-        player.draw();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         next_frame().await;
     }

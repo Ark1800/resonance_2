@@ -22,8 +22,8 @@ map.create_map_array(chest_num, entrance_num, wall_num, entrance_sides)
 use crate::modules::collision::check_collision;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
-use miniquad::date;
 use macroquad::prelude::*;
+use miniquad::date;
 #[derive(Clone)]
 pub struct Map {
     map_array: [[i32; 10]; 15],  // Map array

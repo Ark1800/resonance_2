@@ -28,8 +28,8 @@ pub async fn run(
         "",
         virtual_width,  // width
         virtual_height, // height
-        0.0,  // x position
-        0.0,           // y position
+        0.0,            // x position
+        0.0,            // y position
         true,           // Enable stretching
         1.0,            // Normal zoom (100%)
     )
@@ -50,6 +50,7 @@ pub async fn run(
     let mut info_box = MessageBox::info("Controls", "WASD to move.\n\nUp arrow for melee attack.\nRight arrow for ranged attack.");
     let mut load_box = MessageBox::info("Error", "Invalid username or password.");
     let mut new_box = MessageBox::info("Error", "Password already exists.");
+    let mut empty_box = MessageBox::info("Error", "Username or password field is empty.");
     let mut speed = 0.0;
     // Main Screen
     let mut start_btns_show = true;
@@ -77,6 +78,7 @@ pub async fn run(
                 new_load = "Load".to_string();
             }
             if btn_help.click() {
+                info_box.centered();
                 info_box.show();
             }
             if btn_exit.click() {
@@ -97,7 +99,10 @@ pub async fn run(
                 if new_load == "New" {
                     let mut proceed = true;
                     for i in 0..records.len() {
-                        if records[i].user_name == txt_username.get_text() {
+                        if records[i].user_name == txt_username.get_text()
+                            || txt_username.get_text().trim() == ""
+                            || txt_password.get_text().trim() == ""
+                        {
                             proceed = false;
                             break;
                         }
@@ -143,9 +148,14 @@ pub async fn run(
                         } else {
                             println!("Error inserting records from database: {} ", insert_results.err().unwrap());
                         }
-                        
                     } else {
-                        new_box.show();
+                        if txt_username.get_text().trim() == "" || txt_password.get_text().trim() == "" {
+                            empty_box.centered();
+                            empty_box.show();
+                        } else {
+                            new_box.centered();
+                            new_box.show();
+                        }
                     }
                 } else if new_load == "Load" {
                     let mut proceed = false;
@@ -160,6 +170,7 @@ pub async fn run(
                         }
                     }
                     if !proceed {
+                        load_box.centered();
                         load_box.show();
                     } else {
                         return active_scene;
@@ -176,6 +187,9 @@ pub async fn run(
         }
         if load_box.is_visible() {
             load_box.draw();
+        }
+        if empty_box.is_visible() {
+            empty_box.draw();
         }
 
         next_frame().await

@@ -4,8 +4,6 @@ Date: 2026-04-14
 Program Details:
 */
 
-
-use crate::modules::grid::draw_grid;
 use crate::modules::item::Item;
 use crate::modules::label::Label;
 use crate::modules::listview::ListView;
@@ -31,7 +29,7 @@ pub async fn run(
         "assets/item_files/armour/diamond_armor.png".to_string(),              // Image path
         "Diamond Armour".to_string(),                                          // Name
         "Armour made of the toughest gemstone around!".to_string(),            // Description
-        "bodyarmor".to_string(),                                                  // Type
+        "bodyarmor".to_string(),                                               // Type
         0,                                                                     // Melee
         0,                                                                     // Ranged
         0.8,                                                                   // Move speed mult
@@ -72,20 +70,20 @@ pub async fn run(
     .await;
 
     let hermes_boots = Item::new(
-            tm.get_preload("assets/item_files/armour/hermes_boots.png").unwrap(),
-            "assets/item_files/armour/hermes_boots.png".to_string(),
-            "Hermes Boots".to_string(),
-            "A pair of boots a god once used to take flight, increases movespeed to an astonishing degree, also increaes armor slightly".to_string(),
-            "boots".to_string(),
-            0,
-            0, 
-            0.0,
-            3.0,
-            0,
-            1,
-        )
-        .await;
-   
+        tm.get_preload("assets/item_files/armour/hermes_boots.png").unwrap(),
+        "assets/item_files/armour/hermes_boots.png".to_string(),
+        "Hermes Boots".to_string(),
+        "A pair of boots a god once used to take flight, increases movespeed to an astonishing degree, also increaes armor slightly".to_string(),
+        "boots".to_string(),
+        0,
+        0,
+        0.0,
+        3.0,
+        0,
+        1,
+    )
+    .await;
+
     let mut shop_stock: Vec<Item> = vec![diamond_armour, time_sword, future_bow, hermes_boots];
     let mut shop_names: Vec<String> = vec![];
     for i in 0..shop_stock.len() {
@@ -109,7 +107,7 @@ pub async fn run(
     let mut item_img = StillImage::new(
         "", 160.0, // width
         160.0, // height
-        150.0,   // x position
+        150.0, // x position
         0.0,   // y position
         false, // Enable stretching
         1.0,   // Normal zoom (100%)
@@ -133,7 +131,6 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(WHITE);
         img_back.draw();
-        draw_grid(50.0, BLACK);
 
         if shop_view.selected_item().is_some() && &selected_record != shop_view.selected_item().unwrap() {
             lbl_error.set_text("");

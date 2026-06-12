@@ -6,10 +6,10 @@ Program Details:
 
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
 use crate::modules::grid::draw_grid;
 use crate::modules::map::Map;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
@@ -24,7 +24,7 @@ pub async fn run(
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("w1sp".to_string());
     let mut background1 = StillImage::new(
@@ -51,8 +51,7 @@ pub async fn run(
     background2.set_preload(tm.get_preload("assets/map_files/world1/beach.png").unwrap());
     let mut blue_portal = AnimatedImage::from_gif("", 100.0, 100.0, 498.0, 498.0, true).await;
     let mut portal_hitbox = StillImage::new(
-        "",
-        100.0, // width
+        "", 100.0, // width
         300.0, // height
         300.0, // x position
         200.0, // y position
@@ -63,12 +62,12 @@ pub async fn run(
     portal_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
     let mut world_numeral = StillImage::new(
         "",
-        200.0, // width
-        200.0, // height
-        (virtual_width / 2.0) + 100.0, // x position
+        200.0,                          // width
+        200.0,                          // height
+        (virtual_width / 2.0) + 100.0,  // x position
         (virtual_height / 2.0) - 100.0, // y position
-        true,  // Enable stretching
-        1.0,   // Normal zoom (100%)
+        true,                           // Enable stretching
+        1.0,                            // Normal zoom (100%)
     )
     .await;
     world_numeral.set_preload(tm.get_preload("assets/map_files/1_rn.png").unwrap());
@@ -157,11 +156,12 @@ pub async fn run(
         player.set_player_activedisc(activedisc);
         let old_pos = player.get_oldpos();
         player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         player.move_player(&map, old_pos, &collidable_objects);

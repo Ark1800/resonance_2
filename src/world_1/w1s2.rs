@@ -4,14 +4,13 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use macroquad::prelude::*;
-//use crate::modules::
 
 pub async fn run(
     virtual_width: f32,
@@ -22,7 +21,7 @@ pub async fn run(
     last_scene: &mut String,
     musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("w1s2".to_string());
     let mut background = StillImage::new(
@@ -53,25 +52,24 @@ pub async fn run(
             "assets/map_files/chest.png".to_string(),
         ],
     )
-    .await;   
-if player.get_cleared() == 4 {
-          map.create_map_array(0, 1, 0, vec![3]).await;
+    .await;
+    if player.get_cleared() == 4 {
+        map.create_map_array(0, 1, 0, vec![3]).await;
     } else {
         map.create_map_array(0, 2, 0, vec![1, 3]).await;
     }
-  
+
     let mut enemies: Vec<Enemy> = vec![];
     let mut mage = Enemy::new(
-        "",
-        50.0, // height
-        50.0, // width
-        70.0, // x
-        80.0, // y
-        true, // stretching
-        1.0,  // zoom level
+        "", 50.0,   // height
+        50.0,   // width
+        70.0,   // x
+        80.0,   // y
+        true,   // stretching
+        1.0,    // zoom level
         20.0,   // health
         10.0,   // damage
-        "", // projectile
+        "",     // projectile
         "mage", // enemy type
     )
     .await;
@@ -80,24 +78,22 @@ if player.get_cleared() == 4 {
     enemies.push(mage);
     for _i in 0..2 {
         let mut slime = Enemy::new(
-        "",
-        25.0, //hieght
-        25.0, //width
-        70.0, //x
-        80.0, //y
-        true, //stretching
-        1.0, //zoom level
-        10.0, //health
-        2.0, //damage
-        "",
-        "slime"//enemy type
-    ).await;
+            "", 25.0, //hieght
+            25.0, //width
+            70.0, //x
+            80.0, //y
+            true, //stretching
+            1.0,  //zoom level
+            10.0, //health
+            2.0,  //damage
+            "", "slime", //enemy type
+        )
+        .await;
         slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
         enemies.push(slime);
     }
     let mut choose_open = false;
     let mut item_valid = false;
-
 
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
@@ -105,14 +101,14 @@ if player.get_cleared() == 4 {
         background.draw();
 
         map.draw_map(&tm).await;
-         if player.get_cleared() <= 4 {
-                for i in 0..enemies.len() {
-                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                    if musicdiscfunctions.get_thickofit_active() == false
-                        && musicdiscfunctions.get_pandemonium_active() == false
-                        && musicdiscfunctions.get_sodapop_active() == false
-                    {
-                                            match enemies[i].get_enemy_type() {
+        if player.get_cleared() <= 4 {
+            for i in 0..enemies.len() {
+                //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                if musicdiscfunctions.get_thickofit_active() == false
+                    && musicdiscfunctions.get_pandemonium_active() == false
+                    && musicdiscfunctions.get_sodapop_active() == false
+                {
+                    match enemies[i].get_enemy_type() {
                         "archer" => {
                             enemies[i].archer_action(tm, player, musicdiscfunctions).await;
                             enemies[i].draw_bullet(player, musicdiscfunctions);
@@ -140,7 +136,7 @@ if player.get_cleared() == 4 {
                     enemies[i].draw();
                 }
             }
-         }
+        }
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
@@ -174,18 +170,20 @@ if player.get_cleared() == 4 {
         }
 
         player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
-        } if quit {
+        }
+        if quit {
             return "title_screen".to_string();
         }
         if enemies.is_empty() && player.get_cleared() <= 4 {
@@ -195,7 +193,7 @@ if player.get_cleared() == 4 {
             player.add_health(30.0);
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
         }
-       
+
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);

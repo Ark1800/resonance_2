@@ -6,11 +6,11 @@ Program Details:
 
 use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -22,7 +22,7 @@ pub async fn run(
     last_scene: &mut String,
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("w2sp".to_string());
     let mut map = Map::new(
@@ -82,12 +82,12 @@ pub async fn run(
     let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
     let mut world_numeral = StillImage::new(
         "",
-        200.0, // width
-        200.0, // height
-        (virtual_width / 2.0) - 100.0, // x position
+        200.0,                          // width
+        200.0,                          // height
+        (virtual_width / 2.0) - 100.0,  // x position
         (virtual_height / 2.0) - 100.0, // y position
-        true,  // Enable stretching
-        1.0,   // Normal zoom (100%)
+        true,                           // Enable stretching
+        1.0,                            // Normal zoom (100%)
     )
     .await;
     world_numeral.set_preload(tm.get_preload("assets/map_files/2_rn.png").unwrap());
@@ -104,6 +104,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
+        world_numeral.draw();
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
 
@@ -112,17 +113,18 @@ pub async fn run(
         player.set_player_activedisc(activedisc);
 
         player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         if player.get_cleared() >= 8 {
-        green_portal.draw();
+            green_portal.draw();
         }
-        world_numeral.draw();
+
         player.draw();
         map.draw_map(&tm).await;
         next_frame().await;

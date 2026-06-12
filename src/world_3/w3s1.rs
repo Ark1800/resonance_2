@@ -4,17 +4,15 @@ Date: 2026-04-14
 Program Details:
 */
 
-use crate::modules::enemy::Enemy;
-//use crate::modules::item;
-use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
-//use crate::modules::item::Item;
 use crate::modules::database::{DatabaseClient, DatabaseTable};
+use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
-use miniquad::date;
 use crate::modules::still_image::StillImage;
+use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
+use miniquad::date;
 
 use macroquad::prelude::*;
 pub async fn run(
@@ -56,34 +54,39 @@ pub async fn run(
     println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
     for _i in 0..2 {
-        let mut archer = Enemy::new("",
-        50.0,
-        50.0,
-        rand::gen_range(100.0, virtual_width - 100.0),
-        rand::gen_range(100.0, virtual_height - 100.0),
-        true,
-        1.0,
-        100.0, // health
-        15.0, // Damage
-        "", // Projectile Preload
-        "archer" // Enemy type
-    ).await;
+        let mut archer = Enemy::new(
+            "",
+            50.0,
+            50.0,
+            rand::gen_range(100.0, virtual_width - 100.0),
+            rand::gen_range(100.0, virtual_height - 100.0),
+            true,
+            1.0,
+            100.0,    // health
+            15.0,     // Damage
+            "",       // Projectile Preload
+            "archer", // Enemy type
+        )
+        .await;
         archer.set_preload(tm.get_preload("assets/archer_files/archer_standR.png").unwrap());
         archer.set_projectile_preload(tm.get_preload("assets/arrow.png").unwrap());
         enemies.push(archer);
-    } for _i in 0..2 {
-        let mut large_slime = Enemy::new("",
-        100.0,
-        100.0,
-        rand::gen_range(100.0, virtual_width - 100.0),
-        rand::gen_range(100.0, virtual_height - 100.0),
-        true,
-        1.0,
-        200.0, // health
-        12.0, // Damage
-        "", // Projectile Preload
-        "large_slime" // Enemy type
-    ).await;
+    }
+    for _i in 0..2 {
+        let mut large_slime = Enemy::new(
+            "",
+            100.0,
+            100.0,
+            rand::gen_range(100.0, virtual_width - 100.0),
+            rand::gen_range(100.0, virtual_height - 100.0),
+            true,
+            1.0,
+            200.0,         // health
+            12.0,          // Damage
+            "",            // Projectile Preload
+            "large_slime", // Enemy type
+        )
+        .await;
         large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
         enemies.push(large_slime);
     }
@@ -181,14 +184,6 @@ pub async fn run(
             }
 
             player.handle_inventory();
-            let (save, exit) = player.handle_save_menu().await;
-            if save {
-                println!("Saving game...");
-                player.update_save_data(records, client, last_scene).await;
-            }
-            if exit {
-                return "title_screen".to_string();
-            }
             if enemies.is_empty() && player.get_cleared() == 12 {
                 player.add_cleared();
                 item_valid = true;
@@ -212,6 +207,14 @@ pub async fn run(
             return "inn".to_string();
         }
         if quit {
+            return "title_screen".to_string();
+        }
+            let (save, exit, controls) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
             return "title_screen".to_string();
         }
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);

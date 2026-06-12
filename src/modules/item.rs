@@ -16,7 +16,19 @@ pub struct Item {
 }
 
 impl Item {
-    pub async fn new (imgpath: (Texture2D, Option<Vec<u8>>, String), assetpath: String, title: String, description: String, itemtype: String, mledmg: i32, rngdmg: i32, cooldownmult: f32, movespeedmult: f32, hpchng: i32, armor: i32) -> Self {
+    pub async fn new(
+        imgpath: (Texture2D, Option<Vec<u8>>, String),
+        assetpath: String,
+        title: String,
+        description: String,
+        itemtype: String,
+        mledmg: i32,
+        rngdmg: i32,
+        cooldownmult: f32,
+        movespeedmult: f32,
+        hpchng: i32,
+        armor: i32,
+    ) -> Self {
         Item {
             imgpath,
             assetpath,
@@ -32,15 +44,15 @@ impl Item {
             thorns: false,
         }
     }
-
+    #[allow(unused)]
     pub fn set_thorns(&mut self, thorns: bool) {
         self.thorns = thorns;
     }
-
+    #[allow(unused)]
     pub fn get_thorns(&self) -> bool {
         self.thorns
     }
-    
+
     pub fn get_itemassetpath(&self) -> String {
         self.assetpath.clone()
     }

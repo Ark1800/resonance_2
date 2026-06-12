@@ -124,10 +124,9 @@ impl Projectile {
     // Moves the projectile in the direction it's facing, multiplied by the move speed and frame time
     #[allow(unused)]
     pub fn move_projectiles(&mut self, player_pos: Vec2) {
-            let movement = self.direction * self.move_speed * get_frame_time();
-            self.set_x(self.get_x() + movement.x);
-            self.set_y(self.get_y() + movement.y);
-        
+        let movement = self.direction * self.move_speed * get_frame_time();
+        self.set_x(self.get_x() + movement.x);
+        self.set_y(self.get_y() + movement.y);
     }
     // Sets the direction of the projectile based on the player's position and the projectile's current position
     pub fn set_direction(&mut self, player_pos: Vec2) {

@@ -4,12 +4,12 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -21,8 +21,7 @@ pub async fn run(
     last_scene: &mut String,
     musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
-
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("w1s4".to_string());
     let mut background = StillImage::new(
@@ -55,12 +54,12 @@ pub async fn run(
     .await;
     background.set_preload(tm.get_preload("assets/map_files/world1/beach2.png").unwrap());
 
-     if player.get_cleared() == 6 {
-          map.create_map_array(0, 1, 0, vec![4]).await;
+    if player.get_cleared() == 6 {
+        map.create_map_array(0, 1, 0, vec![4]).await;
     } else {
         map.create_map_array(0, 2, 0, vec![4, 2]).await;
     }
-    
+
     let map_row_len = map.get_map_rows().len();
     let map_column_len = map.get_map_columns().len();
     let mut wall_places: Vec<Vec<i32>> = vec![];
@@ -78,20 +77,21 @@ pub async fn run(
     let mut enemies: Vec<Enemy> = vec![];
     for i in 0..3 {
         let mut large_slime = Enemy::new(
-    "",
-    75.0, //hieght
-    75.0, //width
-    60.0*i as f32, //x
-    virtual_height/2.0, //y
-    true, //stretching
-    1.0, //zoom level
-    20.0, //health
-    8.0, //damage
-    "",
-    "large_slime"//enemy type
-    ).await;
-    large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
-    enemies.push(large_slime);
+            "",
+            75.0,                 //hieght
+            75.0,                 //width
+            60.0 * i as f32,      //x
+            virtual_height / 2.0, //y
+            true,                 //stretching
+            1.0,                  //zoom level
+            20.0,                 //health
+            8.0,                  //damage
+            "",
+            "large_slime", //enemy type
+        )
+        .await;
+        large_slime.set_preload(tm.get_preload("assets/slime.png").unwrap());
+        enemies.push(large_slime);
     }
     let mut choose_open = false;
     let mut item_valid = false;
@@ -103,13 +103,13 @@ pub async fn run(
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         if player.get_cleared() <= 6 {
-                for i in 0..enemies.len() {
-                    //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                    if musicdiscfunctions.get_thickofit_active() == false
-                        && musicdiscfunctions.get_pandemonium_active() == false
-                        && musicdiscfunctions.get_sodapop_active() == false
-                    {
-                                            match enemies[i].get_enemy_type() {
+            for i in 0..enemies.len() {
+                //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
+                if musicdiscfunctions.get_thickofit_active() == false
+                    && musicdiscfunctions.get_pandemonium_active() == false
+                    && musicdiscfunctions.get_sodapop_active() == false
+                {
+                    match enemies[i].get_enemy_type() {
                         "archer" => {
                             enemies[i].archer_action(tm, player, musicdiscfunctions).await;
                             enemies[i].draw_bullet(player, musicdiscfunctions);
@@ -137,20 +137,22 @@ pub async fn run(
                     enemies[i].draw();
                 }
             }
-         }
+        }
         player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
-        } if quit {
+        }
+        if quit {
             return "title_screen".to_string();
         }
         player.move_player(&map, old_pos, &vec![]);

@@ -4,12 +4,11 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
 use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
-//use crate::modules::projectile::Projectile;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
@@ -225,14 +224,6 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
-        let (save, exit) = player.handle_save_menu().await;
-        if save {
-            println!("Saving game...");
-            player.update_save_data(records, client, last_scene).await;
-        }
-        if exit {
-            return "title_screen".to_string();
-        }
         player.handle_inventory();
         if player.get_y() > virtual_height - 10.0 {
             if player.get_cleared() == 1 {
@@ -265,6 +256,14 @@ pub async fn run(
             return "wcs1".to_string();
         }
         if quit {
+            return "title_screen".to_string();
+        }
+            let (save, exit, controls) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
             return "title_screen".to_string();
         }
         next_frame().await;

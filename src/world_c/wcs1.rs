@@ -4,11 +4,10 @@ Date: 2026-04-14
 Program Details:
 */
 
-use crate::modules::label::Label;
-use crate::modules::player::Player;
-//use crate::modules::projectile::Projectile;
 use crate::modules::database::{DatabaseClient, DatabaseTable};
+use crate::modules::label::Label;
 use crate::modules::map::Map;
+use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
@@ -43,7 +42,7 @@ pub async fn run(
         vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
-println!("Cleared: {}", player.get_cleared());
+    println!("Cleared: {}", player.get_cleared());
     if player.get_cleared() >= 3 {
         println!("Two doors");
         map.create_map_array(0, 2, 0, vec![1, 3]).await;
@@ -88,10 +87,7 @@ println!("Cleared: {}", player.get_cleared());
         "Finally found this place! That took forever.. ".to_string(),
         "Come on, lets go further in. Try to keep up! ".to_string(),
     ];
-    let tutorial_list: Vec<String> = vec![
-        "WASD to move ".to_string(),
-        "ESC to open pause menu ".to_string(),
-    ];
+    let tutorial_list: Vec<String> = vec!["ESC to open pause menu ".to_string(), "WASD to move ".to_string()];
     lbl_tutorial.with_scroll_speed(0.1);
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
     lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
@@ -156,14 +152,6 @@ println!("Cleared: {}", player.get_cleared());
             }
 
             player.handle_keypresses(pause, _musicdiscfunctions).await;
-            let (save, exit) = player.handle_save_menu().await;
-            if save {
-                println!("Saving game...");
-                player.update_save_data(records, client, last_scene).await;
-            }
-            if exit {
-                return "title_screen".to_string();
-            }
 
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
@@ -182,6 +170,14 @@ println!("Cleared: {}", player.get_cleared());
                 lbl_tutorial.scrolling_text_draw();
             } else if player.get_cleared() == 0 {
                 lbl_tutorial.draw();
+            }
+            let (save, exit, controls) = player.handle_save_menu().await;
+            if save {
+                println!("Saving game...");
+                player.update_save_data(records, client, last_scene).await;
+            }
+            if exit {
+                return "title_screen".to_string();
             }
 
             if player.get_y() > virtual_height {

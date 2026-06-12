@@ -96,7 +96,6 @@ Then inside the loop you would use:
 */
 
 use crate::modules::preload_image::{PreloadedAnimatedGif, PreloadedAnimatedSpritesheet};
-use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 

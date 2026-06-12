@@ -5,17 +5,14 @@ Program Details:
 */
 
 use crate::modules::animated_image::AnimatedImage;
-use crate::modules::collision::check_collision;
-use crate::modules::item;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
+use crate::modules::enemy::Enemy;
+use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
-use crate::modules::label::Label;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
-use crate::modules::enemy::Enemy;
-use crate::modules::text_button::TextButton;
 
 pub async fn run(
     virtual_width: f32,
@@ -26,8 +23,7 @@ pub async fn run(
     last_scene: &mut String,
     musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
-
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("w1sb".to_string());
     let mut jeff_valid = false;
@@ -70,20 +66,28 @@ pub async fn run(
     )
     .await;
     map.create_map_array(0, 1, 0, vec![4]).await;
+
+    if player.get_cleared() == 7 {
+        map.create_map_array(0, 1, 0, vec![4]).await;
+    } else {
+        map.create_map_array(0, 2, 0, vec![4, 1]).await;
+    }
+
     let mut enemies: Vec<crate::modules::enemy::Enemy> = vec![];
     let mut jeff = Enemy::new(
-    "",
-    150.0, //height
-    150.0, //width
-    300.0, //x
-    300.0, //y
-    true, //stretching
-    1.0, //zoom level
-    200.0, //health
-    10.0, //damage
-    "",
-    "jeff_the_behemoth"//enemy type
-    ).await;
+        "",
+        150.0, //height
+        150.0, //width
+        300.0, //x
+        300.0, //y
+        true,  //stretching
+        1.0,   //zoom level
+        200.0, //health
+        10.0,  //damage
+        "",
+        "jeff_the_behemoth", //enemy type
+    )
+    .await;
     jeff.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idleR.gif").unwrap(), true);
     enemies.push(jeff);
     let mut jeff_start_fight_cooldown = 0.0;
@@ -104,53 +108,58 @@ pub async fn run(
     let mut run_once = true;
     let mut jeff_on_cooldown = false;
     let mut jeff_img_heart = StillImage::new(
-        "", 
-        100.0, // width
-        50.0,  // height
-        60.0, // x position //offset as drawn from center
-        virtual_height-50.0,   // y position
-        true,  // Enable stretching
-        1.0,   // Normal zoom (100%)
+        "",
+        100.0,                 // width
+        50.0,                  // height
+        60.0,                  // x position //offset as drawn from center
+        virtual_height - 50.0, // y position
+        true,                  // Enable stretching
+        1.0,                   // Normal zoom (100%)
     )
     .await;
     jeff_img_heart.set_preload(tm.get_preload("assets/world1_boss/jeff_heart.png").unwrap());
-    let mut lbl_jeff_healthbar = Label::new("", 120.0, virtual_height-10.0, 30);
+    let mut lbl_jeff_healthbar = Label::new("", 120.0, virtual_height - 10.0, 30);
     lbl_jeff_healthbar.with_fixed_size(800.0, 25.0);
     lbl_jeff_healthbar.with_colors(WHITE, Some(BLUE));
     lbl_jeff_healthbar.with_border(BLACK, 2.0);
-    let mut lbl_jeff_healthbarbg = Label::new("", 120.0, virtual_height-10.0, 30);
+    let mut lbl_jeff_healthbarbg = Label::new("", 120.0, virtual_height - 10.0, 30);
     lbl_jeff_healthbarbg.with_fixed_size(800.0, 25.0);
     lbl_jeff_healthbarbg.with_colors(WHITE, Some(WHITE));
     lbl_jeff_healthbarbg.with_border(BLACK, 2.0);
-    let mut lbl_jeff_healthnum = Label::new("200", 90.0, virtual_height-20.0, 30);
-    let mut lbl_jeff_name = Label::new("Jeff The Landshark", 135.0, virtual_height-45.0, 30);
+    let mut lbl_jeff_healthnum = Label::new("200", 90.0, virtual_height - 20.0, 30);
+    let mut lbl_jeff_name = Label::new("Jeff The Landshark", 135.0, virtual_height - 45.0, 30);
     lbl_jeff_name.with_colors(BLACK, Some(BLUE));
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-       // whirlpool.draw();
+        // whirlpool.draw();
         map.draw_map(&tm).await;
         player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
             return "inn".to_string();
-        } if quit {
+        }
+        if quit {
             return "title_screen".to_string();
         }
         player.handle_keypresses(pause, musicdiscfunctions).await;
         if player.get_cleared() <= 7 {
             for i in 0..enemies.len() {
                 //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
-                if musicdiscfunctions.get_thickofit_active() == false && musicdiscfunctions.get_pandemonium_active() == false && musicdiscfunctions.get_sodapop_active() == false {
+                if musicdiscfunctions.get_thickofit_active() == false
+                    && musicdiscfunctions.get_pandemonium_active() == false
+                    && musicdiscfunctions.get_sodapop_active() == false
+                {
                     (jeff_valid, jeff_attackvalid) = enemies[i].jeff_checkhit(player, jeff_valid, jeff_attackvalid);
                     if jeff_valid && jeff_attackvalid && run_once {
                         jeff_start_fight_cooldown = get_time();
@@ -159,21 +168,23 @@ pub async fn run(
                         run_once = false;
                     }
                     if jeff_valid && player.get_health() > 0.0 {
-                        if get_time() - jeff_start_fight_cooldown > 3.0 { //length of gif
+                        if get_time() - jeff_start_fight_cooldown > 3.0 {
+                            //length of gif
                             if jeff_attackcount == 0 {
                                 attack_choice = enemies[0].jeff_choose_attack();
                                 jeff_attackcount += 1;
                             }
                         }
                         match attack_choice {
-                            1 => { //jeff knife dash
+                            1 => {
+                                //jeff knife dash
                                 if jeff_attackcount == 1 {
                                     jeff_attacktime = get_time();
                                     enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_knife.gif").unwrap(), true);
                                     jeff_attackcount += 1;
                                 }
                                 let time = get_time() - jeff_attacktime;
-                                if time >= 1.0  && time < 3.0 {
+                                if time >= 1.0 && time < 3.0 {
                                     jeff_drawvalid = false;
                                     if jeff_attackcount == 2 {
                                         (jeff_knifeattack_wallchoice, lbl_warninglabel) = enemies[0].jeff_knifeattack1();
@@ -212,7 +223,8 @@ pub async fn run(
                                     }
                                 }
                             }
-                            2 => { //jeff bubble beam
+                            2 => {
+                                //jeff bubble beam
                                 if jeff_attackcount == 1 {
                                     jeff_attacktime = get_time();
                                     enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_full.gif").unwrap(), true);
@@ -221,8 +233,8 @@ pub async fn run(
                                 let time = get_time() - jeff_attacktime;
                                 if time >= 1.0 && time < 3.0 {
                                     if jeff_attackcount == 2 {
-                                    lbl_warninglabel = enemies[0].jeff_bubblebeam1(tm);
-                                    jeff_attackcount += 1;
+                                        lbl_warninglabel = enemies[0].jeff_bubblebeam1(tm);
+                                        jeff_attackcount += 1;
                                     }
                                     lbl_warninglabel.draw();
                                 }
@@ -253,7 +265,8 @@ pub async fn run(
                                     }
                                 }
                             }
-                            3 => { //jeff whirlpool bounce
+                            3 => {
+                                //jeff whirlpool bounce
                                 if jeff_attackcount == 1 {
                                     jeff_attacktime = get_time();
                                     enemies[0].set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_idle1.gif").unwrap(), true);
@@ -262,10 +275,17 @@ pub async fn run(
                                 let time = get_time() - jeff_attacktime;
                                 if time >= 2.0 && time < 11.0 {
                                     if jeff_attackcount == 2 {
-                                    jeff_drawvalid = false;
-                                    jeff_attackcount += 1;
+                                        jeff_drawvalid = false;
+                                        jeff_attackcount += 1;
                                     }
-                                    whirlpool_direction = enemies[0].jeff_whirlpoolbounce(player, &mut whirlpool, &mut whirlpool_hitbox, &mut map, whirlpool_direction, musicdiscfunctions)
+                                    whirlpool_direction = enemies[0].jeff_whirlpoolbounce(
+                                        player,
+                                        &mut whirlpool,
+                                        &mut whirlpool_hitbox,
+                                        &mut map,
+                                        whirlpool_direction,
+                                        musicdiscfunctions,
+                                    )
                                 }
                                 if time >= 10.0 && jeff_attackcount == 3 {
                                     jeff_attackcount += 1;
@@ -288,11 +308,11 @@ pub async fn run(
                                         let y = (virtual_height / 2.0) - 200.0;
                                         let position = Vec2::new(x, y);
                                         whirlpool.set_position(x, y);
-                                        whirlpool_direction = Vec2::new(1.0, 1.0);  
+                                        whirlpool_direction = Vec2::new(1.0, 1.0);
                                         whirlpool_hitbox.set_position(position);
                                     }
                                 }
-                            } 
+                            }
                             _ => {}
                         }
                         let mut new_width = enemies[0].get_health() as f32 * 4.0; // Assuming 100 health corresponds to 400 width

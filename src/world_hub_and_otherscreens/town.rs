@@ -5,8 +5,8 @@ Program Details:
 */
 
 use crate::modules::enemy::Enemy;
-use crate::modules::grid::draw_grid;
 //use crate::modules::item::Item;
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::musicdisc::Musicdisc;
@@ -14,7 +14,6 @@ use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 
 pub async fn run(
     virtual_width: f32,
@@ -25,7 +24,7 @@ pub async fn run(
     last_scene: &mut String,
     musicdiscfunctions: &mut Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("town".to_string());
     let mut map = Map::new(
@@ -46,7 +45,7 @@ pub async fn run(
         player.set_position(750.0, 300.0);
     } else if last_scene == "Shop" {
         player.set_position(200.0, 240.0);
-    }else {
+    } else {
         player.set_position(virtual_width / 2.0, virtual_height / 2.0);
     }
     let mut background = StillImage::new(
@@ -153,20 +152,20 @@ pub async fn run(
             }
         }
         background.draw();
-        draw_grid(50.0, BLACK);
+        player.draw();
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
         player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
-        player.draw();
-        draw_grid(50.0, BLACK);
+
         next_frame().await;
     }
 }

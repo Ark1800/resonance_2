@@ -174,30 +174,22 @@ pub async fn run(
             }
         } else if speech_done {
             player.handle_inventory();
-            let (save, exit) = player.handle_save_menu().await;
-            if save {
-                println!("Saving game...");
-                player.update_save_data(records, client, last_scene).await;
-            }
-            if exit {
-                return "title_screen".to_string();
-            }
             player.handle_keypresses(pause, musicdiscfunctions).await;
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
             player.set_player_activedisc(activedisc);
-let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
-        player.set_player_activedisc(activedisc);
-        if mlehit {
-            enemies[index].dmg_enemy(player.get_meleedmg());
-            enemies[index].knockback(player, "enemy");
-        }
-        if rnghit {
-            enemies[index].dmg_enemy(player.get_rngdmg());
-            enemies[index].knockback(player, "enemy");
-        }
+            let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+            player.set_player_activedisc(activedisc);
+            if mlehit {
+                enemies[index].dmg_enemy(player.get_meleedmg());
+                enemies[index].knockback(player, "enemy");
+            }
+            if rnghit {
+                enemies[index].dmg_enemy(player.get_rngdmg());
+                enemies[index].knockback(player, "enemy");
+            }
             if player.get_cleared() < 17 {
                 if enemies[0].get_health() <= 0.0 {
                     player.addcoins(99999 - player.get_musicoins());
@@ -242,6 +234,14 @@ let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfun
             return "inn".to_string();
         }
         if quit {
+            return "title_screen".to_string();
+        }
+            let (save, exit, controls) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
             return "title_screen".to_string();
         }
         if player.get_y() > virtual_height - 10.0 {

@@ -4,12 +4,12 @@ Date: 2026-04-14
 Program Details:
 */
 
+use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
 use crate::modules::map::Map;
 use crate::modules::musicdisc::Musicdisc;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
-use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
 
@@ -22,7 +22,7 @@ pub async fn run(
     last_scene: &mut String,
     musicdiscfunctions: &mut Musicdisc,
     records: &Vec<DatabaseTable>,
-    client: &DatabaseClient
+    client: &DatabaseClient,
 ) -> String {
     player.set_currentscreen("inn".to_string());
     let mut map = Map::new(
@@ -41,7 +41,7 @@ pub async fn run(
     for obj in 0..collidable_objects.len() {
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
     }
-    
+
     if last_scene == "Top" {
         player.set_position(50.0, virtual_height - 50.0);
     } else {
@@ -70,20 +70,22 @@ pub async fn run(
             *last_scene = "Inn".to_string();
             return "town".to_string();
         }
-        
+
         background.draw();
+        player.draw();
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
         player.handle_inventory();
-        let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
-        } if exit {
+        }
+        if exit {
             return "title_screen".to_string();
         }
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
         player.set_player_activedisc(activedisc);
-        player.draw();
+
         next_frame().await;
     }
 }

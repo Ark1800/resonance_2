@@ -31,7 +31,6 @@ use musicdisc::handle_musicdisccooldowns; in each loop
 pub struct Musicdisc {
     //musicpath: &str,
     #[allow(unused)]
-    musicpaths: Vec<String>,
     sounds: Vec<Sound>,
     backinblack_starttime: f64,
     backinblack_valid: bool,
@@ -88,35 +87,16 @@ pub struct Musicdisc {
 }
 
 impl Musicdisc {
-    pub async fn new(tm: &TextureManager) -> Self {
-        let musicpaths = vec![
-            "assets/musicdisc_files/music/backinblack.ogg".to_string(),
-            "assets/musicdisc_files/music/thickofit.ogg".to_string(),
-            "assets/musicdisc_files/music/howitsdone.ogg".to_string(),
-            "assets/musicdisc_files/music/imstillstanding.ogg".to_string(),
-            "assets/musicdisc_files/music/pandemonium.ogg".to_string(),
-            "assets/musicdisc_files/music/sixhundredstrike.ogg".to_string(),
-            "assets/musicdisc_files/music/sodapop.ogg".to_string(),
-            "assets/musicdisc_files/music/thegreatestshow.ogg".to_string(),
-        ];
-        tm.preload_sound(musicpaths[0].as_str()).await;
-        let backinblack_sound = tm.get_preloaded_sound(musicpaths[0].as_str()).unwrap();
-        tm.preload_sound(musicpaths[1].as_str()).await;
-        let thickofit_sound = tm.get_preloaded_sound(musicpaths[1].as_str()).unwrap();
-        tm.preload_sound(musicpaths[2].as_str()).await;
-        let howitsdone_sound = tm.get_preloaded_sound(musicpaths[2].as_str()).unwrap();
-        tm.preload_sound(musicpaths[3].as_str()).await;
-        let imstillstanding_sound = tm.get_preloaded_sound(musicpaths[3].as_str()).unwrap();
-        tm.preload_sound(musicpaths[4].as_str()).await;
-        let pandemonium_sound = tm.get_preloaded_sound(musicpaths[4].as_str()).unwrap();
-        tm.preload_sound(musicpaths[5].as_str()).await;
-        let sixhundredstrike_sound = tm.get_preloaded_sound(musicpaths[5].as_str()).unwrap();
-        tm.preload_sound(musicpaths[6].as_str()).await;
-        let sodapop_sound = tm.get_preloaded_sound(musicpaths[6].as_str()).unwrap();
-        tm.preload_sound(musicpaths[7].as_str()).await;
-        let greatestshow_sound = tm.get_preloaded_sound(musicpaths[7].as_str()).unwrap();
+    pub async fn new(tm: &TextureManager, musicpaths: Vec<&str>) -> Self {
+        let backinblack_sound = tm.get_preloaded_sound(musicpaths[0]).unwrap();
+        let thickofit_sound = tm.get_preloaded_sound(musicpaths[1]).unwrap();
+        let howitsdone_sound = tm.get_preloaded_sound(musicpaths[2]).unwrap();
+        let imstillstanding_sound = tm.get_preloaded_sound(musicpaths[3]).unwrap();
+        let pandemonium_sound = tm.get_preloaded_sound(musicpaths[4]).unwrap();
+        let sixhundredstrike_sound = tm.get_preloaded_sound(musicpaths[5]).unwrap();
+        let sodapop_sound = tm.get_preloaded_sound(musicpaths[6]).unwrap();
+        let greatestshow_sound = tm.get_preloaded_sound(musicpaths[7]).unwrap();
         Musicdisc {
-            musicpaths,
             sounds: vec![
                 backinblack_sound,
                 thickofit_sound,
@@ -180,12 +160,6 @@ impl Musicdisc {
             greatestshow_timevalid: true,
             greatestshow_currentime: 0.0,
         }
-    }
-
-    #[allow(unused)]
-    pub async fn test_musicdisc(&self) {
-        println!("Playing music disc: {}", self.musicpaths[0]);
-        play_sound(&self.sounds[0], PlaySoundParams { looped: false, volume: 1.0 });
     }
 
     pub fn start_musicdisc_time(&mut self, disc_title: &str) {

@@ -224,7 +224,6 @@ flying_blob.set_preload_gif(tm.get_preloaded_animated_gif("assets/flying_blob.gi
 
 */
 use crate::modules::animated_image::AnimatedImage;
-use crate::modules::collision;
 use crate::modules::collision::check_collision;
 use crate::modules::label::Label;
 use crate::modules::map;
@@ -480,15 +479,10 @@ impl Enemy {
         let collision = check_collision(self.view_enemy(), player.view_player(), 1);
 
         if collision {
-          
-                
-            
             let issactive = musicdiscfunctions.get_imstillstanding_active();
             player.dmgplayer(self.get_dmg(), issactive, self);
             self.knockback(player, "player");
             self.knockback(player, "enemy");
-            
-            
         }
         // Apply movement based on frame time
     }
@@ -553,10 +547,10 @@ impl Enemy {
         }
     }
 
-     pub fn view_enemy_animated(&self) -> &AnimatedImage {
+    pub fn view_enemy_animated(&self) -> &AnimatedImage {
         match &self.view {
             EnemyView::Still(_still) => panic!("Cannot get animated image from a still enemy"),
-            EnemyView::Animated(animated) => animated
+            EnemyView::Animated(animated) => animated,
         }
     }
 
@@ -1106,7 +1100,7 @@ impl Enemy {
         }
         player.addcoins(amount);
     }
-
+    #[allow(unused)]
     pub fn jeff_checkhit(&self, player: &mut Player, jeff_valid: bool, jeff_attackvalid: bool) -> (bool, bool) {
         let mut hit = jeff_valid;
         if check_collision(self.view_enemy_animated(), player.view_player(), 1) {
@@ -1185,34 +1179,31 @@ impl Enemy {
             let issactive = musicdiscfunctions.get_imstillstanding_active();
             player.dmgplayer(20.0, issactive, self);
             if player.get_x() < self.get_x() && player.get_y() < self.get_y() {
-                player.set_position(player.get_x() - 150.0, player.get_y()-150.0);
+                player.set_position(player.get_x() - 150.0, player.get_y() - 150.0);
                 if player.get_x() < 70.0 {
                     player.set_x(400.0);
                 }
                 if player.get_y() < 50.0 {
                     player.set_y(400.0);
                 }
-            }
-            else if player.get_x() < self.get_x() && player.get_y() > self.get_y() {
-                player.set_position(player.get_x() - 150.0, player.get_y()+150.0);
+            } else if player.get_x() < self.get_x() && player.get_y() > self.get_y() {
+                player.set_position(player.get_x() - 150.0, player.get_y() + 150.0);
                 if player.get_x() < 70.0 {
                     player.set_x(400.0);
                 }
                 if player.get_y() > 600.0 {
                     player.set_y(300.0);
                 }
-            }
-            else if player.get_x() > self.get_x() && player.get_y() < self.get_y() {
-                player.set_position(player.get_x() + 150.0, player.get_y()-150.0);
+            } else if player.get_x() > self.get_x() && player.get_y() < self.get_y() {
+                player.set_position(player.get_x() + 150.0, player.get_y() - 150.0);
                 if player.get_x() > 930.0 {
                     player.set_x(500.0);
                 }
                 if player.get_y() < 50.0 {
                     player.set_y(400.0);
                 }
-            }
-            else {
-                player.set_position(player.get_x() + 150.0, player.get_y()+150.0);
+            } else {
+                player.set_position(player.get_x() + 150.0, player.get_y() + 150.0);
                 if player.get_x() > 930.0 {
                     player.set_x(500.0);
                 }
@@ -1257,14 +1248,14 @@ impl Enemy {
                 self.set_position(100.0, (VIRTUAL_HEIGHT / 2.0) - 75.0);
                 self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_openmouth2R.gif").unwrap(), true);
                 lbl_warninglabel.set_position(self.get_x() + 150.0, 250.0);
-                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH, VIRTUAL_HEIGHT-420.0);
+                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH, VIRTUAL_HEIGHT - 420.0);
             }
             2 => {
                 //right
                 self.set_position(VIRTUAL_WIDTH - 200.0, (VIRTUAL_HEIGHT / 2.0) - 75.0);
                 self.set_preload_gif(tm.get_preloaded_animated_gif("assets/world1_boss/jeff_openmouth2L.gif").unwrap(), true);
                 lbl_warninglabel.set_position(-20.0, 250.0);
-                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH - 200.0 , VIRTUAL_HEIGHT-420.0);
+                lbl_warninglabel.with_fixed_size(VIRTUAL_WIDTH - 200.0, VIRTUAL_HEIGHT - 420.0);
             }
             _ => {}
         }
@@ -1354,34 +1345,31 @@ impl Enemy {
             let issactive = musicdiscfunctions.get_imstillstanding_active();
             player.dmgplayer(20.0, issactive, self);
             if player.get_x() < self.get_x() && player.get_y() < self.get_y() {
-                player.set_position(player.get_x() - 150.0, player.get_y()-150.0);
+                player.set_position(player.get_x() - 150.0, player.get_y() - 150.0);
                 if player.get_x() < 70.0 {
                     player.set_x(400.0);
                 }
                 if player.get_y() < 50.0 {
                     player.set_y(400.0);
                 }
-            }
-            else if player.get_x() < self.get_x() && player.get_y() > self.get_y() {
-                player.set_position(player.get_x() - 150.0, player.get_y()+150.0);
+            } else if player.get_x() < self.get_x() && player.get_y() > self.get_y() {
+                player.set_position(player.get_x() - 150.0, player.get_y() + 150.0);
                 if player.get_x() < 70.0 {
                     player.set_x(400.0);
                 }
                 if player.get_y() > 600.0 {
                     player.set_y(300.0);
                 }
-            }
-            else if player.get_x() > self.get_x() && player.get_y() < self.get_y() {
-                player.set_position(player.get_x() + 150.0, player.get_y()-150.0);
+            } else if player.get_x() > self.get_x() && player.get_y() < self.get_y() {
+                player.set_position(player.get_x() + 150.0, player.get_y() - 150.0);
                 if player.get_x() > 930.0 {
                     player.set_x(500.0);
                 }
                 if player.get_y() < 50.0 {
                     player.set_y(400.0);
                 }
-            }
-            else {
-                player.set_position(player.get_x() + 150.0, player.get_y()+150.0);
+            } else {
+                player.set_position(player.get_x() + 150.0, player.get_y() + 150.0);
                 if player.get_x() > 930.0 {
                     player.set_x(500.0);
                 }
@@ -1405,7 +1393,7 @@ impl Enemy {
         attack_choice: &mut i32,
         dig: &mut bool,
         musicdiscfunctions: &mut Musicdisc,
-        hit : &mut bool,
+        hit: &mut bool,
     ) {
         let way: &str;
         if player.get_x() < self.get_x() {
@@ -1418,12 +1406,10 @@ impl Enemy {
             self.cooldown = get_time();
         }
         if get_time() > self.cooldown + 5.0 {
-           
             if get_time() >= self.cooldown + 5.1 && get_time() < self.cooldown + 5.2 {
                 rand::srand(date::now() as u64);
-                *attack_choice = rand::gen_range(0, 2); 
+                *attack_choice = rand::gen_range(0, 2);
                 *hit = false;
-     
             }
 
             if *attack_choice == 0 {
@@ -1442,10 +1428,9 @@ impl Enemy {
                 *dig = false;
                 *shoot = false;
                 *chomp = false;
-
             }
         }
-       *attack=false;
+        *attack = false;
 
         let collision = check_collision(self.view_enemy_animated(), player.view_player(), 1);
         if collision && *hit == false {
@@ -1454,8 +1439,6 @@ impl Enemy {
             self.knockback(player, "enemy");
             *hit = true;
         }
-
-        
     }
 
     pub async fn plant_boss_shoot(&mut self, player: &mut Player, tm: &TextureManager, way: &str, shoot: &mut bool, dig: &mut bool, timer: &mut f64) {
@@ -1470,13 +1453,14 @@ impl Enemy {
                 tm.get_preloaded_animated_gif(format!("assets/world2_boss/boss_shoot{}.gif", way).as_str())
                     .unwrap(),
                 false,
-            );}
-            if get_time()> self.cooldown2+2.5{
-        if *shoot == true {
-          self.shoot(player, 100.0, 100.0).await;
-        *shoot = false;}
+            );
         }
-        
+        if get_time() > self.cooldown2 + 2.5 {
+            if *shoot == true {
+                self.shoot(player, 100.0, 100.0).await;
+                *shoot = false;
+            }
+        }
     }
 
     pub async fn plant_boss_chomp(&mut self, player: &mut Player, tm: &TextureManager, way: &str, chomp: &mut bool, dig: &mut bool, timer: &mut f64) {

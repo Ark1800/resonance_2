@@ -4,12 +4,11 @@ Date: 2026-04-14
 Program Details:
 */
 
-use crate::modules::label::Label;
-use crate::modules::player::Player;
-//use crate::modules::projectile::Projectile;
 use crate::modules::database::{DatabaseClient, DatabaseTable};
-use crate::modules::grid::draw_grid;
+use crate::modules::label::Label;
+use crate::modules::item::Item;
 use crate::modules::map::Map;
+use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
@@ -46,6 +45,20 @@ pub async fn run(
     )
     .await;
     map.create_map_array(0, 1, 0, vec![1]).await;
+    let backinblackitem = Item::new(
+            tm.get_preload("assets/musicdisc_files/covers/backinblack.png").unwrap(),
+            "assets/musicdisc_files/covers/backinblack.png".to_string(),
+            "Back In Black".to_string(),
+            "A Disc that allows the user to summon periodic pillars of fire".to_string(),
+            "disc".to_string(),
+            0,
+            0,
+            0.0,
+            0.0,
+            0,
+            0,
+        )
+        .await;
     let mut cyric = StillImage::new(
         "", 45.0,  // width
         70.0,  // height
@@ -105,18 +118,25 @@ pub async fn run(
     let mut script_num = 0;
     let mut script_list: Vec<Vec<String>> = vec![];
     let speech_list: Vec<String> = vec![
-        "I think we're at the end!".to_string(),
-        "....What are those?".to_string(),
-        "They look like music disks..".to_string(),
-        "You should touch one.".to_string(),
-        "It'd be funny.".to_string(),
+        "I think we're at the end! ".to_string(),
+        "....What are those? ".to_string(),
+        "They look like music disks.. ".to_string(),
+        "You should touch one. ".to_string(),
+        "It'd be funny. ".to_string(),
     ];
     let speech_list2: Vec<String> = vec![
-        "Woah, what's happening??".to_string(),
-        "What was that flash of light?".to_string(),
-        "I think I heard something outside, lets go!".to_string(),
+        "Woah, what's happening?? ".to_string(),
+        "What was that flash of light? ".to_string(),
+        "I think I heard something outside, lets go! ".to_string(),
     ];
     let speech_list3: Vec<String> = vec!["......".to_string()];
+
+    let mut lbl_tutorial = Label::new("", 50.0, 100.0, 30);
+    lbl_tutorial.with_scroll(true);
+    let mut tutorial_cooldown = 0.0;
+    let mut tutorial_num = 0;
+    let tutorial_speech = "If you get music disks, you can use them using Q, E, and X".to_string();
+    lbl_tutorial.set_scrolling_text(tutorial_speech.clone());
     script_list.push(speech_list);
     script_list.push(speech_list2);
     script_list.push(speech_list3);
@@ -137,6 +157,19 @@ pub async fn run(
         1.0,                  // Normal zoom (100%)
     )
     .await;
+    let mut img_flashbang = StillImage::new(
+        "",
+        virtual_width - 50.0, // width
+        250.0,                // height
+        25.0,                 // x position
+        500.0,                // y position
+        true,                 // Enable stretching
+        1.0,                  // Normal zoom (100%)
+    )
+    .await;
+    img_flashbang.set_preload(tm.get_preload("assets/map_files/white.png").unwrap());
+    img_flashbang.set_opacity(0.0);
+    let mut flashbang = 0.0;
 
     speech_box.set_preload(tm.get_preload("assets/map_files/textbox.png").unwrap());
     let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
@@ -183,6 +216,10 @@ pub async fn run(
                             }
                         }
                     }
+                    if flashbang > 0.0 {
+                        flashbang -= 0.1;
+                        img_flashbang.set_opacity(flashbang);
+                    }
                 }
             }
             if first_time {
@@ -193,6 +230,10 @@ pub async fn run(
                         cyric.set_preload(tm.get_preload("assets/cyric_files/cyric_f.png").unwrap());
                         speech_cooldown = 2.0;
                     }
+                }
+                if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < 1 && tutorial_cooldown <= 0.0 {
+                    tutorial_cooldown = 1.0;
+                    tutorial_num += 1;
                 }
             }
 
@@ -241,6 +282,9 @@ pub async fn run(
             }
             if first_time {
                 if lbl_interact.scroll() && is_key_pressed(KeyCode::E) {
+                    player.add_inventory_item(backinblackitem.clone());
+                    flashbang = 1.0;
+                    img_flashbang.set_opacity(flashbang);
                     cutscene_going = true;
                     can_interact = false;
                     lbl_interact.with_scroll(false);
@@ -266,9 +310,10 @@ pub async fn run(
                     name_box.draw();
                 }
                 lbl_speech.scrolling_text_draw();
+                lbl_tutorial.scrolling_text_draw();
                 cyric.draw();
             }
-            let (save, exit) = player.handle_save_menu().await;
+            let (save, exit, controls) = player.handle_save_menu().await;
             if save {
                 println!("Saving game...");
                 player.update_save_data(records, client, last_scene).await;
@@ -276,7 +321,9 @@ pub async fn run(
             if exit {
                 return "title_screen".to_string();
             }
-            draw_grid(50.0, BROWN);
+            if flashbang > 0.0 {
+                img_flashbang.draw();
+            }
             next_frame().await;
         }
     }
