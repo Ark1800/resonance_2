@@ -18,6 +18,8 @@ use crate::modules::preload_image::LoadingScreenOptions;
 use crate::modules::preload_image::GifLoadingScreenInfo;
 use crate::modules::musicdisc::Musicdisc;
 use crate::modules::database::{create_database_client, DatabaseTable};
+use macroquad::audio::{PlaySoundParams, play_sound};
+
 /// Set up window settings before the app runs
 fn window_conf() -> Conf {
     Conf {
@@ -56,7 +58,7 @@ async fn main() {
     "assets/world1_boss/jeff_angry.gif", "assets/world1_boss/jeff_annoyed.gif", "assets/world1_boss/jeff_asleep.gif", "assets/world1_boss/jeff_happy.gif","assets/world1_boss/jeff_idleL.gif", "assets/world1_boss/jeff_idleR.gif", "assets/world1_boss/jeff_idle1.gif", "assets/world1_boss/jeff_idle2.gif", "assets/world1_boss/tentaclemonster.gif","assets/world1_boss/jeff_knife.gif", "assets/world1_boss/jeff_openmouth1.gif", "assets/world1_boss/jeff_heart.png", "assets/world1_boss/jeff_zzz2.gif", "assets/world1_boss/jeff_zzz3.gif", "assets/world1_boss/jeff_openmouth2R.gif", "assets/world1_boss/jeff_preattack.gif", "assets/world1_boss/jeff_sad.gif", "assets/world1_boss/jeff_serious.gif", "assets/world1_boss/jeff_smile.gif", "assets/world1_boss/jeff_tired.gif", "assets/world1_boss/jeff_full.gif", "assets/world1_boss/jeff_openmouth2L.gif", "assets/world1_boss/jeff_bubblebeam.png",
     "assets/world2_boss/boss_biteL.gif", "assets/world2_boss/boss_biteR.gif", "assets/world2_boss/boss_idleL.gif", "assets/world2_boss/boss_idleR.gif", "assets/world2_boss/boss_digL.gif", "assets/world2_boss/boss_digR.gif","assets/world2_boss/boss_shootL.gif", "assets/world2_boss/boss_shootR.gif",  "assets/world2_boss/boss_dig_upL.gif","assets/world2_boss/boss_dig_upR.gif", "assets/world2_boss/slime_ball.png",];
     let tm = TextureManager::new();
-    let all_sounds = vec!["assets/musicdisc_files/music/backinblack.ogg", "assets/musicdisc_files/music/thickofit.ogg", "assets/musicdisc_files/music/howitsdone.ogg", "assets/musicdisc_files/music/imstillstanding.ogg", "assets/musicdisc_files/music/pandemonium.ogg", "assets/musicdisc_files/music/sixhundredstrike.ogg", "assets/musicdisc_files/music/sodapop.ogg", "assets/musicdisc_files/music/thegreatestshow.ogg"];
+    let all_sounds = vec!["assets/musicdisc_files/music/backinblack.ogg", "assets/musicdisc_files/music/thickofit.ogg", "assets/musicdisc_files/music/howitsdone.ogg", "assets/musicdisc_files/music/imstillstanding.ogg", "assets/musicdisc_files/music/pandemonium.ogg", "assets/musicdisc_files/music/sixhundredstrike.ogg", "assets/musicdisc_files/music/sodapop.ogg", "assets/musicdisc_files/music/thegreatestshow.ogg",  "assets/music_and_sfx/bgmusic.ogg", "assets/music_and_sfx/arrowrelease.ogg", "assets/music_and_sfx/swordslash.ogg"];
     // Using custom loading screen appearance
     let loading_options = LoadingScreenOptions {
         title: Some("Resonance 2".to_string()),
@@ -79,6 +81,7 @@ async fn main() {
     let mut current_screen = "title_screen".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
+    println!("all sounds {:?}", all_sounds);
     let mut musicdiscfunctions = Musicdisc::new(&tm, all_sounds).await;
     let mut last_scene = "None".to_string();
     let mut player = Player::new(preloadlist, 30.0, 30.0, &tm).await;
@@ -91,6 +94,7 @@ async fn main() {
     } else {
        println!("Error fetching records from database: {} ",fetched_results.err().unwrap());
     }
+    play_sound(musicdiscfunctions.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {

@@ -132,7 +132,7 @@ pub async fn run(
             red_portal.draw();
         }
         //game
-        if player.get_y() > virtual_width - 10.0 {
+        if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Down".to_string();
             return "town".to_string();
         }
@@ -148,7 +148,7 @@ pub async fn run(
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
         
-            let (save, exit, controls) = player.handle_save_menu().await;
+        let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;

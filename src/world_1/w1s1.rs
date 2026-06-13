@@ -167,7 +167,7 @@ pub async fn run(
                 *last_scene = "Right".to_string();
                 return "w1sp".to_string();
             }
-            if enemies.is_empty() && player.get_cleared() <= 3 {
+            if enemies.is_empty() && player.get_cleared() == 3 {
                 player.add_cleared();
                 choose_open = true;
                 item_valid = true;

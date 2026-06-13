@@ -137,6 +137,7 @@ pub async fn run(
     let mut tutorial_num = 0;
     let tutorial_speech = "If you get music disks, you can use them using Q, E, and X".to_string();
     lbl_tutorial.set_scrolling_text(tutorial_speech.clone());
+    lbl_tutorial.with_colors(WHITE, None);
     script_list.push(speech_list);
     script_list.push(speech_list2);
     script_list.push(speech_list3);

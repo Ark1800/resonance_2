@@ -186,7 +186,7 @@ pub async fn run(
         if quit {
             return "title_screen".to_string();
         }
-        if enemies.is_empty() && player.get_cleared() <= 4 {
+        if enemies.is_empty() && player.get_cleared() == 4 {
             player.add_cleared();
             item_valid = true;
             choose_open = true;

@@ -16,10 +16,12 @@ use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 use miniquad::date;
 use std::f32::consts::PI;
+use macroquad::audio::{PlaySoundParams, play_sound, stop_sound};
 
 // STUFF TO TELL DUSOME
 //1. slime, fireball, arrow are outside of folders for ease of testing but also used in the program
-
+//2. deleting stuff from text input sometimes causes the program to crash, it gives error for saying Is_char_boundary is off
+//3. ranged attack cooldown randomly doesnt activate 
 
 //other notes
 //1. guide
@@ -37,6 +39,8 @@ use std::f32::consts::PI;
 //Bug fixes/extras
 
 //Work
+//1. buffed pause menu
+//2. buffed tutorial
 
 
 //Keypresses:
@@ -137,6 +141,8 @@ pub struct Player {
     itemindex3: usize,
     currentscreen: String,
     mleattackdrawing: bool, //is the melee attack currently being drawn (for timing when to stop drawing melee attack labels)
+    lbl_boss_mocking: Label, //label used to mock the player for trying to use musicdiscs on bosses that are immune to them
+    last_mocking_time: f64, //time when the boss mocking label was last updated for timing how long to draw the mocking label
 }
 
 impl Player {
@@ -212,6 +218,8 @@ impl Player {
             itemindex3: 0,
             currentscreen: "".to_string(),
             mleattackdrawing: false,
+            lbl_boss_mocking: Label::new("", 300.0, 100.0, 30),
+            last_mocking_time: 0.0,
         }
     }
     //movement functions
@@ -240,12 +248,12 @@ impl Player {
         self.movement = movement;
         self.handle_image(); //handle if image changes
         if is_key_pressed(KeyCode::Tab) {
+            self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
             if self.save_menu_open {
                 //if save menu is open, close save menu instead of inventory on tab press
                 self.save_menu_open = false;
                 *pause = false; //unpause game when closing save menu
             }
-            self.inventoryopen = !self.inventoryopen; //open/close inventory on tab press (draw vs not draw)
             match pause {
                 true => *pause = false, //unpause game when closing inventory
                 false => *pause = true, //pause game when opening inventory
@@ -270,14 +278,33 @@ impl Player {
             self.rangedattack = true;
         }
         if self.get_player_activedisc() == "none" {
-            if is_key_pressed(KeyCode::Q) {
-                self.handle_musicdiscs(musicdiscs, 7);
+            if self.get_currentscreen() != "w1sb" && self.get_currentscreen() != "w2sb" && self.get_currentscreen() != "w3sb" {
+                if is_key_pressed(KeyCode::Q) {
+                    self.handle_musicdiscs(musicdiscs, 7);
+                }
+                if is_key_pressed(KeyCode::E) {
+                    self.handle_musicdiscs(musicdiscs, 8);
+                }
+                if is_key_pressed(KeyCode::X) {
+                    self.handle_musicdiscs(musicdiscs, 9);
+                }
             }
-            if is_key_pressed(KeyCode::E) {
-                self.handle_musicdiscs(musicdiscs, 8);
-            }
-            if is_key_pressed(KeyCode::X) {
-                self.handle_musicdiscs(musicdiscs, 9);
+            if is_key_pressed(KeyCode::Q) || is_key_pressed(KeyCode::E) || is_key_pressed(KeyCode::X) {
+                if self.get_currentscreen() == "w1sb" {
+                    self.lbl_boss_mocking.set_text("Rawr Rargh...I have earbuds in!");
+                    self.lbl_boss_mocking.with_colors(WHITE, Some(BLUE));
+                    self.last_mocking_time = get_time();
+                }
+                else if self.get_currentscreen() == "w2sb" {
+                    self.lbl_boss_mocking.set_text("You call that music? My plantlist slaps harder than that!");
+                    self.lbl_boss_mocking.with_colors(GREEN, Some(BROWN));
+                    self.last_mocking_time = get_time();
+                }
+                else if self.get_currentscreen() == "w3sb" {
+                    self.lbl_boss_mocking.set_text("Is that a...Spotify playlist? How quaint.");
+                    self.lbl_boss_mocking.with_colors(RED, Some(BLUE));
+                    self.last_mocking_time = get_time();
+                }
             }
         }
     }
@@ -454,6 +481,15 @@ impl Player {
 
     pub fn set_x(&mut self, x: f32) {
         self.view.set_x(x);
+        self.playerui.2[0].set_x(x - 15.0);
+        self.playerui.2[1].set_x(x + 40.0);
+        self.playerui.2[2].set_x(x + 45.0);
+        self.playerui.2[3].set_x(x + 40.0);
+        self.playerui.2[4].set_x(x - 10.0);
+        self.playerui.2[5].set_x(x - 60.0);
+        self.playerui.2[6].set_x(x - 65.0);
+        self.playerui.2[7].set_x(x - 60.0);
+        self.playerui.3[0].set_x(x);
     }
 
     pub fn get_x(&self) -> f32 {
@@ -462,6 +498,15 @@ impl Player {
 
     pub fn set_y(&mut self, y: f32) {
         self.view.set_y(y);
+        self.playerui.2[0].set_y(y - 30.0);
+        self.playerui.2[1].set_y(y - 30.0);
+        self.playerui.2[2].set_y(y + 10.0);
+        self.playerui.2[3].set_y(y + 60.0);
+        self.playerui.2[4].set_y(y + 65.0);
+        self.playerui.2[5].set_y(y + 60.0);
+        self.playerui.2[6].set_y(y + 10.0);
+        self.playerui.2[7].set_y(y - 30.0);
+        self.playerui.3[0].set_y(y);
     }
 
     pub fn get_y(&self) -> f32 {
@@ -566,15 +611,15 @@ impl Player {
                 dmg = 0.0;
             }
             let randomnum = rand::gen_range(1, 5);
-            if self.inventory.1[4].get_filename() == "assets/item_files/armor/shadow_boots.png" {
-                if randomnum == 1 {
+            if self.inventory.1[4].get_filename() == "assets/item_files/armour/shadow_boots.png" {
+                if randomnum == 1 || randomnum == 3 {
                     dmg = 0.0;
                 }
             }
             self.health -= dmg;
             let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
             let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
-            if self.inventory.1[3].get_filename() == "assets/item_files/armor/lifeforce_armor.png" {
+            if self.inventory.1[3].get_filename() == "assets/item_files/armour/lifeforce_armor.png" {
                 new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
                 max_width = self.maxhealth * 2.0; // Double the maximum health
             }
@@ -588,6 +633,7 @@ impl Player {
             }
         }
     }
+
     #[allow(unused)]
     pub fn get_hitboximg(&self) -> StillImage {
         self.hitboximg.clone()
@@ -929,9 +975,13 @@ impl Player {
         //update vars
         let mletimepassed = get_time() - self.last_attack_time;
         let rngtimepassed = get_time() - self.last_rng_attack_time;
+        let mockingtimepassed = get_time() - self.last_mocking_time;
         let mut mlehit = false;
         let mut rnghit = false;
         let mut index = 0;
+        if mockingtimepassed < 2.0 {
+            self.lbl_boss_mocking.draw();
+        }
         //update health number
         self.playerui.1[2].set_text(format!("{}", self.health));
         for image in self.playerui.0.iter_mut() {
@@ -1290,8 +1340,9 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
             }
         } else if self.health <= 0.0 && self.death_screen_open == false && musicdiscfunctions.get_imstillstanding_active() == false {
             self.death_screen_open = true;
+            stop_sound(musicdiscfunctions.get_currently_playing());
+            play_sound(musicdiscfunctions.get_bgmusic(), PlaySoundParams { looped: false, volume: 1.0 });
             *pause = true; //pause game when death screen opens
-            println!("DEATH SCREEN OPEN")
         }
         btn_clicks
     }
@@ -1447,6 +1498,17 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
                         break;
                     }
                 }
+                let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
+                let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
+                if self.inventory.1[3].get_filename() == "assets/item_files/armour/lifeforce_armor.png" {
+                    new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
+                    max_width = self.maxhealth * 2.0; // Double the maximum health
+                }
+                if new_width < 0.0 {
+                    new_width = 0.0; // Prevent negative width
+                }
+                self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
+                self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
             }
             if self.inventory.3[1].click() {
                 let title = self.inventory.0[0].selected_item().unwrap().clone();
@@ -1672,7 +1734,7 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
         self.health = health;
         let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
         let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
-        if self.inventory.1[3].get_filename() == "assets/item_files/armor/lifeforce_armor.png" {
+        if self.inventory.1[3].get_filename() == "assets/item_files/armour/lifeforce_armor.png" {
             new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
             max_width = self.maxhealth * 2.0; // Double the maximum health
         }
@@ -1690,7 +1752,7 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
         }
         let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
         let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
-        if self.inventory.1[3].get_filename() == "assets/item_files/armor/lifeforce_armor.png" {
+        if self.inventory.1[3].get_filename() == "assets/item_files/armour/lifeforce_armor.png" {
             new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
             max_width = self.maxhealth * 2.0; // Double the maximum health
         }
@@ -2168,7 +2230,7 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
         let lifeforce_armor = Item::new(
             tm.get_preload("assets/item_files/armour/lifeforce_armor.png").unwrap(),
             "assets/item_files/armour/lifeforce_armor.png".to_string(),
-            "Scorned Heart BP".to_string(),
+            "Scorned Heart".to_string(),
             "An armor that increases the wearer's very life force, doubling max health".to_string(),
             "bodyarmor".to_string(),
             0,

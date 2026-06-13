@@ -5,7 +5,7 @@ use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
 use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
-use macroquad::audio::{PlaySoundParams, Sound, play_sound};
+use macroquad::audio::{PlaySoundParams, Sound, play_sound, stop_sound};
 use macroquad::prelude::*;
 
 /*
@@ -96,6 +96,7 @@ impl Musicdisc {
         let sixhundredstrike_sound = tm.get_preloaded_sound(musicpaths[5]).unwrap();
         let sodapop_sound = tm.get_preloaded_sound(musicpaths[6]).unwrap();
         let greatestshow_sound = tm.get_preloaded_sound(musicpaths[7]).unwrap();
+        let bg_music = tm.get_preloaded_sound(musicpaths[8]).unwrap();
         Musicdisc {
             sounds: vec![
                 backinblack_sound,
@@ -106,6 +107,7 @@ impl Musicdisc {
                 sixhundredstrike_sound,
                 sodapop_sound,
                 greatestshow_sound,
+                bg_music,
             ],
             disc_elements: Musicdisc::create_disc_elements(&tm).await,
             backinblack_starttime: 0.0,
@@ -244,6 +246,32 @@ impl Musicdisc {
         self.imstillstanding
     }
 
+    pub fn get_currently_playing(&self) -> &Sound {
+        if self.backinblack_valid == false {
+            &self.sounds[0]
+        } else if self.thickofitvalid == false {
+            &self.sounds[1]
+        } else if self.howitsdone_valid == false {
+            &self.sounds[2]
+        } else if self.imstillstanding_valid == false {
+            &self.sounds[3]
+        } else if self.pandemonium_valid == false {
+            &self.sounds[4]
+        } else if self.sixhundredstrike_valid == false {
+            &self.sounds[5]
+        } else if self.sodapop_valid == false {
+            &self.sounds[6]
+        } else if self.greatestshow_valid == false {
+            &self.sounds[7]
+        } else {
+            &self.sounds[8]
+        }
+    }
+
+    pub fn get_bgmusic(&self) -> &Sound {
+        &self.sounds[8]
+    }
+
     fn update_musicdisc_cooldowns(&mut self, player: &mut Player) {
         if self.backinblack_valid == false {
             self.backinblack_cct = get_time() - self.backinblack_cooldown;
@@ -329,6 +357,7 @@ impl Musicdisc {
                         self.backinblack_hit = false;
                         self.backinblack_valid = false;
                         self.backinblack_cooldown = get_time();
+                        play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                         discmatch = "";
                     } else {
                         let is_attack_window = (time as i32) % 2 == 0; //time * 2% gets all even numbers so basically if an even number run the shid
@@ -355,6 +384,7 @@ impl Musicdisc {
                                     }
                                 }
                                 if time <= 1.0 {
+                                    stop_sound(self.get_bgmusic());
                                     play_sound(&self.sounds[0], PlaySoundParams { looped: false, volume: 1.0 });
                                 }
 
@@ -369,6 +399,7 @@ impl Musicdisc {
             "Thick Of It" => {
                 if self.thickofitvalid == true {
                     if self.thickofit_hit == false {
+                        stop_sound(self.get_bgmusic());
                         play_sound(&self.sounds[1], PlaySoundParams { looped: false, volume: 1.0 });
                         self.thickofit_hit = true;
                     }
@@ -388,6 +419,7 @@ impl Musicdisc {
                         self.thickofit_hit = false;
                         self.thickofitvalid = false;
                         self.thickofitcooldown = get_time();
+                        play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                         discmatch = "";
                     }
                 }
@@ -396,6 +428,7 @@ impl Musicdisc {
                 if self.howitsdone_valid == true {
                     let time = get_time() - self.howitsdone_starttime;
                     if self.howitsdone_hit == false {
+                        stop_sound(self.get_bgmusic());
                         play_sound(&self.sounds[2], PlaySoundParams { looped: false, volume: 1.0 });
                         let mledmg = player.get_meleedmg() * 3.0;
                         let rngdmg = player.get_rngdmg() * 3.0;
@@ -411,6 +444,7 @@ impl Musicdisc {
                         self.howitsdone_hit = false;
                         self.howitsdone_valid = false;
                         self.howitsdone_cooldown = get_time();
+                        play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                         discmatch = "";
                     }
                 }
@@ -421,6 +455,7 @@ impl Musicdisc {
             "Pandemonium" => {
                 if self.pandemonium_valid == true {
                     if self.pandemonium_hit == false {
+                        stop_sound(self.get_bgmusic());
                         play_sound(&self.sounds[4], PlaySoundParams { looped: false, volume: 1.0 });
                         self.pandemonium_hit = true;
                     }
@@ -469,6 +504,7 @@ impl Musicdisc {
                         self.pandemonium_hit = false;
                         self.pandemonium_valid = false;
                         self.pandemonium_cooldown = get_time();
+                        play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                         discmatch = "";
                     }
                 }
@@ -482,6 +518,7 @@ impl Musicdisc {
                         self.sixhundredstrike_last_cycle = -1;
                         self.sixhundredstrike_valid = false;
                         self.sixhundredstrike_cooldown = get_time();
+                        play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                         discmatch = "";
                     } else {
                         let attack_cycle = (time / 3.0).floor() as i32; //sets 0.3->0.5 etc. so every 0.5 seconds image dissapears and every 3 seconds runs again
@@ -506,6 +543,7 @@ impl Musicdisc {
                             }
                             if self.sixhundredstrike_hit == false {
                                 if time <= 1.0 {
+                                    stop_sound(self.get_bgmusic());
                                     play_sound(&self.sounds[5], PlaySoundParams { looped: false, volume: 1.0 });
                                 }
                                 println!("Hit enemy with Six Hundred Strike for 60 damage!");
@@ -519,6 +557,7 @@ impl Musicdisc {
             "Soda Pop" => {
                 if self.sodapop_valid == true {
                     if self.sodapop_hit == false {
+                        stop_sound(self.get_bgmusic());
                         play_sound(&self.sounds[6], PlaySoundParams { looped: false, volume: 1.0 });
                         for i in 0..enemies.len() {
                             self.sodapopposlist.push(enemies[i].get_pos());
@@ -540,6 +579,7 @@ impl Musicdisc {
                         self.sodapop_hit = false;
                         self.sodapop_valid = false;
                         self.sodapop_cooldown = get_time();
+                        play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                         discmatch = "";
                     }
                 }
@@ -547,6 +587,7 @@ impl Musicdisc {
             "The Greatest Show" => {
                 if self.greatestshow_valid == true {
                     if self.greatestshow_hit == false {
+                        stop_sound(self.get_bgmusic());
                         play_sound(&self.sounds[7], PlaySoundParams { looped: false, volume: 1.0 });
                         self.greatestshow_hit = true;
                         self.greatestshow_playerhealth = player.get_health() as f64;
@@ -575,6 +616,7 @@ impl Musicdisc {
                             self.greatestshow_valid = false;
                             self.greatestshow_cooldown = get_time();
                             self.greatestshow_playerhealth = 0.0;
+                            play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                             discmatch = "";
                         } else if time >= self.greatestshow_currentime && time <= self.greatestshow_currentime + 1.0 {
                             for i in 0..self.disc_elements.2.len() {
@@ -613,6 +655,7 @@ impl Musicdisc {
                 if self.imstillstanding_hit == false {
                     discmatch = "I'm Still Standing";
                     self.imstillstanding = true;
+                    stop_sound(self.get_bgmusic());
                     play_sound(&self.sounds[3], PlaySoundParams { looped: false, volume: 1.0 });
                     self.imstillstanding_hit = true;
                     self.imstillstanding_starttime = get_time();
@@ -624,6 +667,7 @@ impl Musicdisc {
                     self.imstillstanding_hit = false;
                     self.imstillstanding_valid = false;
                     self.imstillstanding_cooldown = get_time();
+                    play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                     discmatch = "";
                 }
             }

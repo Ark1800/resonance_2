@@ -100,6 +100,8 @@ pub async fn run(
         if *pause == false {
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
+        }
+        if *pause == false {
             //enemy loop
             if player.get_cleared() == 8 {
                 
@@ -170,7 +172,7 @@ pub async fn run(
             }
         }
 
-        if enemies.is_empty() && player.get_cleared() >= 8 {
+        if enemies.is_empty() && player.get_cleared() == 8 {
             player.add_cleared();
             map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]); // opens right side of map when all enemies are dead
             player.add_health(30.0);

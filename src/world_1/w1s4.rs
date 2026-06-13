@@ -67,7 +67,7 @@ pub async fn run(
 
     for x in 0..map_row_len {
         for y in 0..map_column_len {
-            if y != 4 && x != 0 && x != map_row_len - 1 && y != 0 && y != map_column_len - 1 && y != 5 {
+            if x != 0 && x != map_row_len - 1 && y != 0 && y != map_column_len - 1 {
                 wall_places.push(vec![x as i32, y as i32]);
                 walls.push(1);
             }
@@ -75,7 +75,7 @@ pub async fn run(
     }
     map.change_map(walls, wall_places);
     let mut enemies: Vec<Enemy> = vec![];
-    for i in 0..3 {
+    for i in 0..2 {
         let mut large_slime = Enemy::new(
             "",
             75.0,                 //hieght
@@ -187,7 +187,7 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
-        if enemies.is_empty() && player.get_cleared() <= 6 {
+        if enemies.is_empty() && player.get_cleared() == 6 {
             player.add_cleared();
             item_valid = true;
             choose_open = true;

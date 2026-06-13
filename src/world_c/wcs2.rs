@@ -112,7 +112,7 @@ pub async fn run(
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
-
+        player.handle_keypresses(pause, _musicdiscfunctions).await;
         if player.get_cleared() == 1 && enemies.len() == 0 && first {
             map.create_map_array(0, 2, 0, vec![1, 3]).await;
             first = false;
@@ -160,8 +160,6 @@ pub async fn run(
                     tutorial_num += 1;
                 }
             }
-
-            player.handle_keypresses(pause, _musicdiscfunctions).await;
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
             //enemy loop

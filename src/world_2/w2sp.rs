@@ -104,8 +104,8 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
-        player.draw();
         world_numeral.draw();
+        player.draw();
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
 

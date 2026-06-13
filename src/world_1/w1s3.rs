@@ -201,7 +201,7 @@ pub async fn run(
                 enemies.remove(index);
             }
         }
-        if enemies.is_empty() && player.get_cleared() <= 5 {
+        if enemies.is_empty() && player.get_cleared() == 5 {
             player.add_cleared();
             item_valid = true;
             choose_open = true;
