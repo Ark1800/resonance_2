@@ -209,6 +209,7 @@ pub async fn run(
         if quit {
             return "title_screen".to_string();
         }
+        #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

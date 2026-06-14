@@ -75,6 +75,7 @@ pub async fn run(
         player.draw();
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
         player.handle_inventory();
+        #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

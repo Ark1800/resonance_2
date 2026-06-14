@@ -114,6 +114,7 @@ pub async fn run(
         player.set_player_activedisc(activedisc);
 
         player.handle_inventory();
+        #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

@@ -147,7 +147,7 @@ pub async fn run(
         player.handle_inventory();
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
-        
+        #[allow(unused)]
         let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

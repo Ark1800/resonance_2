@@ -153,6 +153,7 @@ pub async fn run(
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.handle_inventory();
+        #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

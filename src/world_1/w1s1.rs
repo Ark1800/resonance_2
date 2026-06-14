@@ -153,6 +153,7 @@ pub async fn run(
                     enemies.remove(index);
                 }
             }
+            #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
 
             if save {

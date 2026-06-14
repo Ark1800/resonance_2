@@ -136,6 +136,7 @@ pub async fn run(
         // whirlpool.draw();
         map.draw_map(&tm).await;
         player.handle_inventory();
+        #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

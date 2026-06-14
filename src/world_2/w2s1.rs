@@ -82,6 +82,7 @@ pub async fn run(
         background.draw();
         player.draw();
         player.handle_inventory();
+        #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

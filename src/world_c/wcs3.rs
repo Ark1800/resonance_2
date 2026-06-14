@@ -314,6 +314,7 @@ pub async fn run(
                 lbl_tutorial.scrolling_text_draw();
                 cyric.draw();
             }
+            #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
             if save {
                 println!("Saving game...");

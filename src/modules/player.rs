@@ -113,6 +113,7 @@ pub struct Player {
     inventoryopen: bool,
     savemenu: (Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for save menu UI elements (images, labels, buttons)
     save_menu_open: bool,   
+    #[allow(unused)]
     control_screen:(Vec<StillImage>, Vec<Label>, Vec<TextButton>),
     control_open: bool,                              //is inventory open
     armor: i32,                                               //armor value for damage reduction

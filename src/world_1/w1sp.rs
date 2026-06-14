@@ -8,7 +8,6 @@ use crate::modules::animated_image::AnimatedImage;
 use crate::modules::collision::check_collision;
 use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
-use crate::modules::grid::draw_grid;
 use crate::modules::map::Map;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
@@ -157,6 +156,7 @@ pub async fn run(
         player.set_player_activedisc(activedisc);
         let old_pos = player.get_oldpos();
         player.handle_inventory();
+        #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");

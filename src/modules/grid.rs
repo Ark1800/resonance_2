@@ -17,6 +17,7 @@ Note: When using with the scale module, make sure to call draw_grid AFTER use_vi
 */
 use macroquad::prelude::*;
 
+#[allow(unused)]
 pub fn draw_grid(grid_size: f32, color: Color) {
     #[cfg(feature = "scale")]
     {

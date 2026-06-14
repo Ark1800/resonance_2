@@ -171,6 +171,7 @@ pub async fn run(
             } else if player.get_cleared() == 0 {
                 lbl_tutorial.draw();
             }
+            #[allow(unused)]
             let (save, exit, controls) = player.handle_save_menu().await;
             if save {
                 println!("Saving game...");
