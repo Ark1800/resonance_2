@@ -13,7 +13,7 @@ use crate::modules::musicdisc::Musicdisc;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::modules::messagebox::{self, MessageBox};
+use crate::modules::messagebox::MessageBox;
 use macroquad::prelude::*;
 
 pub async fn run(
