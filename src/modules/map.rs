@@ -99,7 +99,7 @@ impl Map {
                 2 => self.map_array[0][4] = 0,
                 3 => self.map_array[7][9] = 0,
                 4 => self.map_array[14][4] = 0,
-                _ => println!("Invalid num"),
+                _ => {},
             }
             // Runs twice to make two open spaces
             match entrance_sides[entrance as usize] {
@@ -107,7 +107,7 @@ impl Map {
                 2 => self.map_array[0][5] = 0,
                 3 => self.map_array[6][9] = 0,
                 4 => self.map_array[14][5] = 0,
-                _ => println!("Invalid num"),
+                _ => {},
             }
         }
     }

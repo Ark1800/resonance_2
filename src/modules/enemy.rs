@@ -884,7 +884,6 @@ impl Enemy {
         let mut split = false;
         self.moveing(player, musicdiscfunctions);
         if self.health <= 0.0 {
-            println!("Large slime split");
             split = true;
             (slime1, slime2) = self.split(tm).await;
         }
@@ -907,11 +906,9 @@ impl Enemy {
             self.cooldown = get_time();
             let attack_choice = rand::gen_range(0, 2);
             if attack_choice >= 0 {
-                println!("Cyric used Meteors!");
                 self.meteors(&tm).await;
                 self.cooldown2 = get_time() + 1.0;
             } else {
-                println!("Cyric used Chromatic Orb!");
                 self.shoot(player, 80.0, 80.0).await;
                 self.cooldown2 = get_time() + 2.0;
             }

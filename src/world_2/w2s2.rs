@@ -81,7 +81,7 @@ pub async fn run(
         player.draw();
         player.handle_inventory();
         #[allow(unused)]
-            let (save, exit, controls) = player.handle_save_menu().await;
+            let (save, exit) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;

@@ -9,6 +9,7 @@ use crate::modules::label::Label;
 use crate::modules::map::Map;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
+use crate::modules::messagebox::MessageBox;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
 use macroquad::prelude::*;
@@ -77,20 +78,14 @@ pub async fn run(
     lbl_speech.with_scroll(true);
     let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut lbl_tutorial = Label::new("", 50.0, 40.0, 40);
-    lbl_tutorial.with_colors(WHITE, None);
-    lbl_tutorial.with_scroll(true);
-    let mut tutorial_cooldown = 0.0;
-    let mut tutorial_num = 0;
     let speech_list: Vec<String> = vec![
         "Hurry up man, or I'll lose you! ".to_string(),
         "Finally found this place! That took forever.. ".to_string(),
         "Come on, lets go further in. Try to keep up! ".to_string(),
     ];
-    let tutorial_list: Vec<String> = vec!["ESC to open pause menu ".to_string(), "WASD to move ".to_string()];
-    lbl_tutorial.with_scroll_speed(0.1);
+    let mut tutorial_activate = true;
+    let mut tutorial_box = MessageBox::info("Controls!", "Use WASD to move\n\nPress ESC to open/close the pause menu");
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
-    lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
 
     let mut speech_box = StillImage::new(
         "",
@@ -113,7 +108,7 @@ pub async fn run(
         background.draw();
         map.draw_map(&tm).await;
         let timer = get_time() - start_time;
-        if timer > 0.1 {
+        if timer > 0.1 && !tutorial_box.is_active() {
             current_time = get_time();
             if (current_time - time_dif) > 0.1 {
                 time_dif = current_time;
@@ -130,13 +125,6 @@ pub async fn run(
                             }
                         }
                     }
-                    if tutorial_cooldown > 0.0 {
-                        tutorial_cooldown -= 0.1;
-                        if tutorial_cooldown <= 0.0 {
-                            tutorial_cooldown = 0.0;
-                            lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].to_string());
-                        }
-                    }
                 }
             }
 
@@ -144,10 +132,10 @@ pub async fn run(
                 if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() && speech_cooldown <= 0.0 {
                     speech_cooldown = 1.0;
                     speech_num += 1;
-                }
-                if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < tutorial_list.len() - 1 && tutorial_cooldown <= 0.0 {
-                    tutorial_cooldown = 1.0;
-                    tutorial_num += 1;
+                    if tutorial_activate {
+                        tutorial_box.show();
+                        tutorial_activate = false;
+                    }
                 }
             }
 
@@ -155,30 +143,29 @@ pub async fn run(
 
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
+        }
             player.draw();
             cyric.draw();
             if lbl_speech.get_text() != "" {
                 speech_box.draw();
                 name_box.draw();
             }
-            if speech_num != speech_list.len() && player.get_cleared() == 0 {
+            if speech_num != speech_list.len() && player.get_cleared() == 0 && !tutorial_box.is_active() {
                 lbl_speech.scrolling_text_draw();
             } else if player.get_cleared() == 0 {
                 lbl_speech.draw();
             }
-            if tutorial_num != tutorial_list.len() && player.get_cleared() == 0 {
-                lbl_tutorial.scrolling_text_draw();
-            } else if player.get_cleared() == 0 {
-                lbl_tutorial.draw();
-            }
             #[allow(unused)]
-            let (save, exit, controls) = player.handle_save_menu().await;
+            let (save, exit) = player.handle_save_menu().await;
             if save {
                 println!("Saving game...");
                 player.update_save_data(records, client, last_scene).await;
             }
             if exit {
                 return "title_screen".to_string();
+            }
+            if tutorial_box.is_active() {
+                tutorial_box.draw();
             }
 
             if player.get_y() > virtual_height {
@@ -193,7 +180,6 @@ pub async fn run(
                 return "town".to_string();
             }
             next_frame().await;
-        }
     }
 }
 

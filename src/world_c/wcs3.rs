@@ -5,13 +5,15 @@ Program Details:
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
-use crate::modules::label::Label;
 use crate::modules::item::Item;
+use crate::modules::label::Label;
 use crate::modules::map::Map;
+use crate::modules::messagebox::MessageBox;
 use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
+use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -46,19 +48,19 @@ pub async fn run(
     .await;
     map.create_map_array(0, 1, 0, vec![1]).await;
     let backinblackitem = Item::new(
-            tm.get_preload("assets/musicdisc_files/covers/backinblack.png").unwrap(),
-            "assets/musicdisc_files/covers/backinblack.png".to_string(),
-            "Back In Black".to_string(),
-            "A Disc that allows the user to summon periodic pillars of fire".to_string(),
-            "disc".to_string(),
-            0,
-            0,
-            0.0,
-            0.0,
-            0,
-            0,
-        )
-        .await;
+        tm.get_preload("assets/musicdisc_files/covers/backinblack.png").unwrap(),
+        "assets/musicdisc_files/covers/backinblack.png".to_string(),
+        "Back In Black".to_string(),
+        "A Disc that allows the user to summon periodic pillars of fire".to_string(),
+        "disc".to_string(),
+        0,
+        0,
+        0.0,
+        0.0,
+        0,
+        0,
+    )
+    .await;
     let mut cyric = StillImage::new(
         "", 45.0,  // width
         70.0,  // height
@@ -130,14 +132,8 @@ pub async fn run(
         "I think I heard something outside, lets go! ".to_string(),
     ];
     let speech_list3: Vec<String> = vec!["......".to_string()];
-
-    let mut lbl_tutorial = Label::new("", 50.0, 100.0, 30);
-    lbl_tutorial.with_scroll(true);
-    let mut tutorial_cooldown = 0.0;
-    let mut tutorial_num = 0;
-    let tutorial_speech = "If you get music disks, you can use them using Q, E, and X".to_string();
-    lbl_tutorial.set_scrolling_text(tutorial_speech.clone());
-    lbl_tutorial.with_colors(WHITE, None);
+    let mut tutorial_activate = true;
+    let mut tutorial_box = MessageBox::info("Music Disks!", "If you get music disks, you can use them using Q, E, and X");
     script_list.push(speech_list);
     script_list.push(speech_list2);
     script_list.push(speech_list3);
@@ -160,12 +156,12 @@ pub async fn run(
     .await;
     let mut img_flashbang = StillImage::new(
         "",
-        virtual_width - 50.0, // width
-        250.0,                // height
-        25.0,                 // x position
-        500.0,                // y position
-        true,                 // Enable stretching
-        1.0,                  // Normal zoom (100%)
+        VIRTUAL_WIDTH,  // width
+        VIRTUAL_HEIGHT, // height
+        0.0,            // x position
+        0.0,            // y position
+        true,           // Enable stretching
+        1.0,            // Normal zoom (100%)
     )
     .await;
     img_flashbang.set_preload(tm.get_preload("assets/map_files/white.png").unwrap());
@@ -208,8 +204,10 @@ pub async fn run(
                                     cutscene_going = false;
                                 }
                                 if script_num == 2 {
-                                    player.add_cleared();
-                                    return "wcs2".to_string();
+                                    if tutorial_activate {
+                                        tutorial_activate = false;
+                                        tutorial_box.show();
+                                    }
                                 }
                             } else {
                                 lbl_speech.set_scrolling_text(script_list[script_num][speech_num].to_string());
@@ -232,10 +230,6 @@ pub async fn run(
                         speech_cooldown = 2.0;
                     }
                 }
-                if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < 1 && tutorial_cooldown <= 0.0 {
-                    tutorial_cooldown = 1.0;
-                    tutorial_num += 1;
-                }
             }
 
             if !cutscene_going {
@@ -247,9 +241,13 @@ pub async fn run(
             }
 
             if first_time {
-                for _podium in 0..podium_list.len() {
-                    if (player.get_oldpos().x - podium_list[0].get_x()).abs() < 100.0
-                        && (player.get_oldpos().y - podium_list[0].get_y()).abs() < 100.0
+                for _i in 0..podium_list.len() {
+                    if (((player.get_oldpos().x - podium_list[0].get_x()).abs() < 100.0
+                        && (player.get_oldpos().y - podium_list[0].get_y()).abs() < 100.0)
+                        || ((player.get_oldpos().x - podium_list[1].get_x()).abs() < 100.0
+                            && (player.get_oldpos().y - podium_list[1].get_y()).abs() < 100.0)
+                        || ((player.get_oldpos().x - podium_list[2].get_x()).abs() < 100.0
+                            && (player.get_oldpos().y - podium_list[2].get_y()).abs() < 100.0))
                         && !lbl_interact.scroll()
                         && can_interact
                     {
@@ -257,8 +255,12 @@ pub async fn run(
                         lbl_interact.set_position(player.get_x() - 75.0, player.get_y() - 50.0);
                         lbl_interact.set_scrolling_text("Press E to interact.".to_string());
                         break;
-                    } else if ((player.get_oldpos().x - podium_list[0].get_x()).abs() >= 100.0
+                    } else if (((player.get_oldpos().x - podium_list[0].get_x()).abs() >= 100.0
                         || (player.get_oldpos().y - podium_list[0].get_y()).abs() >= 100.0)
+                        && ((player.get_oldpos().x - podium_list[1].get_x()).abs() >= 100.0
+                            || (player.get_oldpos().y - podium_list[1].get_y()).abs() >= 100.0)
+                        && ((player.get_oldpos().x - podium_list[2].get_x()).abs() >= 100.0
+                            || (player.get_oldpos().y - podium_list[2].get_y()).abs() >= 100.0))
                         && lbl_interact.scroll()
                     {
                         lbl_interact.with_scroll(false);
@@ -296,38 +298,49 @@ pub async fn run(
                     lbl_speech.set_scrolling_text(script_list[script_num][speech_num].clone());
                 }
             }
-
-            for podium in 0..podium_list.len() {
-                podium_list[podium].draw();
-            }
-            player.draw();
-            if lbl_interact.scroll() && can_interact && first_time {
-                lbl_interact.set_position(player.get_x() - 75.0, player.get_y() - 50.0);
-                lbl_interact.scrolling_text_draw();
-            }
-            if first_time {
-                if lbl_speech.get_text() != "" {
-                    speech_box.draw();
-                    name_box.draw();
-                }
-                lbl_speech.scrolling_text_draw();
-                lbl_tutorial.scrolling_text_draw();
-                cyric.draw();
-            }
-            #[allow(unused)]
-            let (save, exit, controls) = player.handle_save_menu().await;
-            if save {
-                println!("Saving game...");
-                player.update_save_data(records, client, last_scene).await;
-            }
-            if exit {
-                return "title_screen".to_string();
-            }
-            if flashbang > 0.0 {
-                img_flashbang.draw();
-            }
-            next_frame().await;
         }
+
+        for podium in 0..podium_list.len() {
+            podium_list[podium].draw();
+        }
+        player.draw();
+        if lbl_interact.scroll() && can_interact && first_time {
+            lbl_interact.set_position(player.get_x() - 75.0, player.get_y() - 50.0);
+            lbl_interact.scrolling_text_draw();
+        }
+        if first_time {
+            if lbl_speech.get_text() != "" {
+                speech_box.draw();
+                name_box.draw();
+            }
+            if !tutorial_box.is_active() {
+                lbl_speech.scrolling_text_draw();
+            } else {
+                lbl_speech.draw();
+            }
+            cyric.draw();
+        }
+        #[allow(unused)]
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            println!("Saving game...");
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
+            return "title_screen".to_string();
+        }
+        if flashbang > 0.0 {
+            img_flashbang.draw();
+        }
+        if tutorial_box.is_active() {
+            tutorial_box.draw();
+        }
+        if !tutorial_activate && first_time && !tutorial_box.is_active() {
+            player.add_cleared();
+            *last_scene = "Top".to_string();
+            return "wcs2".to_string();
+        }
+        next_frame().await;
     }
 }
 

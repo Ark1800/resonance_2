@@ -8,6 +8,7 @@ use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::enemy::Enemy;
 use crate::modules::label::Label;
 use crate::modules::map::Map;
+use crate::modules::messagebox::MessageBox;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
@@ -73,20 +74,17 @@ pub async fn run(
     lbl_speech.with_scroll(true);
     let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
-    let mut lbl_tutorial = Label::new("", 50.0, 40.0, 40);
-    lbl_tutorial.with_colors(WHITE, None);
-    lbl_tutorial.with_scroll(true);
-    let mut tutorial_cooldown = 0.0;
     let mut first = true;
-    let mut tutorial_num = 0;
+    let mut tutorial_activate = true;
+    let mut tutorial_box = MessageBox::info(
+        "Controls!",
+        "Press UP ARROW to use your melee attack\nPress RIGHT ARROW to use your ranged attack",
+    );
+    let mut tutorial2_activate = true;
+    let mut tutorial_box2 = MessageBox::info("Inventory", "TAB to open/close inventory");
     let speech_list: Vec<String> = vec!["Woah, bogie alert!".to_string(), "You take them, you have the sword!".to_string()];
-    let tutorial_list: Vec<String> = vec![
-        "Press UP ARROW to use your melee attack\nPress RIGHT ARROW to use your ranged attack".to_string(),
-        "TAB to open inventory ".to_string(),
-    ];
 
     lbl_speech.set_scrolling_text(speech_list[speech_num].clone());
-    lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].clone());
 
     let mut enemies: Vec<Enemy> = vec![];
     if player.get_cleared() == 1 {
@@ -118,7 +116,7 @@ pub async fn run(
             first = false;
         }
 
-        if *pause == false {
+        if *pause == false && !tutorial_box.is_active() && !tutorial_box2.is_active() {
             let timer = get_time() - start_time;
             if timer > 0.1 {
                 current_time = get_time();
@@ -136,17 +134,6 @@ pub async fn run(
                                 }
                             }
                         }
-                        if tutorial_cooldown > 0.0 {
-                            tutorial_cooldown -= 0.1;
-                            if tutorial_cooldown <= 0.0 {
-                                tutorial_cooldown = 0.0;
-                                if tutorial_num == tutorial_list.len() {
-                                    lbl_tutorial.set_text("");
-                                } else {
-                                    lbl_tutorial.set_scrolling_text(tutorial_list[tutorial_num].to_string());
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -154,10 +141,10 @@ pub async fn run(
                 if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() {
                     speech_cooldown = 0.5;
                     speech_num += 1;
-                }
-                if lbl_tutorial.get_scroll_len() == lbl_tutorial.get_scroll() && tutorial_num < tutorial_list.len() {
-                    tutorial_cooldown = 0.5;
-                    tutorial_num += 1;
+                    if tutorial_activate {
+                        tutorial_box.show();
+                        tutorial_activate = false;
+                    }
                 }
             }
             let old_pos = player.get_oldpos();
@@ -192,36 +179,38 @@ pub async fn run(
                 }
                 enemies[i].draw();
             }
-        }
-        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
-        player.set_player_activedisc(activedisc);
-        if mlehit {
-            enemies[index].dmg_enemy(player.get_meleedmg());
-            if enemies[index].get_health() <= 0.0 {
-                if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, _musicdiscfunctions).await;
-                    if split {
-                        enemies.push(slime1);
-                        enemies.push(slime2);
+
+            let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
+            let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+            player.set_player_activedisc(activedisc);
+            if mlehit {
+                enemies[index].dmg_enemy(player.get_meleedmg());
+                if enemies[index].get_health() <= 0.0 {
+                    if enemies[index].get_enemy_type() == "large_slime" {
+                        let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, _musicdiscfunctions).await;
+                        if split {
+                            enemies.push(slime1);
+                            enemies.push(slime2);
+                        }
                     }
+                    enemies.remove(index);
                 }
-                enemies.remove(index);
+            }
+            if rnghit {
+                enemies[index].dmg_enemy(player.get_rngdmg());
+                if enemies[index].get_health() <= 0.0 {
+                    if enemies[index].get_enemy_type() == "large_slime" {
+                        let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, _musicdiscfunctions).await;
+                        if split {
+                            enemies.push(slime1);
+                            enemies.push(slime2);
+                        }
+                    }
+                    enemies.remove(index);
+                }
             }
         }
-        if rnghit {
-            enemies[index].dmg_enemy(player.get_rngdmg());
-            if enemies[index].get_health() <= 0.0 {
-                if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, _musicdiscfunctions).await;
-                    if split {
-                        enemies.push(slime1);
-                        enemies.push(slime2);
-                    }
-                }
-                enemies.remove(index);
-            }
-        }
+        player.draw();
         player.handle_inventory();
         if player.get_y() > virtual_height - 10.0 {
             if player.get_cleared() == 1 {
@@ -233,19 +222,31 @@ pub async fn run(
 
         if enemies.is_empty() {
             map.change_map(vec![0, 0], vec![vec![7, 9], vec![6, 9]]);
+            if player.get_cleared() == 1 && tutorial2_activate {
+                tutorial_box2.show();
+                tutorial2_activate = false;
+            }
         }
         if player.get_y() < 10.0 {
             *last_scene = "Top".to_string();
             return "wcs1".to_string();
         }
-        player.draw();
+
         if player.get_cleared() == 1 {
             if lbl_speech.get_text() != "" && player.get_cleared() == 1 {
                 speech_box.draw();
                 name_box.draw();
             }
-            lbl_speech.scrolling_text_draw();
-            lbl_tutorial.scrolling_text_draw();
+            if !tutorial_box.is_active() && !tutorial_box2.is_active() {
+                lbl_speech.scrolling_text_draw();
+            } else {
+                lbl_speech.draw();
+            }
+        }
+        if tutorial_box.is_active() {
+            tutorial_box.draw();
+        } else if tutorial_box2.is_active() {
+            tutorial_box2.draw();
         }
 
         let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
@@ -257,7 +258,7 @@ pub async fn run(
             return "title_screen".to_string();
         }
         #[allow(unused)]
-            let (save, exit, controls) = player.handle_save_menu().await;
+        let (save, exit) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;

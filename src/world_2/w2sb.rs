@@ -98,7 +98,7 @@ player.draw();
         healthbar.set_value(enemies[0].get_health());
         player.handle_inventory();
         #[allow(unused)]
-            let (save, exit, controls) = player.handle_save_menu().await;
+            let (save, exit) = player.handle_save_menu().await;
         if save {
             println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
@@ -132,11 +132,12 @@ player.draw();
                     )
                     .await;
                 enemies[0].draw_bullet(player, musicdiscfunctions);
-                let old_pos = player.get_oldpos();
+                
                 //enemy loop
                 enemies[0].draw();
-                player.move_player(&map, old_pos, &vec![]);
-            }
+                
+            }let old_pos = player.get_oldpos();
+            player.move_player(&map, old_pos, &vec![]);
         }
 
         let (mlehit, rnghit, _index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame

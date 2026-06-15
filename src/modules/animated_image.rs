@@ -486,17 +486,14 @@ impl AnimatedImage {
                     };
                 } else {
                     // Fall back to loading as a regular texture if GIF processing fails
-                    println!("Failed to process GIF frames, falling back to regular texture");
                     return Self::new(gif_path, x, y, width, height, 1, 1, 0.1, loop_animation).await;
                 }
             }
             Err(e) => {
-                println!("Failed to load GIF file: {}", e);
             }
         }
 
         // Return empty animation if anything fails
-        println!("Could not load GIF '{}', returning empty animation", gif_path);
         Self::create_empty(x, y, width, height)
     }
 
@@ -606,7 +603,6 @@ impl AnimatedImage {
                 return Some((frames, delays, width, height));
             }
             Err(e) => {
-                println!("Failed to decode GIF: {}", e);
                 return None;
             }
         }

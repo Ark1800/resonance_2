@@ -28,20 +28,17 @@ use macroquad::audio::{PlaySoundParams, play_sound, stop_sound};
 //2. buffed tutorial
 
 //STILL TO DOOOOOO
-//1. add note that player needs to equip their weapons after loading a save (cant be fixed)
-//2. coding logs
+//1. note player needs to equip items when loading in
+//2. readding stuff back from commit 
 //3. removing printlns
-//4. cleaning up unused code and comments
-//5. adding comments to all code
-//6. change every file size to what size we use
 
 /*
-//Bug fixes/extras
-
-//Work
-//1. buffed pause menu
-//2. buffed tutorial
-
+BUGS TO FIX
+1. not being able to get same item twice
+2. normalize arrow directional movement
+3. inventory and pause menus moved to being drawn above bg
+4. going back into w1s1 after beating w1sb breaks everything
+5. death from music discs
 
 //Keypresses:
 Move Up - W
@@ -112,10 +109,7 @@ pub struct Player {
     playerui: (Vec<StillImage>, Vec<Label>, Vec<AnimatedImage>, Vec<StillImage>, Vec<StillImage>), //2d list for player UI elements (images, labels)
     inventoryopen: bool,
     savemenu: (Vec<StillImage>, Vec<Label>, Vec<TextButton>), //2d list for save menu UI elements (images, labels, buttons)
-    save_menu_open: bool,   
-    #[allow(unused)]
-    control_screen:(Vec<StillImage>, Vec<Label>, Vec<TextButton>),
-    control_open: bool,                              //is inventory open
+    save_menu_open: bool,                              //is inventory open
     armor: i32,                                               //armor value for damage reduction
     attack: bool,                                             //is player currently attacking (for drawing attack labels)
     last_attack_time: f64,                                    //time of last attack for timing attack labels
@@ -163,7 +157,6 @@ impl Player {
         let playerui = Player::create_player_ui(x, y, &preloadlist, tm).await;
         let inventory = Player::create_inventory(&preloadlist).await;
         let savemenu = Player::create_save_menu(&preloadlist).await;
-        let control_screen= Player::create_control_screen(&preloadlist).await;
         let itemui = Player::create_item_ui(tm).await;
         let death_screen = Player::create_death_screen(&preloadlist).await;
         let attackimg = playerui.2[0].clone();
@@ -190,8 +183,6 @@ impl Player {
             inventoryopen: false,
             savemenu,
             save_menu_open: false,
-            control_screen,
-            control_open: false,
             armor: 0,
             itemui,
             playerui,
@@ -276,8 +267,14 @@ impl Player {
             self.attack = true;
         }
         if is_key_pressed(KeyCode::Right) {
+            let rngtimepassed = get_time() - self.last_rng_attack_time;
             self.rangedattack = true;
+            //  if self.rangedattack {
+            self.create_range_attack().await;
+            
+          
         }
+       
         if self.get_player_activedisc() == "none" {
             if self.get_currentscreen() != "w1sb" && self.get_currentscreen() != "w2sb" && self.get_currentscreen() != "w3sb" {
                 if is_key_pressed(KeyCode::Q) {
@@ -1077,14 +1074,13 @@ impl Player {
             }
         }
         if self.rangedattack {
-            self.create_range_attack().await;
-            if rngtimepassed > 0.5 && rngtimepassed < 3.0 {
+        
+            if rngtimepassed < 3.0 {
                 let cooldown = (3.0 - rngtimepassed + 1.0) as f32 * self.cooldownmult; //+1 to not show 0 when cooldown is ready
                 self.playerui.1[3].set_text(format!("{:.0}", cooldown));
             } else if rngtimepassed >= 3.0 {
                 self.playerui.1[3].set_text("".to_string());
-            }
-            if rngtimepassed > 3.0 {
+            }if rngtimepassed > 3.0 {
                 self.rangedattack = false;
                 self.rangedattackimgcreated = false;
             }
@@ -1234,20 +1230,19 @@ impl Player {
         let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
         shadow.set_preload(preloads[13].clone());
         shadow.set_opacity(0.7);
-        let mut lbl_paused = Label::new("Paused", VIRTUAL_WIDTH / 2.0 - 90.0, VIRTUAL_HEIGHT / 2.0 - 50.0, 60);
+        let mut lbl_paused = Label::new("Paused", VIRTUAL_WIDTH / 2.0 - 40.0, VIRTUAL_HEIGHT / 2.0 - 50.0, 60);
         lbl_paused.with_colors(WHITE, Some(BLACK));
-        let mut btn_save = TextButton::new(VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0, 200.0, 75.0, "Save", BLACK, GREEN, 30);
+        let mut btn_save = TextButton::new(VIRTUAL_WIDTH / 2.0 - 50.0, VIRTUAL_HEIGHT / 2.0, 200.0, 75.0, "Save", BLACK, GREEN, 30);
         btn_save.with_text_color(WHITE);
-         let mut btn_controls = TextButton::new(VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 + 200.0, 200.0, 75.0, "Controls", BLACK, RED, 30,);
-        btn_controls.with_text_color(WHITE);
-        let mut btn_exit = TextButton::new(VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 + 400.0, 200.0, 75.0, "Exit to Menu", BLACK, RED, 30,);
+        let mut btn_exit = TextButton::new(VIRTUAL_WIDTH / 2.0 - 50.0, VIRTUAL_HEIGHT / 2.0 + 200.0, 200.0, 75.0, "Exit to Menu", BLACK, RED, 30,);
         btn_exit.with_text_color(WHITE);
-
-        (vec![shadow], vec![lbl_paused], vec![btn_save, btn_exit, btn_controls])
+        let mut lbl_controls = Label::new("Controls:\nWASD to Move\nUp Arrow to melee Attack\nRight arrow to Ranged Attack\nE or Q or X to Use Musicdiscs\nTab to open/close Inventory\nEsc to open/close Pause Menu\nWARNING: WAIT A FEW SECONDS AFTER SAVING!!!!", VIRTUAL_WIDTH / 2.0 - 430.0, VIRTUAL_HEIGHT / 2.0 - 100.0, 30);
+        lbl_controls.with_colors(WHITE, None);
+        (vec![shadow], vec![lbl_paused, lbl_controls], vec![btn_save, btn_exit])
     }
 
-    pub async fn handle_save_menu(&mut self) -> (bool, bool, bool) {
-        let (mut save, mut exit, mut controls) = (false, false, false);
+    pub async fn handle_save_menu(&mut self) -> (bool, bool) {
+        let (mut save, mut exit) = (false, false);
         if self.save_menu_open == true {
             //draw menu
             for image in self.savemenu.0.iter_mut() {
@@ -1268,29 +1263,10 @@ impl Player {
                 exit = true;
                 self.save_menu_open = false;
             }
-                if self.savemenu.2[2].click() {
-                    //controls button
-                    controls = true;
-                    self.control_open = true;
-        }}
-        (save, exit, controls)
+                }
+        (save, exit)
     }
-async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
-        let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
-        shadow.set_preload(preloads[13].clone());
-        shadow.set_opacity(0.7);
-        let mut lbl_controls = Label::new("Controls", VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 - 350.0, 60);
-        lbl_controls.with_colors(WHITE, Some(BLACK));
-        let mut lbl_movement = Label::new("WASD to Move", VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 - 200.0, 30);
-        lbl_movement.with_colors(WHITE, Some(BLACK));
-        let mut lbl_melee = Label::new("Up Arrow to Melee Attack", VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 - 150.0, 30);
-        lbl_melee.with_colors(WHITE, Some(BLACK));
-        let mut lbl_ranged = Label::new("Right Arrow to Ranged Attack", VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 - 100.0, 30);
-        lbl_ranged.with_colors(WHITE, Some(BLACK));
-        let mut btn_exit = TextButton::new(VIRTUAL_WIDTH / 2.0 - 100.0, VIRTUAL_HEIGHT / 2.0 + 200.0, 200.0, 75.0, "Back", BLACK, RED, 30);
-        btn_exit.with_text_color(WHITE);
-        (vec![shadow], vec![lbl_controls, lbl_movement, lbl_melee, lbl_ranged], vec![btn_exit])
-    }
+
     async fn create_death_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, String)>) -> (Vec<StillImage>, Vec<Label>, Vec<TextButton>) {
         let mut shadow = StillImage::new("", VIRTUAL_WIDTH, VIRTUAL_HEIGHT, 0.0, 0.0, true, 1.0).await;
         shadow.set_preload(preloads[13].clone());
@@ -1698,7 +1674,7 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
                     musicdiscs.start_musicdisc_time("Soda Pop");
                 }
             }
-            "The Greatest Show" => {
+            "Greatest Show" => {
                 if validity[7] == true {
                     self.activedisc = "The Greatest Show".to_string();
                     musicdiscs.start_musicdisc_time("The Greatest Show");
@@ -2103,7 +2079,7 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
         let greatestshowitem = Item::new(
             tm.get_preload("assets/musicdisc_files/covers/greatestshowman.png").unwrap(),
             "assets/musicdisc_files/covers/greatestshowman.png".to_string(),
-            "The Greatest Show".to_string(),
+            "Greatest Show".to_string(),
             "A Disc that calls upon the power of the greatest showman, summoning a meteor that gets bigger the longer you arent hit".to_string(),
             "disc".to_string(),
             0,
@@ -2151,7 +2127,7 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
         let diamond_armor = Item::new(
             tm.get_preload("assets/item_files/armour/diamond_armor.png").unwrap(),
             "assets/item_files/armour/diamond_armor.png".to_string(),
-            "Diamond Armour".to_string(),
+            "Diamond BA".to_string(),
             "A chesplate rumoured to be unbreakable, increasing armor signifigantly".to_string(),
             "bodyarmor".to_string(),
             0,
@@ -2216,7 +2192,7 @@ async fn create_control_screen(preloads: &Vec<(Texture2D, Option<Vec<u8>>, Strin
             tm.get_preload("assets/item_files/weapons/axl_greatbow.png").unwrap(),
             "assets/item_files/weapons/axl_greatbow.png".to_string(),
             "Axl Greatbow".to_string(),
-            "A powerful slow bow that can shoot arrows with incredible force, increasing damage cooldowns".to_string(),
+            "A powerful slow bow that can shoot arrows with incredible force, increasing damage and cooldowns".to_string(),
             "ranged".to_string(),
             0,
             18,

@@ -154,7 +154,7 @@ pub async fn run(
                 }
             }
             #[allow(unused)]
-            let (save, exit, controls) = player.handle_save_menu().await;
+            let (save, exit) = player.handle_save_menu().await;
 
             if save {
                 println!("Saving game...");
