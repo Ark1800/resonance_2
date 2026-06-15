@@ -119,6 +119,9 @@ pub async fn run(
     .await;
     world_numeral.set_preload(tm.get_preload("assets/map_files/3_rn.png").unwrap());
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         // set virtual resolution and clear frame
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -150,13 +153,12 @@ pub async fn run(
         #[allow(unused)]
         let (save, exit) = player.handle_save_menu().await;
         if save {
-            println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {
             return "title_screen".to_string();
         }
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
         player.set_player_activedisc(activedisc);
         next_frame().await;
     }

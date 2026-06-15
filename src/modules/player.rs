@@ -11,26 +11,24 @@ use crate::modules::musicdisc::Musicdisc;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::still_image::StillImage;
 use crate::modules::text_button::TextButton;
+use crate::modules::messagebox::MessageBox;
 use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH, modules};
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 use miniquad::date;
 use std::f32::consts::PI;
-use macroquad::audio::{PlaySoundParams, play_sound, stop_sound};
+use macroquad::audio::{PlaySoundParams, play_sound, stop_sound, Sound};
 
 // STUFF TO TELL DUSOME
 //1. slime, fireball, arrow are outside of folders for ease of testing but also used in the program
 //2. deleting stuff from text input sometimes causes the program to crash, it gives error for saying Is_char_boundary is off
-//3. ranged attack cooldown randomly doesnt activate 
 
 //other notes
 //1. guide
 //2. buffed tutorial
 
 //STILL TO DOOOOOO
-//1. note player needs to equip items when loading in
-//2. readding stuff back from commit 
-//3. removing printlns
+//1. keep adding note player needs to equip items when loading inventory
 
 /*
 BUGS TO FIX
@@ -138,10 +136,13 @@ pub struct Player {
     mleattackdrawing: bool, //is the melee attack currently being drawn (for timing when to stop drawing melee attack labels)
     lbl_boss_mocking: Label, //label used to mock the player for trying to use musicdiscs on bosses that are immune to them
     last_mocking_time: f64, //time when the boss mocking label was last updated for timing how long to draw the mocking label
+    player_equip_items_box: MessageBox,
+    melee_sfx: Sound,
+    ranged_sfx: Sound,
 }
 
 impl Player {
-    pub async fn new(preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)>, x: f32, y: f32, tm: &TextureManager) -> Self {
+    pub async fn new(all_sounds: Vec<&str>, preloadlist: Vec<(Texture2D, Option<Vec<u8>>, String)>, x: f32, y: f32, tm: &TextureManager) -> Self {
         let mut view = StillImage::new(
             "", 40.0, // width
             60.0, // height
@@ -162,7 +163,8 @@ impl Player {
         let attackimg = playerui.2[0].clone();
         let hitboximg = playerui.4[0].clone();
         let possible_items = Player::create_all_items(tm).await;
-
+        let melee_sfx = tm.get_preloaded_sound(all_sounds[10]).unwrap();
+        let ranged_sfx = tm.get_preloaded_sound(all_sounds[9]).unwrap();
         Player {
             view,
             move_speed: 400.0, // Movement speed in pixels per second
@@ -212,6 +214,9 @@ impl Player {
             mleattackdrawing: false,
             lbl_boss_mocking: Label::new("", 300.0, 100.0, 30),
             last_mocking_time: 0.0,
+            player_equip_items_box: MessageBox::info("EQUIP ITEMS!", "If you have any items click TAB to open your inventory and reequip them!"),
+            melee_sfx,
+            ranged_sfx,
         }
     }
     //movement functions
@@ -266,7 +271,10 @@ impl Player {
         if is_key_pressed(KeyCode::Up) {
             self.attack = true;
         }
+
+        
         if is_key_pressed(KeyCode::Right) {
+            #[allow(unused)]
             let rngtimepassed = get_time() - self.last_rng_attack_time;
             self.rangedattack = true;
             //  if self.rangedattack {
@@ -316,6 +324,11 @@ impl Player {
             }
         }
         interact
+    }
+
+    pub fn show_player_messagebox(&mut self) {
+        self.player_equip_items_box.centered();
+        self.player_equip_items_box.draw();
     }
 
     pub fn handle_image(&mut self) {
@@ -397,7 +410,6 @@ impl Player {
             collide = true;
         }
         if map.map_collision(&self.get_playerhitbox()).0 {
-            println!("collided with map on x axis");
             //collision with map
             self.set_x(old_pos.x);
             self.playerui.3[0].set_x(old_pos.x);
@@ -1160,6 +1172,7 @@ impl Player {
                 "tl" => self.playerui.4[7].clone(),
                 _ => self.playerui.4[0].clone(),
             };
+            play_sound(&self.melee_sfx, PlaySoundParams { looped: false, volume: 1.0 });
             for i in 0..enemies.len() {
                 let enemy_view_type = enemies[i].get_enemy_view_type();
                 if enemy_view_type == "still" {
@@ -1223,6 +1236,7 @@ impl Player {
             self.arrows.push(rng_attack_img);
             self.rangedattackimgcreated = true;
             self.last_rng_attack_time = get_time();
+            play_sound(&self.ranged_sfx, PlaySoundParams { looped: false, volume: 1.0 });
         }
     }
     //SAVE MENUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU:)
@@ -1424,8 +1438,6 @@ impl Player {
                 let title = self.inventory.0[0].selected_item().unwrap();
                 for (i, item) in self.items.iter().enumerate() {
                     if item.get_itemtitle() == *title {
-                        println!("Equipping item: {}", item.get_itemtitle());
-                        println!("Item type: {}", item.get_itemtype());
                         if item.get_itemtype() == "disc" {
                             let already_equipped = self.equipped_items.iter().any(|equipped_item| {
                                 self.items[*equipped_item].get_itemtype() == "disc"
@@ -1467,11 +1479,6 @@ impl Player {
                             self.refresh_disc_display();
                         }
                         self.update_stats();
-                        println!("equipped items: {:?}", self.equipped_items);
-                        println!(
-                            "playerstats: health: {}, mledmg: {}, rngdmg: {}, movespeedmult: {}, cooldownmult: {}, armor: {}",
-                            self.health, self.mledmg, self.rngdmg, self.movespeedmult, self.cooldownmult, self.armor
-                        );
                         break;
                     }
                 }
@@ -1489,12 +1496,10 @@ impl Player {
             }
             if self.inventory.3[1].click() {
                 let title = self.inventory.0[0].selected_item().unwrap().clone();
-                println!("Unequipping item: {}", title);
                 self.unequip_item(&title);
             }
             if self.inventory.3[2].click() {
                 let title = self.inventory.0[0].selected_item().unwrap().clone();
-                println!("{:?}", self.items.len());
                 for (i, item) in self.items.iter().enumerate() {
                     if item.get_itemtitle() == *title {
                         for image in self.inventory.1.iter_mut() {
@@ -1788,7 +1793,6 @@ impl Player {
         for i in 0..records.len() {
             if records[i].user_name == self.get_name() {
                 save_id = records[i].id;
-                println!("Found matching save record with id: {}", save_id);
             }
         }
         if let Ok(_updated_count) = client

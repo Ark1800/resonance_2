@@ -184,6 +184,9 @@ pub async fn run(
     lbl_speech.set_scrolling_text(script_list[script_num][speech_num].clone());
 
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -211,7 +214,6 @@ pub async fn run(
                                 }
                             } else {
                                 lbl_speech.set_scrolling_text(script_list[script_num][speech_num].to_string());
-                                println!("Script num: {}, Speech num: {}", script_num, speech_num);
                             }
                         }
                     }
@@ -236,7 +238,7 @@ pub async fn run(
                 player.handle_keypresses(pause, _musicdiscfunctions).await;
                 let old_pos = player.get_oldpos();
                 player.move_player(&map, old_pos, &podium_list);
-                let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+                let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
                 player.set_player_activedisc(activedisc);
             }
 
@@ -323,7 +325,6 @@ pub async fn run(
         #[allow(unused)]
         let (save, exit) = player.handle_save_menu().await;
         if save {
-            println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

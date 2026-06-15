@@ -337,7 +337,7 @@ impl Musicdisc {
         }
     }
 
-    pub fn handle_musicdiscs(
+    pub async fn handle_musicdiscs(
         &mut self,
         activedisc: String,
         enemies: &mut Vec<Enemy>,
@@ -371,13 +371,11 @@ impl Musicdisc {
                                     for enemy in enemies.iter_mut() {
                                         if enemy.get_enemy_view_type() == "still" {
                                             if check_collision(image, enemy.view_enemy(), 1) {
-                                                println!("Hit enemy with Back In Black for 20 damage!");
                                                 enemy.dmg_enemy(20.0);
                                             }
                                         }
                                         if enemy.get_enemy_view_type() == "animated" {
                                             if check_collision(image, enemy.view_enemy_animated(), 1) {
-                                                println!("Hit enemy with Back In Black for 20 damage!");
                                                 enemy.dmg_enemy(20.0);
                                             }
                                         }
@@ -385,7 +383,7 @@ impl Musicdisc {
                                 }
                                 if time <= 1.0 {
                                     stop_sound(self.get_bgmusic());
-                                    play_sound(&self.sounds[0], PlaySoundParams { looped: false, volume: 1.0 });
+                                    play_sound(&self.sounds[0], PlaySoundParams {looped: false, volume: 1.0 });
                                 }
 
                                 self.backinblack_hit = true;
@@ -480,8 +478,7 @@ impl Musicdisc {
                                 enemies[i].pandemonium(highesthealthenemypos, enemy_old_pos);
                                 if enemies[i].get_enemy_view_type() == "still" {
                                     if check_collision(enemies[i].view_enemy(), enemies[highesthealthenemyindex].view_enemy(), 1) {
-                                        println!("Hit enemy with Pandemonium for 1 damage!");
-                                        enemies[highesthealthenemyindex].dmg_enemy(1.0);
+                                        enemies[highesthealthenemyindex].dmg_enemy(3.0);
                                         enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
                                     }
                                 }
@@ -491,8 +488,7 @@ impl Musicdisc {
                                         enemies[highesthealthenemyindex].view_enemy_animated(),
                                         1,
                                     ) {
-                                        println!("Hit enemy with Pandemonium for 1 damage!");
-                                        enemies[highesthealthenemyindex].dmg_enemy(1.0);
+                                        enemies[highesthealthenemyindex].dmg_enemy(3.0);
                                         enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
                                     }
                                 }
@@ -546,7 +542,6 @@ impl Musicdisc {
                                     stop_sound(self.get_bgmusic());
                                     play_sound(&self.sounds[5], PlaySoundParams { looped: false, volume: 1.0 });
                                 }
-                                println!("Hit enemy with Six Hundred Strike for 60 damage!");
                                 enemies[highesthealthenemyindex].dmg_enemy(60.0);
                                 self.sixhundredstrike_hit = true;
                             }
@@ -672,7 +667,20 @@ impl Musicdisc {
                 }
             }
         }
-        //println!("Discmatch: {}", discmatch);
+        for index in 0..enemies.len() {
+            enemies[index].knockback(player, "enemy");
+                if enemies[index].get_health() <= 0.0 {
+                if enemies[index].get_enemy_type() == "large_slime" {
+                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, self).await;
+                    if split {
+                        enemies.push(slime1);
+                        enemies.push(slime2);
+                    }
+                }
+                enemies[index].add_gold(player);
+                enemies.remove(index);
+            }
+        }
         discmatch.to_string()
     }
 

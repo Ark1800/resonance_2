@@ -23,6 +23,7 @@ pub async fn run(
     records: &mut Vec<DatabaseTable>,
     player: &mut Player,
     client: &DatabaseClient,
+    last_scene: &mut String,
 ) -> String {
     let mut background = StillImage::new(
         "",
@@ -57,7 +58,6 @@ pub async fn run(
     // New/Load Screen
     let mut txt_inputs_show = false;
     let mut new_load = "None".to_string();
-
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         background.draw();
@@ -95,7 +95,7 @@ pub async fn run(
                 txt_inputs_show = false;
                 start_btns_show = true;
             }
-            if btn_start.click() {
+            if btn_start.click() && txt_username.get_text().trim() != "" && txt_password.get_text().trim() != "" {
                 if new_load == "New" {
                     let mut proceed = true;
                     for i in 0..records.len() {
@@ -146,7 +146,6 @@ pub async fn run(
                             player.set_usernamepassword(txt_username.get_text(), txt_password.get_text());
                             return "wcs1".to_string();
                         } else {
-                            println!("Error inserting records from database: {} ", insert_results.err().unwrap());
                         }
                     } else {
                         if txt_username.get_text().trim() == "" || txt_password.get_text().trim() == "" {
@@ -157,11 +156,11 @@ pub async fn run(
                             new_box.show();
                         }
                     }
-                } else if new_load == "Load" {
+                } else if new_load == "Load"  {
                     let mut proceed = false;
                     let mut active_scene = "None".to_string();
                     for i in 0..records.len() {
-                        if records[i].user_name == txt_username.get_text().trim() && records[i].user_password == txt_password.get_text().trim() {
+                        if records[i].user_name == txt_username.get_text().trim() && records[i].user_password == txt_password.get_text().trim() && txt_username.get_text().trim() != "" && txt_password.get_text().trim() != "" {
                             proceed = true;
                             active_scene = records[i].player_currentscreenvar.clone();
                             player.set_save_data(&records[i].clone());
@@ -173,6 +172,7 @@ pub async fn run(
                         load_box.centered();
                         load_box.show();
                     } else {
+                        *last_scene = "title_screen".to_string();
                         return active_scene;
                     }
                 }

@@ -130,6 +130,9 @@ pub async fn run(
     let mut lbl_jeff_name = Label::new("Jeff The Landshark", 135.0, virtual_height - 45.0, 30);
     lbl_jeff_name.with_colors(BLACK, Some(BLUE));
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -139,7 +142,6 @@ pub async fn run(
         #[allow(unused)]
             let (save, exit) = player.handle_save_menu().await;
         if save {
-            println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

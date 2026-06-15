@@ -48,7 +48,6 @@ pub async fn run(
     } else {
         map.create_map_array(0, 2, 0, vec![1, 2]).await;
     }
-    println!("Last scene: {}", last_scene);
     let mut enemies: Vec<Enemy> = vec![];
     for _i in 0..3 {
         let mut mage = Enemy::new(
@@ -100,6 +99,9 @@ pub async fn run(
     let mut choose_open = false;
     let mut item_valid = false;
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -147,7 +149,7 @@ pub async fn run(
             }
             player.draw();
             let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
             player.set_player_activedisc(activedisc);
             if mlehit {
                 enemies[index].dmg_enemy(player.get_meleedmg());
@@ -209,7 +211,6 @@ pub async fn run(
         #[allow(unused)]
             let (save, exit) = player.handle_save_menu().await;
         if save {
-            println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

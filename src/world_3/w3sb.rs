@@ -142,6 +142,9 @@ pub async fn run(
     let mut lbl_cyric_name = Label::new("cyric The Betrayer", 135.0, virtual_height - 45.0, 30);
     lbl_cyric_name.with_colors(BLACK, Some(RED));
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
@@ -177,11 +180,7 @@ pub async fn run(
             player.handle_keypresses(pause, musicdiscfunctions).await;
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
-            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
-            player.set_player_activedisc(activedisc);
             let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
-            player.set_player_activedisc(activedisc);
             if mlehit {
                 enemies[index].dmg_enemy(player.get_meleedmg());
                 enemies[index].knockback(player, "enemy");
@@ -239,7 +238,6 @@ pub async fn run(
         #[allow(unused)]
             let (save, exit) = player.handle_save_menu().await;
         if save {
-            println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

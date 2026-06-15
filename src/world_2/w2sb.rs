@@ -89,18 +89,20 @@ pub async fn run(
     healthbar.with_colors(RED, PURPLE, WHITE);
     healthbar.with_border(true, BLACK, 2.0);
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         
         background.draw();
-player.draw();
+        player.draw();
         healthbar.set_value(enemies[0].get_health());
         player.handle_inventory();
         #[allow(unused)]
             let (save, exit) = player.handle_save_menu().await;
         if save {
-            println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {
@@ -141,7 +143,7 @@ player.draw();
         }
 
         let (mlehit, rnghit, _index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
         player.set_player_activedisc(activedisc);
         if mlehit {
             enemies[0].dmg_enemy(player.get_meleedmg());

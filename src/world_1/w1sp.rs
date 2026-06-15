@@ -130,6 +130,9 @@ pub async fn run(
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
     }
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         // set virtual resolution and clear frame
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -152,14 +155,13 @@ pub async fn run(
         //player
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
         player.set_player_activedisc(activedisc);
         let old_pos = player.get_oldpos();
         player.handle_inventory();
         #[allow(unused)]
             let (save, exit) = player.handle_save_menu().await;
         if save {
-            println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

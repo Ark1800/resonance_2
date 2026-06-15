@@ -43,12 +43,9 @@ pub async fn run(
         vec!["assets/map_files/wall.png".to_string(), "assets/map_files/chest.png".to_string()],
     )
     .await;
-    println!("Cleared: {}", player.get_cleared());
     if player.get_cleared() >= 3 {
-        println!("Two doors");
         map.create_map_array(0, 2, 0, vec![1, 3]).await;
     } else {
-        println!("One door");
         map.create_map_array(0, 1, 0, vec![3]).await;
     }
     if last_scene == "Top" {
@@ -103,6 +100,9 @@ pub async fn run(
     name_box.with_colors(WHITE, None);
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -158,7 +158,6 @@ pub async fn run(
             #[allow(unused)]
             let (save, exit) = player.handle_save_menu().await;
             if save {
-                println!("Saving game...");
                 player.update_save_data(records, client, last_scene).await;
             }
             if exit {

@@ -92,6 +92,9 @@ pub async fn run(
     .await;
     world_numeral.set_preload(tm.get_preload("assets/map_files/2_rn.png").unwrap());
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();
             return "town".to_string();
@@ -110,14 +113,13 @@ pub async fn run(
         let old_pos = player.get_oldpos();
 
         player.move_player(&map, old_pos, &vec![]);
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm);
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
         player.set_player_activedisc(activedisc);
 
         player.handle_inventory();
         #[allow(unused)]
             let (save, exit) = player.handle_save_menu().await;
         if save {
-            println!("Saving game...");
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

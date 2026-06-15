@@ -128,6 +128,9 @@ pub async fn run(
     let mut selected_record: String = "None".to_string();
 
     loop {
+        if last_scene == "title_screen" {
+            player.show_player_messagebox();
+        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(WHITE);
         img_back.draw();

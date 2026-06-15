@@ -81,10 +81,9 @@ async fn main() {
     let mut current_screen = "title_screen".to_string();
     let mut pause = false;
     let mut last_switch = get_time() - 0.02;
-    println!("all sounds {:?}", all_sounds);
-    let mut musicdiscfunctions = Musicdisc::new(&tm, all_sounds).await;
+    let mut musicdiscfunctions = Musicdisc::new(&tm, all_sounds.clone()).await;
     let mut last_scene = "None".to_string();
-    let mut player = Player::new(preloadlist, 30.0, 30.0, &tm).await;
+    let mut player = Player::new(all_sounds, preloadlist, 30.0, 30.0, &tm).await;
     //Save Data
     let client = create_database_client();
     let mut records: Vec<DatabaseTable> = Vec::new();
@@ -92,9 +91,8 @@ async fn main() {
     if let Ok(result) = fetched_results {
         records = result;
     } else {
-       println!("Error fetching records from database: {} ",fetched_results.err().unwrap());
     }
-    play_sound(musicdiscfunctions.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
+    play_sound(musicdiscfunctions.get_bgmusic(), PlaySoundParams {looped: true, volume: 1.0 });
     loop {
         if get_time() - last_switch > 0.01 {
             current_screen = match current_screen.as_str() {
@@ -121,7 +119,7 @@ async fn main() {
                 "town" => world_hub_and_otherscreens::town::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
                 "shop" => world_hub_and_otherscreens::shop::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions).await,
                 "inn" => world_hub_and_otherscreens::inn::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &mut player, &tm, &mut pause, &mut last_scene, &mut musicdiscfunctions, &records, &client).await,
-                "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &tm, &mut musicdiscfunctions, &mut records, &mut player, &client).await,
+                "title_screen" => title_screen::run(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, &tm, &mut musicdiscfunctions, &mut records, &mut player, &client, &mut last_scene).await,
                 _ => break,
             };
             last_switch = get_time();
