@@ -689,7 +689,7 @@ impl Musicdisc {
                     }
                     enemies[index].add_gold(player);
                     enemies.remove(index);
-                    break;
+                    continue;
                 }
             }
             self.musicdisc_hit = false;
