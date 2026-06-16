@@ -125,6 +125,10 @@ impl ListView {
         self
     }
 
+    pub fn get_all_items(&self) -> &Vec<String> {
+        &self.items
+    }
+
     // Method to set foreground, background, and selection colors
     #[allow(unused)]
     pub fn with_colors(&mut self, foreground: Color, background: Option<Color>, selection_color: Option<Color>) -> &mut Self {

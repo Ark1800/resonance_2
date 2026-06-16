@@ -67,7 +67,7 @@ pub async fn run(
 
     for x in 0..map_row_len {
         for y in 0..map_column_len {
-            if x != 0 && x != map_row_len - 1 && y != 0 && y != map_column_len - 1 {
+            if x != 0 && x != map_row_len - 1 && y != 0 && y != map_column_len - 1 && y != 1 && y != 8 && x != 1 && x != 13 && y != 4 && y != 5 {
                 wall_places.push(vec![x as i32, y as i32]);
                 walls.push(1);
             }

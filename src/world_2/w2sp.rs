@@ -116,6 +116,7 @@ pub async fn run(
             green_portal.draw();
         }
         map.draw_map(&tm).await;
+        let (_mlehit, _rnghit, _index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {

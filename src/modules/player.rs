@@ -23,20 +23,9 @@ use macroquad::audio::{PlaySoundParams, play_sound, stop_sound, Sound};
 //1. slime, fireball, arrow are outside of folders for ease of testing but also used in the program
 //2. deleting stuff from text input sometimes causes the program to crash, it gives error for saying Is_char_boundary is off
 
-//other notes
-//1. guide
-//2. buffed tutorial
-
-//STILL TO DOOOOOO
-//1. keep adding note player needs to equip items when loading inventory
-
 /*
 BUGS TO FIX
-0.5 changing item stats
-1. not being able to get same item twice
-2. normalize arrow directional movement
 4. going back into w1s1 after beating w1sb breaks everything
-5. death from music discs
 
 //Keypresses:
 Move Up - W
@@ -1341,6 +1330,7 @@ impl Player {
         } else if self.health <= 0.0 && self.death_screen_open == false && musicdiscfunctions.get_imstillstanding_active() == false {
             self.death_screen_open = true;
             stop_sound(musicdiscfunctions.get_currently_playing());
+            stop_sound(musicdiscfunctions.get_bgmusic());
             play_sound(musicdiscfunctions.get_bgmusic(), PlaySoundParams { looped: false, volume: 1.0 });
             *pause = true; //pause game when death screen opens
         }
@@ -1944,11 +1934,12 @@ impl Player {
                 let pick_unique_index = |used_indices: &[usize]| -> usize {
                     loop {
                         let candidate = rand::gen_range(0, item_count as i32) as usize;
-                        if !used_indices.contains(&candidate) && !self.equipped_items.contains(&candidate) {
+                        let name_list = self.inventory.0[0].get_all_items();
+                        if !used_indices.contains(&candidate) && !name_list.contains(&self.possible_items[candidate].get_itemtitle()) {
                             return candidate;
                         }
                     }
-                };
+                };                        //current working method of random item indices
                 loop {
                     self.itemindex1 = pick_unique_index(&[]);
                     if self.possible_items[self.itemindex1].get_itemtitle() != self.inventory.2[0].get_text() {
@@ -2062,7 +2053,7 @@ impl Player {
         let sixhundredstrikeitem = Item::new(
             tm.get_preload("assets/musicdisc_files/covers/sixhundredstrike.png").unwrap(),
             "assets/musicdisc_files/covers/sixhundredstrike.png".to_string(),
-            "Six Hundred Strike".to_string(),
+            "600 Strike".to_string(),
             "A Disc that calls upon the wrath of odysseus to strike down the highest opponent for massive damage periodically".to_string(),
             "disc".to_string(),
             0,
@@ -2111,7 +2102,7 @@ impl Player {
             "Time Sword".to_string(),
             "A Sword wielded across timelines, increasing damage and movespeed".to_string(),
             "melee".to_string(),
-            10,
+            15,
             0,
             0.0,
             1.5,
@@ -2128,7 +2119,7 @@ impl Player {
             "A Bow that can shoot into the future increasing damage and decreasing cooldowns".to_string(),
             "ranged".to_string(),
             0,
-            10,
+            15,
             0.5,
             0.0,
             0,
@@ -2208,7 +2199,7 @@ impl Player {
             "A powerful slow bow that can shoot arrows with incredible force, increasing damage and cooldowns".to_string(),
             "ranged".to_string(),
             0,
-            18,
+            25,
             1.5,
             0.0,
             0,
@@ -2255,9 +2246,9 @@ impl Player {
             "L's Cap".to_string(),
             "A ballcap that infuses the wearer with a sense of plumbing confidence, and all around efficiency, lightly buffs every stat.".to_string(),
             "helmet".to_string(),
-            2,
-            2,
-            0.8,
+            4,
+            4,
+            0.7,
             1.2,
             0,
             2,

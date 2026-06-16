@@ -84,6 +84,7 @@ pub struct Musicdisc {
     greatestshow_timevalid: bool,
     greatestshow_currentime: f64,
     disc_elements: (Vec<StillImage>, Vec<StillImage>, Vec<StillImage>), //0 is backinblack, 1 is sixhundredstrike, 2 is greatestshow
+    musicdisc_hit: bool,
 }
 
 impl Musicdisc {
@@ -161,6 +162,7 @@ impl Musicdisc {
             greatestshow_playerhealth: 0.0,
             greatestshow_timevalid: true,
             greatestshow_currentime: 0.0,
+            musicdisc_hit: false,
         }
     }
 
@@ -371,11 +373,13 @@ impl Musicdisc {
                                     for enemy in enemies.iter_mut() {
                                         if enemy.get_enemy_view_type() == "still" {
                                             if check_collision(image, enemy.view_enemy(), 1) {
+                                                self.musicdisc_hit = true;
                                                 enemy.dmg_enemy(20.0);
                                             }
                                         }
                                         if enemy.get_enemy_view_type() == "animated" {
                                             if check_collision(image, enemy.view_enemy_animated(), 1) {
+                                                self.musicdisc_hit = true;
                                                 enemy.dmg_enemy(20.0);
                                             }
                                         }
@@ -478,6 +482,7 @@ impl Musicdisc {
                                 enemies[i].pandemonium(highesthealthenemypos, enemy_old_pos);
                                 if enemies[i].get_enemy_view_type() == "still" {
                                     if check_collision(enemies[i].view_enemy(), enemies[highesthealthenemyindex].view_enemy(), 1) {
+                                        self.musicdisc_hit = true;
                                         enemies[highesthealthenemyindex].dmg_enemy(3.0);
                                         enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
                                     }
@@ -488,6 +493,7 @@ impl Musicdisc {
                                         enemies[highesthealthenemyindex].view_enemy_animated(),
                                         1,
                                     ) {
+                                        self.musicdisc_hit = true;
                                         enemies[highesthealthenemyindex].dmg_enemy(3.0);
                                         enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
                                     }
@@ -542,6 +548,7 @@ impl Musicdisc {
                                     stop_sound(self.get_bgmusic());
                                     play_sound(&self.sounds[5], PlaySoundParams { looped: false, volume: 1.0 });
                                 }
+                                self.musicdisc_hit = true;
                                 enemies[highesthealthenemyindex].dmg_enemy(60.0);
                                 self.sixhundredstrike_hit = true;
                             }
@@ -621,11 +628,13 @@ impl Musicdisc {
                             for i in 0..enemies.len() {
                                 if enemies[i].get_enemy_view_type() == "still" {
                                     if enemies[i].check_collision(&self.disc_elements.2[0]) {
+                                        self.musicdisc_hit = true;
                                         enemies[i].dmg_enemy(200.0);
                                     }
                                 }
                                 if enemies[i].get_enemy_view_type() == "animated" {
                                     if enemies[i].check_collision(&self.disc_elements.2[0]) {
+                                        self.musicdisc_hit = true;
                                         enemies[i].dmg_enemy(200.0);
                                     }
                                 }
@@ -667,20 +676,24 @@ impl Musicdisc {
                 }
             }
         }
-       // for index in 0..enemies.len() {
-          //  enemies[index].knockback(player, "enemy");
-           //     if enemies[index].get_health() <= 0.0 {
-           //     if enemies[index].get_enemy_type() == "large_slime" {
-           //         let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, self).await;
-            //        if split {
-           //             enemies.push(slime1);
-           //             enemies.push(slime2);
-           //         }
-          //      }
-           //     enemies[index].add_gold(player);
-          //      enemies.remove(index);
-          //  }
-        //}
+        if self.musicdisc_hit == true {
+            for index in 0..enemies.len() {
+                enemies[index].knockback(player, "enemy");
+                    if enemies[index].get_health() <= 0.0 {
+                    if enemies[index].get_enemy_type() == "large_slime" {
+                        let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, self).await;
+                        if split {
+                            enemies.push(slime1);
+                            enemies.push(slime2);
+                        }
+                    }
+                    enemies[index].add_gold(player);
+                    enemies.remove(index);
+                    break;
+                }
+            }
+            self.musicdisc_hit = false;
+        }
         discmatch.to_string()
     }
 

@@ -72,6 +72,7 @@ pub async fn run(
     player.set_position(VIRTUAL_WIDTH / 2.0, VIRTUAL_HEIGHT / 2.0);
     let mut choose_open = false;
     let mut item_valid = false;
+    *pause = false;
     loop {
         player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);

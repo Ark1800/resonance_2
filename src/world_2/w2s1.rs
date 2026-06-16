@@ -174,6 +174,7 @@ pub async fn run(
             *last_scene = "Left".to_string();
             return "w2sp".to_string();
         }
+        
         player.handle_inventory();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         let (save, exit) = player.handle_save_menu().await;

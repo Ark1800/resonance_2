@@ -5,7 +5,6 @@ Program Details:
 */
 
 use crate::modules::enemy::Enemy;
-//use crate::modules::item::Item;
 use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::label::Label;
 use crate::modules::map::Map;
@@ -133,7 +132,6 @@ pub async fn run(
             if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_cooldown <= 0.0 {
                 speech_cooldown = 1.5;
             }
-
             current_time = get_time();
             if (current_time - time_dif) > 0.1 {
                 time_dif = current_time;
