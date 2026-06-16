@@ -142,9 +142,6 @@ pub async fn run(
     let mut lbl_cyric_name = Label::new("cyric The Betrayer", 135.0, virtual_height - 45.0, 30);
     lbl_cyric_name.with_colors(BLACK, Some(RED));
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
@@ -176,7 +173,6 @@ pub async fn run(
                 }
             }
         } else if speech_done {
-            player.handle_inventory();
             player.handle_keypresses(pause, musicdiscfunctions).await;
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
@@ -227,6 +223,19 @@ pub async fn run(
         } else {
             lbl_speech.draw();
         }
+        player.handle_inventory();
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
+            return "title_screen".to_string();
+        }
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
         let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
@@ -234,17 +243,6 @@ pub async fn run(
         }
         if quit {
             return "title_screen".to_string();
-        }
-        #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
-        if save {
-            player.update_save_data(records, client, last_scene).await;
-        }
-        if exit {
-            return "title_screen".to_string();
-        }
-        if player.get_y() > virtual_height - 10.0 {
-            return "w3s4".to_string();
         }
         next_frame().await;
     }

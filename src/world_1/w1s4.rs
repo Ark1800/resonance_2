@@ -96,9 +96,6 @@ pub async fn run(
     let mut choose_open = false;
     let mut item_valid = false;
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -140,23 +137,6 @@ pub async fn run(
                     enemies[i].draw();
                 }
             }
-        }
-        player.handle_inventory();
-        #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
-        if save {
-            player.update_save_data(records, client, last_scene).await;
-        }
-        if exit {
-            return "title_screen".to_string();
-        }
-        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
-        if restart {
-            *last_scene = "None".to_string();
-            return "inn".to_string();
-        }
-        if quit {
-            return "title_screen".to_string();
         }
         player.move_player(&map, old_pos, &vec![]);
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
@@ -207,7 +187,28 @@ pub async fn run(
             *last_scene = "Right".to_string();
             return "w1s3".to_string();
         }
+        player.handle_inventory();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
+            return "title_screen".to_string();
+        }
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
+        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
+        if restart {
+            *last_scene = "None".to_string();
+            return "inn".to_string();
+        }
+        if quit {
+            return "title_screen".to_string();
+        }
         next_frame().await;
     }
 }

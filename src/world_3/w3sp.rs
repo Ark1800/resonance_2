@@ -55,7 +55,7 @@ pub async fn run(
     )
     .await;
     map.create_map_array(0, 1, 0, vec![3]).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/world1/red_portal.gif") {
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/red_portal.gif") {
         red_portal.set_preloaded_gif(preloaded, true);
     }
     if last_scene == "Down" {
@@ -119,9 +119,6 @@ pub async fn run(
     .await;
     world_numeral.set_preload(tm.get_preload("assets/map_files/3_rn.png").unwrap());
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         // set virtual resolution and clear frame
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -147,10 +144,11 @@ pub async fn run(
         //player
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
-        player.handle_inventory();
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
-        #[allow(unused)]
+        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+        player.set_player_activedisc(activedisc);
+        player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
@@ -158,8 +156,11 @@ pub async fn run(
         if exit {
             return "title_screen".to_string();
         }
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-        player.set_player_activedisc(activedisc);
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
         next_frame().await;
     }
 }

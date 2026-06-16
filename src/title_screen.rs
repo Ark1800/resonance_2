@@ -172,7 +172,7 @@ pub async fn run(
                         load_box.centered();
                         load_box.show();
                     } else {
-                        *last_scene = "title_screen".to_string();
+                        *last_scene = "null".to_string();
                         return active_scene;
                     }
                 }

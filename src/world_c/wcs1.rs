@@ -100,9 +100,6 @@ pub async fn run(
     name_box.with_colors(WHITE, None);
     //let mut projectile_list: Vec<Projectile> = vec![];
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -155,14 +152,6 @@ pub async fn run(
             } else if player.get_cleared() == 0 {
                 lbl_speech.draw();
             }
-            #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
-            if save {
-                player.update_save_data(records, client, last_scene).await;
-            }
-            if exit {
-                return "title_screen".to_string();
-            }
             if tutorial_box.is_active() {
                 tutorial_box.draw();
             }
@@ -178,6 +167,19 @@ pub async fn run(
                 *last_scene = "Top".to_string();
                 return "town".to_string();
             }
+            player.handle_inventory();
+            let (save, exit) = player.handle_save_menu().await;
+            if save {
+                player.update_save_data(records, client, last_scene).await;
+            }
+            if exit {
+                return "title_screen".to_string();
+            }
+            if last_scene == "null" {
+                player.show_player_messagebox();
+                *last_scene = "".to_string();
+            }
+            player.draw_player_messagebox();
             next_frame().await;
     }
 }

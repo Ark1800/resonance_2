@@ -106,9 +106,6 @@ pub async fn run(
     let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
     name_box.with_colors(WHITE, None);
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
@@ -118,7 +115,6 @@ pub async fn run(
             map.create_map_array(0, 2, 0, vec![1, 3]).await;
             first = false;
         }
-
         if *pause == false && !tutorial_box.is_active() && !tutorial_box2.is_active() {
             let timer = get_time() - start_time;
             if timer > 0.1 {
@@ -214,7 +210,6 @@ pub async fn run(
             }
         }
         player.draw();
-        player.handle_inventory();
         if player.get_y() > virtual_height - 10.0 {
             if player.get_cleared() == 1 {
                 player.add_cleared();
@@ -251,21 +246,25 @@ pub async fn run(
         } else if tutorial_box2.is_active() {
             tutorial_box2.draw();
         }
-
-        let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
-        if restart {
-            *last_scene = "None".to_string();
-            return "wcs1".to_string();
-        }
-        if quit {
-            return "title_screen".to_string();
-        }
-        #[allow(unused)]
+        player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {
+            return "title_screen".to_string();
+        }
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
+        let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
+        if restart {
+            *last_scene = "None".to_string();
+            return "inn".to_string();
+        }
+        if quit {
             return "title_screen".to_string();
         }
         next_frame().await;

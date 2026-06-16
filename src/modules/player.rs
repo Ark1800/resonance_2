@@ -32,9 +32,9 @@ use macroquad::audio::{PlaySoundParams, play_sound, stop_sound, Sound};
 
 /*
 BUGS TO FIX
+0.5 changing item stats
 1. not being able to get same item twice
 2. normalize arrow directional movement
-3. inventory and pause menus moved to being drawn above bg
 4. going back into w1s1 after beating w1sb breaks everything
 5. death from music discs
 
@@ -165,6 +165,7 @@ impl Player {
         let possible_items = Player::create_all_items(tm).await;
         let melee_sfx = tm.get_preloaded_sound(all_sounds[10]).unwrap();
         let ranged_sfx = tm.get_preloaded_sound(all_sounds[9]).unwrap();
+        
         Player {
             view,
             move_speed: 400.0, // Movement speed in pixels per second
@@ -219,6 +220,8 @@ impl Player {
             ranged_sfx,
         }
     }
+
+
     //movement functions
     pub async fn handle_keypresses(&mut self, pause: &mut bool, musicdiscs: &mut Musicdisc) {
         //basic movement input handling (WASD)
@@ -307,7 +310,7 @@ impl Player {
                     self.last_mocking_time = get_time();
                 }
                 else if self.get_currentscreen() == "w3sb" {
-                    self.lbl_boss_mocking.set_text("Is that a...Spotify playlist? How quaint.");
+                    self.lbl_boss_mocking.set_text("Your music has no voice within this symphony, friend.");
                     self.lbl_boss_mocking.with_colors(RED, Some(BLUE));
                     self.last_mocking_time = get_time();
                 }
@@ -328,7 +331,13 @@ impl Player {
 
     pub fn show_player_messagebox(&mut self) {
         self.player_equip_items_box.centered();
-        self.player_equip_items_box.draw();
+        self.player_equip_items_box.show();
+    }
+
+    pub fn draw_player_messagebox(&mut self) {
+        if self.player_equip_items_box.is_visible() {
+            self.player_equip_items_box.draw();
+        }
     }
 
     pub fn handle_image(&mut self) {
@@ -405,7 +414,7 @@ impl Player {
         self.move_x();
         let new_x = self.get_x();
         self.playerui.3[0].set_x(new_x); //move hitbox with player for accurate collision detection
-        let mut collide = false;
+        let mut collide = true;
         if !collides.is_empty() {
             collide = true;
         }
@@ -423,7 +432,7 @@ impl Player {
                 img.set_x(img.get_x() - self.movement.x); //move player UI elements back if collision to prevent them getting stuck in walls
             }
             self.attackimg.set_x(self.attackimg.get_x() - self.movement.x);
-        } else if collide {
+        }  if collide {
             for img in collides {
                 if self.check_x_collision(img) {
                     self.set_position(old_pos.x, self.get_y()); //move player back to old x position but keep new y position for smoother movement when colliding with objects
@@ -448,7 +457,7 @@ impl Player {
                 img.set_y(img.get_y() - self.movement.y); //move player UI elements back if collision to prevent them getting stuck in walls
             }
             self.attackimg.set_y(self.attackimg.get_y() - self.movement.y);
-        } else if collide {
+        }  if collide {
             for img in collides {
                 if self.check_y_collision(img) {
                     self.set_position(self.get_x(), old_pos.y);

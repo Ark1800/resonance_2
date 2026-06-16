@@ -13,7 +13,6 @@ use crate::modules::musicdisc::Musicdisc;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::modules::messagebox::MessageBox;
 use macroquad::prelude::*;
 
 pub async fn run(
@@ -105,7 +104,6 @@ pub async fn run(
     name_box.with_colors(WHITE, None);
     let mut enemies: Vec<Enemy> = vec![];
     player.add_health(30.0);
-    let mut info_box = MessageBox::info("Controls", "WASD to move.\n\nUp arrow for melee attack.\nRight arrow for ranged attack.");
     loop {
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -156,23 +154,28 @@ pub async fn run(
         background.draw();
         player.draw();
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+        player.set_player_activedisc(activedisc);
         player.handle_inventory();
-        #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
+        let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {
             return "title_screen".to_string();
         }
-        if is_key_pressed(KeyCode::O) {
-            info_box.centered();
-            info_box.show();
-        }
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-        player.set_player_activedisc(activedisc);
-        if last_scene == "title_screen" {
+        if last_scene == "null" {
             player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
+        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
+        if restart {
+            *last_scene = "None".to_string();
+            return "inn".to_string();
+        }
+        if quit {
+            return "title_screen".to_string();
         }
         next_frame().await;
     }

@@ -667,20 +667,20 @@ impl Musicdisc {
                 }
             }
         }
-        for index in 0..enemies.len() {
-            enemies[index].knockback(player, "enemy");
-                if enemies[index].get_health() <= 0.0 {
-                if enemies[index].get_enemy_type() == "large_slime" {
-                    let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, self).await;
-                    if split {
-                        enemies.push(slime1);
-                        enemies.push(slime2);
-                    }
-                }
-                enemies[index].add_gold(player);
-                enemies.remove(index);
-            }
-        }
+       // for index in 0..enemies.len() {
+          //  enemies[index].knockback(player, "enemy");
+           //     if enemies[index].get_health() <= 0.0 {
+           //     if enemies[index].get_enemy_type() == "large_slime" {
+           //         let (slime1, slime2, split) = enemies[index].large_slime_action(tm, player, self).await;
+            //        if split {
+           //             enemies.push(slime1);
+           //             enemies.push(slime2);
+           //         }
+          //      }
+           //     enemies[index].add_gold(player);
+          //      enemies.remove(index);
+          //  }
+        //}
         discmatch.to_string()
     }
 

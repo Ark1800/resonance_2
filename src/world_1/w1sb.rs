@@ -130,31 +130,11 @@ pub async fn run(
     let mut lbl_jeff_name = Label::new("Jeff The Landshark", 135.0, virtual_height - 45.0, 30);
     lbl_jeff_name.with_colors(BLACK, Some(BLUE));
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
         // whirlpool.draw();
         map.draw_map(&tm).await;
-        player.handle_inventory();
-        #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
-        if save {
-            player.update_save_data(records, client, last_scene).await;
-        }
-        if exit {
-            return "title_screen".to_string();
-        }
-        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
-        if restart {
-            *last_scene = "None".to_string();
-            return "inn".to_string();
-        }
-        if quit {
-            return "title_screen".to_string();
-        }
         player.handle_keypresses(pause, musicdiscfunctions).await;
         if player.get_cleared() <= 7 {
             for i in 0..enemies.len() {
@@ -369,7 +349,28 @@ pub async fn run(
             *last_scene = "Up".to_string();
             return "w1sp".to_string();
         }
+        player.handle_inventory();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
+            return "title_screen".to_string();
+        }
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
+        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
+        if restart {
+            *last_scene = "None".to_string();
+            return "inn".to_string();
+        }
+        if quit {
+            return "title_screen".to_string();
+        }
         next_frame().await;
     }
 }

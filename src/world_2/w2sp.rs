@@ -92,9 +92,6 @@ pub async fn run(
     .await;
     world_numeral.set_preload(tm.get_preload("assets/map_files/2_rn.png").unwrap());
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         if player.get_x() < 10.0 {
             *last_scene = "Left".to_string();
             return "town".to_string();
@@ -115,22 +112,23 @@ pub async fn run(
         player.move_player(&map, old_pos, &vec![]);
         let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
         player.set_player_activedisc(activedisc);
-
+        if player.get_cleared() >= 8 {
+            green_portal.draw();
+        }
+        map.draw_map(&tm).await;
         player.handle_inventory();
-        #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
+        let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {
             return "title_screen".to_string();
         }
-        if player.get_cleared() >= 8 {
-            green_portal.draw();
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
         }
-
-        
-        map.draw_map(&tm).await;
+        player.draw_player_messagebox();
         next_frame().await;
     }
 }

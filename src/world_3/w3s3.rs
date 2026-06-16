@@ -58,8 +58,8 @@ pub async fn run(
             80.0, //y
             true, //stretching
             1.0,  //zoom level
-            80.0, //health
-            10.0, //damage
+            40.0, //health
+            15.0, //damage
             "",
             "summoner", //enemy type
         )
@@ -76,8 +76,8 @@ pub async fn run(
             rand::gen_range(100.0, virtual_height - 100.0),
             true,
             1.0,
-            40.0,    // health
-            8.0,     // Damage
+            30.0,    // health
+            12.0,     // Damage
             "",      // Projectile Preload
             "slime", // Enemy type
         )
@@ -98,9 +98,6 @@ pub async fn run(
     let mut choose_open = false;
     let mut item_valid = false;
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -180,9 +177,6 @@ pub async fn run(
                     enemies.remove(index);
                 }
             }
-
-            player.handle_inventory();
-
             if player.get_x() > virtual_width - 10.0 {
                 *last_scene = "Right".to_string();
                 return "w3s4".to_string();
@@ -199,6 +193,20 @@ pub async fn run(
                 return "w3s2".to_string();
             }
         }
+        player.handle_inventory();
+        (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
+            return "title_screen".to_string();
+        }
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
         let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
@@ -207,16 +215,6 @@ pub async fn run(
         if quit {
             return "title_screen".to_string();
         }
-        #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
-        if save {
-            player.update_save_data(records, client, last_scene).await;
-        }
-        if exit {
-            return "title_screen".to_string();
-        }
-
-        (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         next_frame().await;
     }
 }

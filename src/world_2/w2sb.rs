@@ -89,9 +89,6 @@ pub async fn run(
     healthbar.with_colors(RED, PURPLE, WHITE);
     healthbar.with_border(true, BLACK, 2.0);
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         player.handle_keypresses(pause, musicdiscfunctions).await;
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -99,23 +96,6 @@ pub async fn run(
         background.draw();
         player.draw();
         healthbar.set_value(enemies[0].get_health());
-        player.handle_inventory();
-        #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
-        if save {
-            player.update_save_data(records, client, last_scene).await;
-        }
-        if exit {
-            return "title_screen".to_string();
-        }
-        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
-        if restart {
-            *last_scene = "None".to_string();
-            return "inn".to_string();
-        }
-        if quit {
-            return "title_screen".to_string();
-        }
         map.draw_map(&tm).await;
         if *pause == false {
             if enemies[0].get_health() > 0.0 {
@@ -143,8 +123,7 @@ pub async fn run(
         }
 
         let (mlehit, rnghit, _index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-        player.set_player_activedisc(activedisc);
+       
         if mlehit {
             enemies[0].dmg_enemy(player.get_meleedmg());
         }
@@ -160,17 +139,37 @@ pub async fn run(
         }
 
         if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Left".to_string();
-            return "w2s3".to_string();
-        }
-
-        if player.get_x() < 10.0 {
-            *last_scene = "Up".to_string();
+            *last_scene = "Right".to_string();
             return "w2sp".to_string();
         }
 
-        (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
+        if player.get_x() < 10.0 {
+            *last_scene = "Left".to_string();
+            return "w2s3".to_string();
+        }
         healthbar.draw();
+        player.handle_inventory();
+        (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
+        let (save, exit) = player.handle_save_menu().await;
+        if save {
+            player.update_save_data(records, client, last_scene).await;
+        }
+        if exit {
+            return "title_screen".to_string();
+        }
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
+        let (restart, quit) = player.handle_death_screen(pause, musicdiscfunctions).await;
+        if restart {
+            *last_scene = "None".to_string();
+            return "inn".to_string();
+        }
+        if quit {
+            return "title_screen".to_string();
+        }
         next_frame().await;
     }
 }

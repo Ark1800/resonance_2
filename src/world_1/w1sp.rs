@@ -31,9 +31,9 @@ pub async fn run(
         virtual_width / 2.0, // width
         virtual_height,      // height
         virtual_width / 2.0, // x position
-        0.0,                 // y position
-        true,                // Enable stretching
-        1.0,                 // Normal zoom (100%)
+        0.0,
+        true,
+        1.0,
     )
     .await;
     background1.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
@@ -42,9 +42,9 @@ pub async fn run(
         virtual_width / 2.0, // width
         virtual_height,      // height
         0.0,                 // x position
-        0.0,                 // y position
-        true,                // Enable stretching
-        1.0,                 // Normal zoom (100%)
+        0.0,
+        true,
+        1.0,
     )
     .await;
     background2.set_preload(tm.get_preload("assets/map_files/world1/beach.png").unwrap());
@@ -53,20 +53,18 @@ pub async fn run(
         "", 100.0, // width
         300.0, // height
         300.0, // x position
-        200.0, // y position
-        true,  // Enable stretching
-        1.0,   // Normal zoom (100%)
+        200.0, true, 1.0,
     )
     .await;
     portal_hitbox.set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
     let mut world_numeral = StillImage::new(
         "",
-        200.0,                          // width
-        200.0,                          // height
-        (virtual_width / 2.0) + 100.0,  // x position
-        (virtual_height / 2.0) - 100.0, // y position
-        true,                           // Enable stretching
-        1.0,                            // Normal zoom (100%)
+        200.0,                         // width
+        200.0,                         // height
+        (virtual_width / 2.0) + 100.0, // x position
+        (virtual_height / 2.0) - 100.0,
+        true,
+        1.0,
     )
     .await;
     world_numeral.set_preload(tm.get_preload("assets/map_files/1_rn.png").unwrap());
@@ -89,50 +87,15 @@ pub async fn run(
     }
     //COLLIDABLES
     let mut collidable_objects: Vec<StillImage> = vec![
-        StillImage::new(
-            "", 250.0, // width
-            175.0, // height
-            0.0,   // x position
-            600.0, // y position
-            true,  // Enable stretching
-            1.0,   // Normal zoom (100%)
-        )
-        .await,
-        StillImage::new(
-            "", 150.0, // width
-            200.0, // height
-            0.0,   // x position
-            450.0, // y position
-            true,  // Enable stretching
-            1.0,   // Normal zoom (100%)
-        )
-        .await,
-        StillImage::new(
-            "", 200.0, // width
-            150.0, // height
-            0.0,   // x position
-            300.0, // y position
-            true,  // Enable stretching
-            1.0,   // Normal zoom (100%)
-        )
-        .await,
-        StillImage::new(
-            "", 250.0, // width
-            350.0, // height
-            0.0,   // x position
-            0.0,   // y position
-            true,  // Enable stretching
-            1.0,   // Normal zoom (100%)
-        )
-        .await,
+        StillImage::new("", 250.0, 175.0, 0.0, 600.0, true, 1.0).await,
+        StillImage::new("", 150.0, 200.0, 0.0, 450.0, true, 1.0).await,
+        StillImage::new("", 200.0, 150.0, 0.0, 300.0, true, 1.0).await,
+        StillImage::new("", 250.0, 350.0, 0.0, 0.0, true, 1.0).await,
     ];
     for obj in 0..collidable_objects.len() {
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
     }
     loop {
-        if last_scene == "title_screen" {
-            player.show_player_messagebox();
-        }
         // set virtual resolution and clear frame
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
@@ -155,21 +118,26 @@ pub async fn run(
         //player
         player.handle_keypresses(pause, _musicdiscfunctions).await;
         player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+        let activedisc = _musicdiscfunctions
+            .handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm)
+            .await;
         player.set_player_activedisc(activedisc);
         let old_pos = player.get_oldpos();
-        player.handle_inventory();
         #[allow(unused)]
-            let (save, exit) = player.handle_save_menu().await;
+        player.move_player(&map, old_pos, &collidable_objects);
+        player.handle_inventory();
+        let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {
             return "title_screen".to_string();
         }
-        player.move_player(&map, old_pos, &collidable_objects);
-        
-        
+        if last_scene == "null" {
+            player.show_player_messagebox();
+            *last_scene = "".to_string();
+        }
+        player.draw_player_messagebox();
         next_frame().await;
     }
 }
