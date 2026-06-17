@@ -69,7 +69,7 @@ pub async fn run(
     let mut timer = 0.0;
     let mut hit = false;
     map.create_map_array(0, 1, 0, vec![2]).await;
-    if player.get_cleared() == 12 {
+    if player.get_cleared() >= 12 {
         map.create_map_array(0, 2, 0, vec![2, 4]).await;
     }
     let mut choose_open = false;

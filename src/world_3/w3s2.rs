@@ -192,7 +192,7 @@ pub async fn run(
 
             if player.get_y() < 10.0 {
                 *last_scene = "Top".to_string();
-                return "w2s3".to_string();
+                return "w3s3".to_string();
             }
         }
         player.handle_inventory();

@@ -657,9 +657,9 @@ impl Player {
         }
         let mut new_width = self.health as f32 * 4.0; // Assuming 100 health corresponds to 400 width
         let mut max_width = self.maxhealth as f32 * 4.0; // Maximum width based on max health
-        if self.inventory.1[3].get_filename() == "assets/item_files/armor/lifeforce_armor.png" {
-            new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
-            max_width = self.maxhealth * 2.0; // Double the maximum health
+        if self.inventory.1[3].get_filename() == "assets/item_files/armour/lifeforce_armor.png" {
+                new_width = self.health * 2.0; // Assuming 100 health corresponds to 400 width
+                max_width = self.maxhealth * 2.0; // Double the maximum health
         }
         if new_width > max_width {
             new_width = max_width; // Prevent negative width
@@ -1559,6 +1559,9 @@ impl Player {
             if self.items[index].get_itemtype() == "disc" {
                 self.refresh_disc_display();
             }
+        if self.inventory.1[3].get_filename() == "assets/item_files/armour/lifeforce_armor.png" {
+            self.healplayer(1.0);
+        }
             self.update_stats();
         }
     }
@@ -1666,10 +1669,10 @@ impl Player {
                     musicdiscs.start_musicdisc_time("Pandemonium");
                 }
             }
-            "Six Hundred Strike" => {
+            "600 Strike" => {
                 if validity[5] == true {
-                    self.activedisc = "Six Hundred Strike".to_string();
-                    musicdiscs.start_musicdisc_time("Six Hundred Strike");
+                    self.activedisc = "600 Strike".to_string();
+                    musicdiscs.start_musicdisc_time("600 Strike");
                 }
             }
             "Soda Pop" => {
@@ -1680,8 +1683,8 @@ impl Player {
             }
             "Greatest Show" => {
                 if validity[7] == true {
-                    self.activedisc = "The Greatest Show".to_string();
-                    musicdiscs.start_musicdisc_time("The Greatest Show");
+                    self.activedisc = "Greatest Show".to_string();
+                    musicdiscs.start_musicdisc_time("Greatest Show");
                 }
             }
             _ => {}
@@ -1935,7 +1938,7 @@ impl Player {
                     loop {
                         let candidate = rand::gen_range(0, item_count as i32) as usize;
                         let name_list = self.inventory.0[0].get_all_items();
-                        if !used_indices.contains(&candidate) && !name_list.contains(&self.possible_items[candidate].get_itemtitle()) {
+                        if !used_indices.contains(&candidate) && !name_list.contains(&self.possible_items[candidate].get_itemtitle()) && candidate < 18 {
                             return candidate;
                         }
                     }
@@ -2163,7 +2166,7 @@ impl Player {
         let helmet_of_thorns: Item = Item::new(
             tm.get_preload("assets/item_files/armour/helmet_of_thorns.png").unwrap(),
             "assets/item_files/armour/helmet_of_thorns.png".to_string(),
-            "Helmet Of Thorns".to_string(),
+            "Thorn Helm".to_string(),
             "A helmet that punishes any who dare hit the wearer with ravenous thorns, also increaes armor slightly".to_string(),
             "helmet".to_string(),
             0,
@@ -2270,6 +2273,66 @@ impl Player {
         )
         .await;
         possible_items.push(healthpot);
+        let iron_armour = Item::new(
+        tm.get_preload("assets/item_files/armour/iron_armor.png").unwrap(), // Preload
+        "assets/item_files/armour/iron_armor.png".to_string(),              // Image path
+        "Diamond Armour".to_string(),                                          // Name
+        "Armour made of the toughest iron around!".to_string(),            // Description
+        "bodyarmor".to_string(),                                               // Type
+        0,                                                                     // Melee
+        0,                                                                     // Ranged
+        0.0 ,                                                                   // Move speed mult
+        0.0,                                                                   // Cooldown mult
+        0,                                                                    // Health
+        8,                                                                    // Armour
+        )
+        .await;
+        possible_items.push(iron_armour);
+        let swift_sword = Item::new(
+            tm.get_preload("assets/item_files/weapons/swift_sword.png").unwrap(), // Preload
+            "assets/item_files/weapons/swift_sword.png".to_string(),              // Image path
+            "Swift Sword".to_string(),                                            // Name
+            "A weapon made to slice swfitly through enemies increasing damage".to_string(),            // Description
+            "melee".to_string(),                                                // Type
+            9,                                                                  // Melee
+            0,                                                                   // Ranged
+            0.0,                                                                 // Move speed mult
+            0.0,                                                                // Cooldown mult
+            0,                                                                   // Health
+            0,                                                                   // Armour
+        )
+        .await;
+        possible_items.push(swift_sword);
+        let crossbow = Item::new(
+            tm.get_preload("assets/item_files/weapons/crossbow.png").unwrap(), // Preload
+            "assets/item_files/weapons/crossbow.png".to_string(),              // Image path
+            "Crossbow".to_string(),                                            // Name
+            "A bow that, does moderate damage and increases cooldowns slightly".to_string(), // Description
+            "ranged".to_string(),                                                // Type
+            0,                                                                   // Melee
+            15,                                                                  // Ranged
+            1.2,                                                                // Move speed mult
+            0.0,                                                               // Cooldown mult
+            0,                                                                   // Health
+            0,                                                                   // Armour
+        )
+        .await;
+        possible_items.push(crossbow);
+        let swift_sneakers = Item::new(
+            tm.get_preload("assets/item_files/armour/swift_sneakers.png").unwrap(),
+            "assets/item_files/armour/swift_sneakers.png".to_string(),
+            "Swift Sneakers".to_string(),
+            "A pair of boots with remnants of energy from the blue blur, increases movement speed and armor".to_string(),
+            "boots".to_string(),
+            0,
+            0,
+            0.0,
+            2.0,
+            0,
+            3,
+        )
+        .await;
+        possible_items.push(swift_sneakers);
         possible_items
     }
 }

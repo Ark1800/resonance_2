@@ -183,14 +183,14 @@ impl Musicdisc {
             "Pandemonium" => {
                 self.pandemonium_starttime = get_time();
             }
-            "Six Hundred Strike" => {
+            "600 Strike" => {
                 self.sixhundredstrike_starttime = get_time();
                 self.sixhundredstrike_imagetime = get_time();
             }
             "Soda Pop" => {
                 self.sodapop_starttime = get_time();
             }
-            "The Greatest Show" => {
+            "Greatest Show" => {
                 self.greatestshow_starttime = get_time();
             }
             _ => {}
@@ -511,7 +511,7 @@ impl Musicdisc {
                     }
                 }
             }
-            "Six Hundred Strike" => {
+            "600 Strike" => {
                 if self.sixhundredstrike_valid == true {
                     let time = get_time() - self.sixhundredstrike_starttime;
                     if time >= 22.0 {
@@ -586,7 +586,7 @@ impl Musicdisc {
                     }
                 }
             }
-            "The Greatest Show" => {
+            "Greatest Show" => {
                 if self.greatestshow_valid == true {
                     if self.greatestshow_hit == false {
                         stop_sound(self.get_bgmusic());
@@ -689,7 +689,7 @@ impl Musicdisc {
                     }
                     enemies[index].add_gold(player);
                     enemies.remove(index);
-                    continue;
+                    break;
                 }
             }
             self.musicdisc_hit = false;

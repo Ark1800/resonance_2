@@ -69,7 +69,7 @@ pub async fn run(
     }
     background.set_preload(tm.get_preload("assets/map_files/grass.png").unwrap());
     map.create_map_array(0, 1, 0, vec![3]).await;
-    if player.get_cleared() == 11 {
+    if player.get_cleared() >= 11 {
         map.create_map_array(0, 2, 0, vec![3, 4]).await;
     }
     let mut choose_open = false;
