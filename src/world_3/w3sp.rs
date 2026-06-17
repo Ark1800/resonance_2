@@ -38,6 +38,9 @@ pub async fn run(
     .await;
     background1.set_preload(tm.get_preload("assets/map_files/magma_floor.png").unwrap());
     let mut red_portal = AnimatedImage::from_gif("", 100.0, 100.0, 498.0, 498.0, true).await;
+    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/red_portal.gif") {
+        red_portal.set_preloaded_gif(preloaded, true);
+    }
     let portal_hitbox = StillImage::new(
         "assets/map_files/wall.png",
         100.0, // width
@@ -55,9 +58,6 @@ pub async fn run(
     )
     .await;
     map.create_map_array(0, 1, 0, vec![3]).await;
-    if let Some(preloaded) = tm.get_preloaded_animated_gif("assets/map_files/red_portal.gif") {
-        red_portal.set_preloaded_gif(preloaded, true);
-    }
     if last_scene == "Down" {
         player.set_position((virtual_width / 2.0) - 20.0, 80.0);
     } else if last_scene == "Top" {
@@ -146,7 +146,9 @@ pub async fn run(
         player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+        let activedisc = _musicdiscfunctions
+            .handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm)
+            .await;
         player.set_player_activedisc(activedisc);
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;

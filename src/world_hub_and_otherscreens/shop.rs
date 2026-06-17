@@ -118,7 +118,7 @@ pub async fn run(
         160.0, // height
         150.0, // x position
         0.0,   // y position
-        false, // Enable stretching
+        true, // Enable stretching
         1.0,   // Normal zoom (100%)
     )
     .await;
