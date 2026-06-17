@@ -62,7 +62,7 @@ pub async fn run(
             true,
             1.0,
             60.0,    // health
-            20.0,     // Damage
+            30.0,     // Damage
             "",       // Projectile Preload
             "archer", // Enemy type
         )
@@ -81,7 +81,7 @@ pub async fn run(
             true,
             1.0,
             60.0,         // health
-            12.0,          // Damage
+            25.0,          // Damage
             "",            // Projectile Preload
             "large_slime", // Enemy type
         )
@@ -205,6 +205,7 @@ pub async fn run(
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
+            *pause = false;
         }
         if exit {
             return "title_screen".to_string();

@@ -51,7 +51,7 @@ pub async fn run(
     let mut enemies: Vec<Enemy> = vec![];
     for _i in 0..1 {
         let mut summoner = Enemy::new(
-            "summoner.png",
+            "",
             50.0, //hieght
             50.0, //width
             70.0, //x
@@ -67,7 +67,7 @@ pub async fn run(
         summoner.set_preload(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap());
         enemies.push(summoner);
     }
-    for _i in 0..12 {
+    for _i in 0..7 {
         let mut slime = Enemy::new(
             "",
             50.0,
@@ -77,7 +77,7 @@ pub async fn run(
             true,
             1.0,
             30.0,    // health
-            12.0,     // Damage
+            20.0,     // Damage
             "",      // Projectile Preload
             "slime", // Enemy type
         )
@@ -185,7 +185,7 @@ pub async fn run(
                 player.add_cleared();
                 item_valid = true;
                 choose_open = true;
-                map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
+                map.change_map(vec![0, 0], vec![vec![14, 4], vec![14, 5]]);
                 player.add_health(30.0);
             }
             if player.get_y() > virtual_height - 10.0 {
@@ -198,6 +198,7 @@ pub async fn run(
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
+            *pause = false;
         }
         if exit {
             return "title_screen".to_string();

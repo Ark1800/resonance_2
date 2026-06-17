@@ -104,6 +104,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
+         if *pause == false {
         world_numeral.draw();
         player.draw();
         player.handle_keypresses(pause, _musicdiscfunctions).await;
@@ -117,9 +118,11 @@ pub async fn run(
         }
         map.draw_map(&tm).await;
         let (_mlehit, _rnghit, _index) = player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
+    }
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {
+            *pause = false;
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

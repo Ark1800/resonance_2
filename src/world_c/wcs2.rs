@@ -250,6 +250,7 @@ pub async fn run(
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
+            *pause = false;
         }
         if exit {
             return "title_screen".to_string();
@@ -262,7 +263,7 @@ pub async fn run(
         let (restart, quit) = player.handle_death_screen(pause, _musicdiscfunctions).await;
         if restart {
             *last_scene = "None".to_string();
-            return "inn".to_string();
+            return "wcs1".to_string();
         }
         if quit {
             return "title_screen".to_string();

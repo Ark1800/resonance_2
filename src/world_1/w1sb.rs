@@ -135,6 +135,7 @@ pub async fn run(
         background.draw();
         // whirlpool.draw();
         map.draw_map(&tm).await;
+         if *pause == false {
         player.handle_keypresses(pause, musicdiscfunctions).await;
         if player.get_cleared() <= 7 {
             for i in 0..enemies.len() {
@@ -348,11 +349,12 @@ pub async fn run(
         if player.get_y() < 10.0 {
             *last_scene = "Up".to_string();
             return "w1sp".to_string();
-        }
+        }}
         player.handle_inventory();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         let (save, exit) = player.handle_save_menu().await;
         if save {
+            *pause = false;
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

@@ -85,8 +85,7 @@ pub async fn run(
     let start_time = get_time();
     let mut current_time: f64;
     let mut time_dif = start_time;
-    let mut lbl_speech = Label::new("", 50.0, 100.0, 30);
-    lbl_speech.with_colors(WHITE, None);
+    let mut lbl_speech = Label::new("", 50.0, 600.0, 30);
     lbl_speech.with_scroll(true);
     let mut speech_cooldown = 0.0;
     let mut speech_num = 0;
@@ -115,7 +114,7 @@ pub async fn run(
     let mut name_box = Label::new("Cyric", 150.0, 575.0, 40);
     name_box.with_colors(WHITE, None);
     let mut speech_done = false;
-    if player.get_cleared() < 17 {
+    if player.get_cleared() <= 17 {
         speech_done = true;
     }
 
@@ -145,19 +144,22 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
+        map.draw_map(&tm).await;
+
 
         if player.get_cleared() < 17 {
             current_time = get_time();
             if (current_time - time_dif) > 0.1 {
                 time_dif = current_time;
 
-                if player.get_cleared() < 3 {
+                if player.get_cleared() == 16 {
                     if speech_cooldown > 0.0 {
                         speech_cooldown -= 0.1;
                         if speech_cooldown <= 0.0 {
                             speech_cooldown = 0.0;
                             if speech_num == speech_list.len() {
                                 lbl_speech.set_text("");
+                                speech_done = true;
                             } else {
                                 lbl_speech.set_scrolling_text(speech_list[speech_num].to_string());
                             }
@@ -166,13 +168,13 @@ pub async fn run(
                 }
             }
 
-            if player.get_cleared() < 17 {
+            if player.get_cleared() == 16 {
                 if lbl_speech.get_scroll_len() == lbl_speech.get_scroll() && speech_num < speech_list.len() && speech_cooldown <= 0.0 {
                     speech_cooldown = 1.0;
                     speech_num += 1;
                 }
             }
-        } else if speech_done {
+        } else if speech_done && *pause == false {
             player.handle_keypresses(pause, musicdiscfunctions).await;
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
@@ -213,7 +215,6 @@ pub async fn run(
         lbl_cyric_healthnum.set_text(enemies[0].get_health().to_string());
         lbl_cyric_healthnum.draw();
         player.draw();
-        map.draw_map(&tm).await;
         if lbl_speech.get_text() != "" && player.get_cleared() < 17 {
             speech_box.draw();
             name_box.draw();
@@ -227,6 +228,7 @@ pub async fn run(
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
+            *pause = false;
         }
         if exit {
             return "title_screen".to_string();

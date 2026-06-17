@@ -197,6 +197,52 @@ impl Musicdisc {
         }
     }
 
+    pub fn master_reset_every_variable(&mut self) {
+        self.backinblack_cct = 0.0;
+        self.backinblack_cooldown = 0.0;
+        self.backinblack_hit = false;
+        self.backinblack_valid = true;
+        self.thickofit_cct = 0.0;
+        self.thickofitcooldown = 0.0;
+        self.thickofit_hit = false;
+        self.thickofitvalid = true;
+        self.thickofit = false;
+        self.howitsdone_cct = 0.0;
+        self.howitsdone_cooldown = 0.0;
+        self.howitsdone_hit = false;
+        self.howitsdone_valid = true;
+        self.imstillstanding_cct = 0.0;
+        self.imstillstanding_cooldown = 0.0;
+        self.imstillstanding_hit = false;
+        self.imstillstanding_valid = true;
+        self.imstillstanding = false;
+        self.pandemonium_cct = 0.0;
+        self.pandemonium_cooldown = 0.0;
+        self.pandemonium_hit = false;
+        self.pandemonium_valid = true;
+        self.pandemonium = false;
+        self.sixhundredstrike_cct = 0.0;
+        self.sixhundredstrike_cooldown = 0.0;
+        self.sixhundredstrike_hit = false;
+        self.sixhundredstrike_valid = true;
+        self.sixhundredstrike_last_cycle = -1;
+        self.sodapop_cct = 0.0;
+        self.sodapop_cooldown = 0.0;
+        self.sodapop_hit = false;
+        self.sodapop_valid = true;
+        self.sodapop = false;
+        self.greatestshow_cct = 0.0;
+        self.greatestshow_cooldown = 0.0;
+        self.greatestshow_hit = false;
+        self.greatestshow_valid = true;
+        self.greatestshow_complete = false;
+        self.greatestshow_playerhealth = 0.0;
+        self.greatestshow_timevalid = true;
+        self.greatestshow_currentime = 0.0;
+        self.thickofit = false;
+        self.musicdisc_hit = false;
+    }
+
     pub fn get_musicdisc_cooldowns(&mut self) -> Vec<f64> {
         let backinblack_remaining = (45.0 - (get_time() - self.backinblack_cooldown)).max(0.0);
         let thickofit_remaining = (60.0 - (get_time() - self.thickofitcooldown)).max(0.0);
@@ -597,8 +643,8 @@ impl Musicdisc {
                     let time = get_time() - self.greatestshow_starttime;
                     if time < 60.0 {
                         for i in 0..self.disc_elements.2.len() {
-                            let width = self.disc_elements.2[i].get_width() + (time * 0.001) as f32; //multiply by 20.0 for even growing time * 20.0) as f32;
-                            let height = self.disc_elements.2[i].get_height() + (time * 0.001) as f32;
+                            let width = self.disc_elements.2[i].get_width() + (time * 0.01) as f32; 
+                            let height = self.disc_elements.2[i].get_height() + (time * 0.01) as f32;
                             let new_position = vec2(
                                 self.disc_elements.2[i].get_x() - (time * 0.0005) as f32,
                                 self.disc_elements.2[i].get_y() - (time * 0.0005) as f32,

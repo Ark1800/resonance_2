@@ -11,7 +11,6 @@ use crate::modules::player::Player;
 use crate::modules::preload_image::TextureManager;
 use crate::modules::scale::use_virtual_resolution;
 use crate::modules::still_image::StillImage;
-use crate::{VIRTUAL_HEIGHT, VIRTUAL_WIDTH};
 use macroquad::prelude::*;
 pub async fn run(
     virtual_width: f32,
@@ -59,7 +58,7 @@ pub async fn run(
             true,
             1.0,
             50.0,  // health
-            20.0,   // Damage
+            30.0,   // Damage
             "",     // Projectile Preload
             "mage", // Enemy type
         )
@@ -78,7 +77,7 @@ pub async fn run(
             true,
             1.0,
             60.0,         // health
-            15.0,          // Damage
+            25.0,          // Damage
             "",            // Projectile Preload
             "large_slime", // Enemy type
         )
@@ -95,7 +94,6 @@ pub async fn run(
     } else if *last_scene == "Right" {
         player.set_position(80.0, virtual_height / 2.0);
     }
-    player.set_position(VIRTUAL_WIDTH / 2.0, VIRTUAL_HEIGHT / 2.0);
     let mut choose_open = false;
     let mut item_valid = false;
     loop {
@@ -200,6 +198,7 @@ pub async fn run(
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
+            *pause = false;
         }
         if exit {
             return "title_screen".to_string();

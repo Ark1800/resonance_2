@@ -24,6 +24,10 @@ use macroquad::audio::{PlaySoundParams, play_sound, stop_sound, Sound};
 //2. deleting stuff from text input sometimes causes the program to crash, it gives error for saying Is_char_boundary is off
 
 /*
+music overlap on death
+fix sodapop
+put handlediscs in cleared
+
 
 //Keypresses:
 Move Up - W
@@ -618,7 +622,7 @@ impl Player {
         if issactive == false {
             let mut dmg = dmg - self.armor as f32;
             if dmg < 0.0 {
-                dmg = 0.0;
+                dmg = 1.0;
             }
             let randomnum = rand::gen_range(1, 5);
             if self.inventory.1[4].get_filename() == "assets/item_files/armour/shadow_boots.png" {
@@ -1270,6 +1274,7 @@ impl Player {
                 //save button
                 save = true;
                 self.save_menu_open = false;
+                
             }  
             if self.savemenu.2[1].click() {
                 //exit to menu button
@@ -1332,7 +1337,7 @@ impl Player {
             self.death_screen_open = true;
             stop_sound(musicdiscfunctions.get_currently_playing());
             stop_sound(musicdiscfunctions.get_bgmusic());
-            play_sound(musicdiscfunctions.get_bgmusic(), PlaySoundParams { looped: false, volume: 1.0 });
+            musicdiscfunctions.master_reset_every_variable();
             *pause = true; //pause game when death screen opens
         }
         btn_clicks
@@ -1434,7 +1439,7 @@ impl Player {
             self.inventory.2[0].draw();
             self.inventory.2[1].draw();
             self.inventory.2[2].set_text(format!("{}", self.musicoins));
-            if self.inventory.3[0].click() {
+            if self.inventory.3[0].click() && self.inventory.0[0].selected_item().is_some() {
                 let title = self.inventory.0[0].selected_item().unwrap();
                 for (i, item) in self.items.iter().enumerate() {
                     if item.get_itemtitle() == *title {
@@ -1494,11 +1499,11 @@ impl Player {
                 self.playerui.1[0].with_fixed_size(max_width, 25.0); //update healthbar size based on health
                 self.playerui.1[1].with_fixed_size(new_width, 25.0); //update healthbar size based on health
             }
-            if self.inventory.3[1].click() {
+            if self.inventory.3[1].click() && self.inventory.0[0].selected_item().is_some() {
                 let title = self.inventory.0[0].selected_item().unwrap().clone();
                 self.unequip_item(&title);
             }
-            if self.inventory.3[2].click() {
+            if self.inventory.3[2].click() && self.inventory.0[0].selected_item().is_some() {
                 let title = self.inventory.0[0].selected_item().unwrap().clone();
                 for (i, item) in self.items.iter().enumerate() {
                     if item.get_itemtitle() == *title {

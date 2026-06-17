@@ -127,6 +127,7 @@ pub async fn run(
         background1.draw();
         world_numeral.draw();
         map.draw_map(tm).await;
+        if *pause == false {
         player.draw();
         if player.get_cleared() >= 12 {
             red_portal.draw();
@@ -150,10 +151,12 @@ pub async fn run(
             .handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm)
             .await;
         player.set_player_activedisc(activedisc);
+    }
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
+            *pause = false;
         }
         if exit {
             return "title_screen".to_string();

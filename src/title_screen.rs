@@ -43,7 +43,7 @@ pub async fn run(
     let btn_start = TextButton::new(virtual_width / 2.0 - 100.0, 400.0, 200.0, 60.0, "Start Game", BLUE, GREEN, 30);
     let btn_exit = TextButton::new(virtual_width / 2.0 - 100.0, 600.0, 200.0, 60.0, "Leave game", BLUE, GREEN, 30);
     let mut lbl_title = Label::new("Resonance 2", (virtual_width / 2.0) - 200.0, 200.0, 80);
-    let mut lbl_team = Label::new("Made by Team Berry", (virtual_width / 2.0) - 250.0, 250.0, 50);
+    let mut lbl_team = Label::new("Made by Team Berry", (virtual_width / 2.0) - 225.0, 250.0, 50);
     let mut txt_username = TextInput::new(virtual_width / 2.0 - 150.0, 200.0, 300.0, 40.0, 25.0);
     txt_username.set_prompt("Username");
     let mut txt_password = TextInput::new(virtual_width / 2.0 - 150.0, 300.0, 300.0, 40.0, 25.0);

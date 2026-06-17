@@ -49,9 +49,9 @@ pub async fn run(
         map.create_map_array(0, 2, 0, vec![1, 2]).await;
     }
     let mut enemies: Vec<Enemy> = vec![];
-    for _i in 0..3 {
+    for _i in 0..2 {
         let mut summoner = Enemy::new(
-            "summoner.png",
+            "",
             50.0, //hieght
             50.0, //width
             70.0, //x
@@ -59,7 +59,7 @@ pub async fn run(
             true, //stretching
             1.0,  //zoom level
             80.0, //health
-            10.0, //damage
+            15.0, //damage
             "",
             "summoner", //enemy type
         )
@@ -67,7 +67,7 @@ pub async fn run(
         summoner.set_preload(tm.get_preload("assets/summoner_files/summoner_standR.png").unwrap());
         enemies.push(summoner);
     }
-    for _i in 0..12 {
+    for _i in 0..3 {
         let mut mage = Enemy::new(
             "",
             50.0,
@@ -76,8 +76,8 @@ pub async fn run(
             rand::gen_range(100.0, virtual_height - 100.0),
             true,
             1.0,
-            16000.0,  // health
-            20.0,   // Damage
+            60.0,  // health
+            30.0,   // Damage
             "",     // Projectile Preload
             "mage", // Enemy type
         )
@@ -200,6 +200,7 @@ pub async fn run(
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
+            *pause = false;
         }
         if exit {
             return "title_screen".to_string();

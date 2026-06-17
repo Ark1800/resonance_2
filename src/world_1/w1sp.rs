@@ -105,6 +105,7 @@ pub async fn run(
         background2.draw();
         blue_portal.draw();
         world_numeral.draw();
+         if *pause == false {
         player.draw();
         //game
         if player.get_x() > virtual_width - 10.0 {
@@ -125,9 +126,11 @@ pub async fn run(
         let old_pos = player.get_oldpos();
         #[allow(unused)]
         player.move_player(&map, old_pos, &collidable_objects);
+    }
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {
+            *pause = false;
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

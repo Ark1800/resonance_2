@@ -907,11 +907,18 @@ impl Enemy {
             let attack_choice = rand::gen_range(0, 2);
             if attack_choice >= 0 {
                 self.meteors(&tm).await;
-                self.cooldown2 = get_time() + 1.0;
+                self.cooldown2 = get_time() + 3.0;
             } else {
                 self.shoot(player, 80.0, 80.0).await;
                 self.cooldown2 = get_time() + 2.0;
             }
+        }
+        for i in 0..self.projectiles.len() {
+            self.projectiles[i].move_projectiles(player.get_oldpos());
+            if self.projectiles[i].check_collide(player) {
+                player.dmgplayer(35.0, true, self);
+            }
+            self.projectiles[i].draw();
         }
         let mut healthbar = self.set_healthbar();
         healthbar.draw();

@@ -108,8 +108,11 @@ pub async fn run(
         clear_background(BLACK);
         map.draw_map(&tm).await;
         player.handle_keypresses(pause, musicdiscfunctions).await;
-        let old_pos = player.get_oldpos();
+        if *pause == false {
+            let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
+        }
+        
         if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Down".to_string();
             return "wcs1".to_string();
@@ -158,6 +161,7 @@ pub async fn run(
         let (save, exit) = player.handle_save_menu().await;
         if save {
             player.update_save_data(records, client, last_scene).await;
+            *pause = false;
         }
         if exit {
             return "title_screen".to_string();

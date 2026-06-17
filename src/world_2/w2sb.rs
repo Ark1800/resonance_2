@@ -152,6 +152,7 @@ pub async fn run(
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         let (save, exit) = player.handle_save_menu().await;
         if save {
+            *pause = false;
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

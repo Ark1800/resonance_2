@@ -113,6 +113,8 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
+        map.draw_map(&tm).await;
+         if *pause == false {
         if player.get_cleared() <= 5 {
             for i in 0..enemies.len() {
                 //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
@@ -149,7 +151,7 @@ pub async fn run(
                 }
             }
         }
-        map.draw_map(&tm).await;
+        
         player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
@@ -201,10 +203,12 @@ pub async fn run(
             return "w1s2".to_string();
         }
         player.draw_player_messagebox();
+    }
         player.handle_inventory();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         let (save, exit) = player.handle_save_menu().await;
         if save {
+            *pause = false;
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

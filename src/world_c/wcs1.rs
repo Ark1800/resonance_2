@@ -104,6 +104,7 @@ pub async fn run(
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
+        if *pause == false {
         let timer = get_time() - start_time;
         if timer > 0.1 && !tutorial_box.is_active() {
             current_time = get_time();
@@ -166,11 +167,12 @@ pub async fn run(
             if player.get_y() < 10.0 && player.get_cleared() >= 3 {
                 *last_scene = "Top".to_string();
                 return "town".to_string();
-            }
+            }}
             player.handle_inventory();
             let (save, exit) = player.handle_save_menu().await;
             if save {
                 player.update_save_data(records, client, last_scene).await;
+            *pause = false;
             }
             if exit {
                 return "title_screen".to_string();

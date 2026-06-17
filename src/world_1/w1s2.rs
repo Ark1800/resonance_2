@@ -101,6 +101,7 @@ pub async fn run(
         background.draw();
 
         map.draw_map(&tm).await;
+         if *pause == false {
         if player.get_cleared() <= 4 {
             for i in 0..enemies.len() {
                 //matches each enemy with its type and performs the appropriate action (movement, attacking, etc.)
@@ -188,11 +189,12 @@ pub async fn run(
         if player.get_y() > virtual_height - 10.0 {
             *last_scene = "Down".to_string();
             return "w1s1".to_string();
-        }
+        }}
         player.handle_inventory();
         (choose_open, item_valid) = player.handle_choose_item(&mut choose_open, &mut item_valid);
         let (save, exit) = player.handle_save_menu().await;
         if save {
+            *pause = false;
             player.update_save_data(records, client, last_scene).await;
         }
         if exit {

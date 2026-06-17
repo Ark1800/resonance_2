@@ -27,7 +27,7 @@ pub async fn run(
     let iron_armour = Item::new(
         tm.get_preload("assets/item_files/armour/iron_armor.png").unwrap(), // Preload
         "assets/item_files/armour/iron_armor.png".to_string(),              // Image path
-        "Diamond Armour".to_string(),                                          // Name
+        "Iron Armour".to_string(),                                          // Name
         "Armour made of the toughest iron around!".to_string(),            // Description
         "bodyarmor".to_string(),                                               // Type
         0,                                                                     // Melee
