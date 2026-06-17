@@ -24,8 +24,6 @@ use macroquad::audio::{PlaySoundParams, play_sound, stop_sound, Sound};
 //2. deleting stuff from text input sometimes causes the program to crash, it gives error for saying Is_char_boundary is off
 
 /*
-BUGS TO FIX
-4. going back into w1s1 after beating w1sb breaks everything
 
 //Keypresses:
 Move Up - W
@@ -367,6 +365,10 @@ impl Player {
                 self.view.set_preload(self.preloads[idx].clone()); //Changes filename
             }
         }
+    }
+
+    pub fn get_inventory_titles(&self) -> Vec<String> {
+        self.item_titles.clone()
     }
 
     pub fn move_x(&mut self) {
@@ -718,7 +720,6 @@ impl Player {
     pub fn get_mleattackdrawing(&self) -> bool {
         self.mleattackdrawing
     }
-
     //PLAYER UIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
     #[allow(unused)]
     pub async fn create_player_ui(
@@ -1502,23 +1503,22 @@ impl Player {
                 for (i, item) in self.items.iter().enumerate() {
                     if item.get_itemtitle() == *title {
                         for image in self.inventory.1.iter_mut() {
-                            if image.get_filename() == self.items[0].get_itemassetpath() {
-                                //self.unequip_item(&title);
+                            if image.get_filename() == self.items[i].get_itemassetpath() {
+                                self.unequip_item(&title);
                                 break;
                             }
-
-                            self.items.remove(i);
-                            self.itemstats.0.remove(i);
-                            self.itemstats.0.remove(i);
-                            self.itemstats.1.remove(i);
-                            self.itemstats.1.remove(i);
-                            self.itemstats.1.remove(i);
-                            self.itemstats.1.remove(i);
-                            self.itemstats.2.remove(i);
-                            self.itemstats.2.remove(i);
-                            self.itemstats.3.remove(i);
-                            self.item_titles.remove(i);
                         }
+                        self.items.remove(i);
+                        self.itemstats.0.remove(i);
+                        self.itemstats.0.remove(i);
+                        self.itemstats.1.remove(i);
+                        self.itemstats.1.remove(i);
+                        self.itemstats.1.remove(i);
+                        self.itemstats.1.remove(i);
+                        self.itemstats.2.remove(i);
+                        self.itemstats.2.remove(i);
+                        self.itemstats.3.remove(i);
+                        self.item_titles.remove(i);
                         self.inventory.1[1].set_preload(self.preloads[1].clone());
                         self.inventory.2[0].set_text("Title");
                         self.inventory.2[1].set_text("Description");
@@ -2139,7 +2139,7 @@ impl Player {
             0.0,
             0.0,
             0,
-            8,
+            15,
         )
         .await;
         possible_items.push(diamond_armor);

@@ -133,7 +133,7 @@ pub async fn run(
     ];
     let speech_list3: Vec<String> = vec!["......".to_string()];
     let mut tutorial_activate = true;
-    let mut tutorial_box = MessageBox::info("Music Disks!", "If you get music disks, you can equip them in the inventory and use them using Q, E, and X");
+    let mut tutorial_box = MessageBox::info("Music Disks!", "If you get music disks, you can equip them in the inventory by clicking TAB, clicking on them, clicking EQUIP, close your inventory with TAB, and use them using Q, E, and X (SLOT 1 2 and 3)");
     script_list.push(speech_list);
     script_list.push(speech_list2);
     script_list.push(speech_list3);

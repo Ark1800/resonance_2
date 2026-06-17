@@ -24,67 +24,76 @@ pub async fn run(
     _musicdiscfunctions: &mut crate::modules::musicdisc::Musicdisc,
 ) -> String {
     player.set_currentscreen("shop".to_string());
-    let diamond_armour = Item::new(
-        tm.get_preload("assets/item_files/armour/diamond_armor.png").unwrap(), // Preload
-        "assets/item_files/armour/diamond_armor.png".to_string(),              // Image path
+    let iron_armour = Item::new(
+        tm.get_preload("assets/item_files/armour/iron_armor.png").unwrap(), // Preload
+        "assets/item_files/armour/iron_armor.png".to_string(),              // Image path
         "Diamond Armour".to_string(),                                          // Name
-        "Armour made of the toughest gemstone around!".to_string(),            // Description
+        "Armour made of the toughest iron around!".to_string(),            // Description
         "bodyarmor".to_string(),                                               // Type
         0,                                                                     // Melee
         0,                                                                     // Ranged
-        0.8,                                                                   // Move speed mult
+        0.0 ,                                                                   // Move speed mult
         0.0,                                                                   // Cooldown mult
-        50,                                                                    // Health
-        20,                                                                    // Armour
+        0,                                                                    // Health
+        8,                                                                    // Armour
     )
     .await;
-
-    let time_sword = Item::new(
-        tm.get_preload("assets/item_files/weapons/time_sword.png").unwrap(), // Preload
-        "assets/item_files/weapons/time_sword.png".to_string(),              // Image path
-        "Time Sword".to_string(),                                            // Name
-        "A weapon made to slice through time itself".to_string(),            // Description
-        "attack".to_string(),                                                // Type
-        30,                                                                  // Melee
+    let swift_sword = Item::new(
+        tm.get_preload("assets/item_files/weapons/swift_sword.png").unwrap(), // Preload
+        "assets/item_files/weapons/swift_sword.png".to_string(),              // Image path
+        "Swift Sword".to_string(),                                            // Name
+        "A weapon made to slice swfitly through enemies increasing damage".to_string(),            // Description
+        "melee".to_string(),                                                // Type
+        9,                                                                  // Melee
         0,                                                                   // Ranged
-        1.0,                                                                 // Move speed mult
-        -0.1,                                                                // Cooldown mult
+        0.0,                                                                 // Move speed mult
+        0.0,                                                                // Cooldown mult
         0,                                                                   // Health
         0,                                                                   // Armour
     )
     .await;
-
-    let future_bow = Item::new(
-        tm.get_preload("assets/item_files/weapons/future_bow.png").unwrap(), // Preload
-        "assets/item_files/weapons/future_bow.png".to_string(),              // Image path
-        "Future Bow".to_string(),                                            // Name
-        "A bow that, due to its enchantments, can fire its arrows into the future".to_string(), // Description
-        "attack".to_string(),                                                // Type
+    let crossbow = Item::new(
+        tm.get_preload("assets/item_files/weapons/crossbow.png").unwrap(), // Preload
+        "assets/item_files/weapons/crossbow.png".to_string(),              // Image path
+        "Crossbow".to_string(),                                            // Name
+        "A bow that, does moderate damage and increases cooldowns slightly".to_string(), // Description
+        "ranged".to_string(),                                                // Type
         0,                                                                   // Melee
-        20,                                                                  // Ranged
-        1.15,                                                                // Move speed mult
-        -0.15,                                                               // Cooldown mult
+        15,                                                                  // Ranged
+        1.2,                                                                // Move speed mult
+        0.0,                                                               // Cooldown mult
         0,                                                                   // Health
         0,                                                                   // Armour
     )
     .await;
-
-    let hermes_boots = Item::new(
-        tm.get_preload("assets/item_files/armour/hermes_boots.png").unwrap(),
-        "assets/item_files/armour/hermes_boots.png".to_string(),
-        "Hermes Boots".to_string(),
-        "A pair of boots a god once used to take flight, increases movespeed to an astonishing degree, also increaes armor slightly".to_string(),
+    let swift_sneakers = Item::new(
+        tm.get_preload("assets/item_files/armour/swift_sneakers.png").unwrap(),
+        "assets/item_files/armour/swift_sneakers.png".to_string(),
+        "Swift Sneakers".to_string(),
+        "A pair of boots with remnants of energy from the blue blur, increases movement speed and armor".to_string(),
         "boots".to_string(),
         0,
         0,
         0.0,
-        3.0,
+        2.0,
         0,
-        1,
+        3,
     )
     .await;
 
-    let mut shop_stock: Vec<Item> = vec![diamond_armour, time_sword, future_bow, hermes_boots];
+    let mut shop_stock: Vec<Item> = vec![];
+    if !player.get_inventory_titles().contains(&"Iron Armour".to_string()) {
+        shop_stock.push(iron_armour);
+    }
+    if !player.get_inventory_titles().contains(&"Swift Sword".to_string()) {
+        shop_stock.push(swift_sword);
+    }
+    if !player.get_inventory_titles().contains(&"Crossbow".to_string()) {
+        shop_stock.push(crossbow);
+    }
+    if !player.get_inventory_titles().contains(&"Swift Sneakers".to_string()) {
+        shop_stock.push(swift_sneakers);
+    }
     let mut shop_names: Vec<String> = vec![];
     for i in 0..shop_stock.len() {
         shop_names.push(shop_stock[i].get_itemtitle().clone());
