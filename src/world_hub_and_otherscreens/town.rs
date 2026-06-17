@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: central town hub scene
 */
 
 use crate::modules::enemy::Enemy;
@@ -155,8 +155,6 @@ pub async fn run(
         background.draw();
         player.draw();
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-        player.set_player_activedisc(activedisc);
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {

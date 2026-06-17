@@ -85,6 +85,7 @@ pub struct Musicdisc {
     greatestshow_currentime: f64,
     disc_elements: (Vec<StillImage>, Vec<StillImage>, Vec<StillImage>), //0 is backinblack, 1 is sixhundredstrike, 2 is greatestshow
     musicdisc_hit: bool,
+    issmastervalid: bool,
 }
 
 impl Musicdisc {
@@ -163,6 +164,7 @@ impl Musicdisc {
             greatestshow_timevalid: true,
             greatestshow_currentime: 0.0,
             musicdisc_hit: false,
+            issmastervalid: false,
         }
     }
 
@@ -177,7 +179,7 @@ impl Musicdisc {
             "How It's Done" => {
                 self.howitsdone_starttime = get_time();
             }
-            "I'm Still Standing" => {
+            "IS Standing" => {
                 self.imstillstanding_starttime = get_time();
             }
             "Pandemonium" => {
@@ -241,6 +243,7 @@ impl Musicdisc {
         self.greatestshow_currentime = 0.0;
         self.thickofit = false;
         self.musicdisc_hit = false;
+        self.issmastervalid = false;
     }
 
     pub fn get_musicdisc_cooldowns(&mut self) -> Vec<f64> {
@@ -323,21 +326,21 @@ impl Musicdisc {
     fn update_musicdisc_cooldowns(&mut self, player: &mut Player) {
         if self.backinblack_valid == false {
             self.backinblack_cct = get_time() - self.backinblack_cooldown;
-            if self.backinblack_cct >= 45.0 * player.get_cooldownmult() as f64 {
+            if self.backinblack_cct >= 40.0 * player.get_cooldownmult() as f64 {
                 self.backinblack_valid = true;
                 self.backinblack_cct = 0.0;
             }
         }
         if self.thickofitvalid == false {
             self.thickofit_cct = get_time() - self.thickofitcooldown;
-            if self.thickofit_cct >= 60.0 * player.get_cooldownmult() as f64 {
+            if self.thickofit_cct >= 30.0 * player.get_cooldownmult() as f64 {
                 self.thickofitvalid = true;
                 self.thickofit_cct = 0.0;
             }
         }
         if self.howitsdone_valid == false {
             self.howitsdone_cct = get_time() - self.howitsdone_cooldown;
-            if self.howitsdone_cct >= 70.0 * player.get_cooldownmult() as f64 {
+            if self.howitsdone_cct >= 20.0 * player.get_cooldownmult() as f64 {
                 self.howitsdone_valid = true;
                 self.howitsdone_hit = false;
                 self.howitsdone_cct = 0.0;
@@ -345,7 +348,7 @@ impl Musicdisc {
         }
         if self.imstillstanding_valid == false {
             self.imstillstanding_cct = get_time() - self.imstillstanding_cooldown;
-            if self.imstillstanding_cct >= 120.0 * player.get_cooldownmult() as f64 {
+            if self.imstillstanding_cct >= 90.0 * player.get_cooldownmult() as f64 {
                 self.imstillstanding_valid = true;
                 self.imstillstanding_hit = false;
                 self.imstillstanding_cct = 0.0;
@@ -353,7 +356,7 @@ impl Musicdisc {
         }
         if self.pandemonium_valid == false {
             self.pandemonium_cct = get_time() - self.pandemonium_cooldown;
-            if self.pandemonium_cct >= 100.0 * player.get_cooldownmult() as f64 {
+            if self.pandemonium_cct >= 40.0 * player.get_cooldownmult() as f64 {
                 self.pandemonium_valid = true;
                 self.pandemonium_hit = false;
                 self.pandemonium_cct = 0.0;
@@ -361,7 +364,7 @@ impl Musicdisc {
         }
         if self.sixhundredstrike_valid == false {
             self.sixhundredstrike_cct = get_time() - self.sixhundredstrike_cooldown;
-            if self.sixhundredstrike_cct >= 70.0 * player.get_cooldownmult() as f64 {
+            if self.sixhundredstrike_cct >= 50.0 * player.get_cooldownmult() as f64 {
                 self.sixhundredstrike_valid = true;
                 self.sixhundredstrike_hit = false;
                 self.sixhundredstrike_cct = 0.0;
@@ -369,7 +372,7 @@ impl Musicdisc {
         }
         if self.sodapop_valid == false {
             self.sodapop_cct = get_time() - self.sodapop_cooldown;
-            if self.sodapop_cct >= 70.0 * player.get_cooldownmult() as f64 {
+            if self.sodapop_cct >= 40.0 * player.get_cooldownmult() as f64 {
                 self.sodapop_valid = true;
                 self.sodapop_hit = false;
                 self.sodapop_cct = 0.0;
@@ -377,7 +380,7 @@ impl Musicdisc {
         }
         if self.greatestshow_valid == false {
             self.greatestshow_cct = get_time() - self.greatestshow_cooldown;
-            if self.greatestshow_cct >= 80.0 * player.get_cooldownmult() as f64 {
+            if self.greatestshow_cct >= 40.0 * player.get_cooldownmult() as f64 {
                 self.greatestshow_valid = true;
                 self.greatestshow_hit = false;
                 self.greatestshow_cct = 0.0;
@@ -607,6 +610,7 @@ impl Musicdisc {
                     if self.sodapop_hit == false {
                         stop_sound(self.get_bgmusic());
                         play_sound(&self.sounds[6], PlaySoundParams { looped: false, volume: 1.0 });
+                        self.sodapopposlist.clear();
                         for i in 0..enemies.len() {
                             self.sodapopposlist.push(enemies[i].get_pos());
                         }
@@ -623,6 +627,10 @@ impl Musicdisc {
                         }
                     }
                     if time >= 20.0 {
+                        for enemy in enemies.iter_mut() {
+                            enemy.set_speed(enemy.get_speed().abs());
+                        }
+                        self.sodapopposlist.clear();
                         self.sodapop = false;
                         self.sodapop_hit = false;
                         self.sodapop_valid = false;
@@ -693,18 +701,12 @@ impl Musicdisc {
             }
             _ => {}
         }
-        if self.backinblack_valid == false
-            && self.thickofitvalid == false
-            && self.pandemonium_valid == false
-            && self.sixhundredstrike_valid == false
-            && self.sodapop_valid == false
-            && self.howitsdone_valid == false
-            && self.greatestshow_valid == false
-        {
-            if player.get_health() < 0.0 {
+        if player.get_health() <= 0.0  && self.imstillstanding_valid == true || self.issmastervalid == true {
+            if discmatch == "none" || discmatch == "IS Standing"  || self.issmastervalid == true {
                 if self.imstillstanding_hit == false {
-                    discmatch = "I'm Still Standing";
+                    discmatch = "IS Standing";
                     self.imstillstanding = true;
+                    self.issmastervalid = true;
                     stop_sound(self.get_bgmusic());
                     play_sound(&self.sounds[3], PlaySoundParams { looped: false, volume: 1.0 });
                     self.imstillstanding_hit = true;
@@ -715,6 +717,7 @@ impl Musicdisc {
                 if time >= 10.0 {
                     self.imstillstanding = false;
                     self.imstillstanding_hit = false;
+                    self.issmastervalid = false;
                     self.imstillstanding_valid = false;
                     self.imstillstanding_cooldown = get_time();
                     play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });

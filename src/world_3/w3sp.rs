@@ -127,6 +127,7 @@ pub async fn run(
         background1.draw();
         world_numeral.draw();
         map.draw_map(tm).await;
+        player.handle_keypresses(pause, _musicdiscfunctions).await;
         if *pause == false {
         player.draw();
         if player.get_cleared() >= 12 {
@@ -143,15 +144,10 @@ pub async fn run(
             return "w3s1".to_string();
         }
         //player
-        player.handle_keypresses(pause, _musicdiscfunctions).await;
         player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
-        let activedisc = _musicdiscfunctions
-            .handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm)
-            .await;
-        player.set_player_activedisc(activedisc);
-    }
+        }
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {

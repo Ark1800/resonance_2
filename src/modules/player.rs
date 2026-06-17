@@ -24,10 +24,6 @@ use macroquad::audio::{PlaySoundParams, play_sound, stop_sound, Sound};
 //2. deleting stuff from text input sometimes causes the program to crash, it gives error for saying Is_char_boundary is off
 
 /*
-music overlap on death
-fix sodapop
-put handlediscs in cleared
-
 
 //Keypresses:
 Move Up - W
@@ -1337,6 +1333,7 @@ impl Player {
             self.death_screen_open = true;
             stop_sound(musicdiscfunctions.get_currently_playing());
             stop_sound(musicdiscfunctions.get_bgmusic());
+            play_sound(musicdiscfunctions.get_bgmusic(), PlaySoundParams { looped: false, volume: 1.0 });
             musicdiscfunctions.master_reset_every_variable();
             *pause = true; //pause game when death screen opens
         }
@@ -1378,7 +1375,7 @@ impl Player {
         disc1_img.set_preload(preloads[1].clone());
         disc2_img.set_preload(preloads[1].clone());
         disc3_img.set_preload(preloads[1].clone());
-        let mut lbl_title = Label::new(format!("Title"), 50.0, 375.0, 60);
+        let mut lbl_title = Label::new(format!("Title"), 50.0, 375.0, 30);
         lbl_title.with_alignment(modules::label::TextAlign::Center);
         lbl_title.with_fixed_size(250.0, 75.0);
         lbl_title.with_colors(WHITE, Some(BROWN));
@@ -1662,10 +1659,10 @@ impl Player {
                     musicdiscs.start_musicdisc_time("How It's Done");
                 }
             }
-            "I'm Still Standing" => {
+            "IS Standing" => {
                 if validity[3] == true {
-                    self.activedisc = "I'm Still Standing".to_string();
-                    musicdiscs.start_musicdisc_time("I'm Still Standing");
+                    self.activedisc = "IS Standing".to_string();
+                    musicdiscs.start_musicdisc_time("IS Standing");
                 }
             }
             "Pandemonium" => {
@@ -1943,11 +1940,11 @@ impl Player {
                     loop {
                         let candidate = rand::gen_range(0, item_count as i32) as usize;
                         let name_list = self.inventory.0[0].get_all_items();
-                        if !used_indices.contains(&candidate) && !name_list.contains(&self.possible_items[candidate].get_itemtitle()) && candidate < 18 {
+                        if !used_indices.contains(&candidate) && !name_list.contains(&self.possible_items[candidate].get_itemtitle()) && candidate < 20 {
                             return candidate;
                         }
                     }
-                };                        //current working method of random item indices
+                };                        
                 loop {
                     self.itemindex1 = pick_unique_index(&[]);
                     if self.possible_items[self.itemindex1].get_itemtitle() != self.inventory.2[0].get_text() {
@@ -2172,7 +2169,7 @@ impl Player {
             tm.get_preload("assets/item_files/armour/helmet_of_thorns.png").unwrap(),
             "assets/item_files/armour/helmet_of_thorns.png".to_string(),
             "Thorn Helm".to_string(),
-            "A helmet that punishes any who dare hit the wearer with ravenous thorns, also increaes armor slightly".to_string(),
+            "A helmet that punishes any who dare hit the wearer with ravenous thorns not powerful enough to kill but packs a punch, also increaes armor slightly".to_string(),
             "helmet".to_string(),
             0,
             0,
@@ -2278,6 +2275,20 @@ impl Player {
         )
         .await;
         possible_items.push(healthpot);
+        let imstillstandingitem = Item::new(
+            tm.get_preload("assets/musicdisc_files/covers/imstillstanding.png").unwrap(),
+            "assets/musicdisc_files/covers/imstillstanding.png".to_string(),
+            "IS Standing".to_string(),
+            "A Disc that gives the user a second wind, reviving them with invincibility and limited hp upon death".to_string(),
+            "disc".to_string(),
+            0,
+            0,
+            0.0,
+            0.0,
+            0,
+            0,
+        ).await;
+        possible_items.push(imstillstandingitem);
         let iron_armour = Item::new(
         tm.get_preload("assets/item_files/armour/iron_armor.png").unwrap(), // Preload
         "assets/item_files/armour/iron_armor.png".to_string(),              // Image path

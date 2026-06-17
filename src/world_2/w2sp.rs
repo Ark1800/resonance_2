@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: world 2 starting portal scene w2sp, leads to w2s1. Has a portal that only opens if cleared is 8 or higher, which is the requirement to enter world 2.
 */
 
 use crate::modules::animated_image::AnimatedImage;
@@ -104,15 +104,13 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(RED);
         background.draw();
+        player.handle_keypresses(pause, _musicdiscfunctions).await;
          if *pause == false {
         world_numeral.draw();
         player.draw();
-        player.handle_keypresses(pause, _musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
 
         player.move_player(&map, old_pos, &vec![]);
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-        player.set_player_activedisc(activedisc);
         if player.get_cleared() >= 8 {
             green_portal.draw();
         }

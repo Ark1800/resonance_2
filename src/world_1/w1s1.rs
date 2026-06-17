@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: starting scene w1s1 with two archers
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
@@ -94,6 +94,7 @@ pub async fn run(
                             "archer" => {
                                 enemies[i].archer_action(tm, player, musicdiscfunctions).await;
                                 enemies[i].draw_bullet(player, musicdiscfunctions);
+                                println!("currentime: {}", get_time());
                             }
                             "slime" => {
                                 enemies[i].slime_action(player, musicdiscfunctions);
@@ -118,11 +119,11 @@ pub async fn run(
                         enemies[i].draw();
                     }
                 }
+            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+            player.set_player_activedisc(activedisc);
             }
             player.draw();
             let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-            player.set_player_activedisc(activedisc);
             if mlehit {
                 enemies[index].dmg_enemy(player.get_meleedmg());
                 enemies[index].knockback(player, "enemy");

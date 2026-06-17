@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: title screen, leads to wcs1 when starting new game, also has load game option
 */
 use crate::modules::database::{DatabaseClient, DatabaseTable};
 use crate::modules::label::Label;

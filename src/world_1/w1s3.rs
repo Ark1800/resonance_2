@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: third scene w1s3 with two mages, one slime, and one summoner
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
@@ -114,6 +114,7 @@ pub async fn run(
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
+        player.handle_keypresses(pause, musicdiscfunctions).await;
          if *pause == false {
         if player.get_cleared() <= 5 {
             for i in 0..enemies.len() {
@@ -150,14 +151,12 @@ pub async fn run(
                     enemies[i].draw();
                 }
             }
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+        player.set_player_activedisc(activedisc);
         }
-        
-        player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-        player.set_player_activedisc(activedisc);
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
             if enemies[index].get_health() <= 0.0 {

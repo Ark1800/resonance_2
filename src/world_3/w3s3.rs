@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: w3s3 with two mages, one slime, and one summoner. Cleared starts at 14, goes to 15. Leads to w3s4 on the right and w3s2 on the bottom.
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
@@ -142,11 +142,11 @@ pub async fn run(
                         enemies[i].draw();
                     }
                 }
+            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+            player.set_player_activedisc(activedisc);
             }
             player.draw();
             let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-            player.set_player_activedisc(activedisc);
             if mlehit {
                 enemies[index].dmg_enemy(player.get_meleedmg());
                 enemies[index].knockback(player, "enemy");

@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: portal entry scene w1sp, leads to w1s1.
 */
 
 use crate::modules::animated_image::AnimatedImage;
@@ -91,6 +91,8 @@ pub async fn run(
         StillImage::new("", 150.0, 200.0, 0.0, 450.0, true, 1.0).await,
         StillImage::new("", 200.0, 150.0, 0.0, 300.0, true, 1.0).await,
         StillImage::new("", 250.0, 350.0, 0.0, 0.0, true, 1.0).await,
+        StillImage::new("", virtual_width, 100.0, 0.0, -80.0, true, 1.0).await,
+        StillImage::new("", virtual_width, 100.0, 0.0, virtual_height - 20.0, true, 1.0).await,
     ];
     for obj in 0..collidable_objects.len() {
         collidable_objects[obj].set_preload(tm.get_preload("assets/map_files/wall.png").unwrap());
@@ -105,28 +107,24 @@ pub async fn run(
         background2.draw();
         blue_portal.draw();
         world_numeral.draw();
-         if *pause == false {
-        player.draw();
-        //game
-        if player.get_x() > virtual_width - 10.0 {
-            *last_scene = "Right".to_string();
-            return "town".to_string();
-        }
-        if check_collision(player.view_player(), &portal_hitbox, 1) {
-            *last_scene = "Left".to_string();
-            return "w1s1".to_string();
-        }
-        //player
         player.handle_keypresses(pause, _musicdiscfunctions).await;
-        player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
-        let activedisc = _musicdiscfunctions
-            .handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm)
-            .await;
-        player.set_player_activedisc(activedisc);
-        let old_pos = player.get_oldpos();
-        #[allow(unused)]
-        player.move_player(&map, old_pos, &collidable_objects);
-    }
+        if *pause == false {
+            player.draw();
+            //game
+            if player.get_x() > virtual_width - 10.0 {
+                *last_scene = "Right".to_string();
+                return "town".to_string();
+            }
+            if check_collision(player.view_player(), &portal_hitbox, 1) {
+                *last_scene = "Left".to_string();
+                return "w1s1".to_string();
+            }
+            //player
+            player.handle_player_ui(&mut enemies, _musicdiscfunctions).await;
+            let old_pos = player.get_oldpos();
+            #[allow(unused)]
+            player.move_player(&map, old_pos, &collidable_objects);
+        }
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {

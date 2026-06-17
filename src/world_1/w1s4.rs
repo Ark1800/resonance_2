@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: fourth scene w1s4 with two mages, one slime, and one summoner. Cleared starts at 6, goes to 7
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
@@ -138,11 +138,11 @@ pub async fn run(
                     enemies[i].draw();
                 }
             }
+        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+        player.set_player_activedisc(activedisc);
         }
         player.move_player(&map, old_pos, &vec![]);
         let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-        player.set_player_activedisc(activedisc);
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
             if enemies[index].get_health() <= 0.0 {

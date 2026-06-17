@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: starting scene w2s1 with three archers and two mages. Cleared starts at 8, goes to 9
 */
 
 use crate::modules::enemy::Enemy;
@@ -122,11 +122,12 @@ pub async fn run(
                     enemies[i].draw();
                 }
             }
-        }}
-        
-        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
         player.set_player_activedisc(activedisc);
+        }
+    }
+        
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
             if enemies[index].get_health() <= 0.0 {

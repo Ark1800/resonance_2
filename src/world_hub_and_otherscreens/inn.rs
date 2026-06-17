@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: revive spot in the inn, leads to town when leaving
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
@@ -63,8 +63,8 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         map.draw_map(&tm).await;
+        player.handle_keypresses(pause, musicdiscfunctions).await;
         if *pause == false {
-            player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &collidable_objects);
         }
@@ -77,8 +77,6 @@ pub async fn run(
         background.draw();
         player.draw();
         player.handle_player_ui(&mut enemies, musicdiscfunctions).await;
-        let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
-        player.set_player_activedisc(activedisc);
         player.handle_inventory();
         let (save, exit) = player.handle_save_menu().await;
         if save {

@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: jeff boss fight scene. Cleared starts at 7, goes to 8
 */
 
 use crate::modules::animated_image::AnimatedImage;
@@ -135,8 +135,8 @@ pub async fn run(
         background.draw();
         // whirlpool.draw();
         map.draw_map(&tm).await;
-         if *pause == false {
         player.handle_keypresses(pause, musicdiscfunctions).await;
+         if *pause == false {
         if player.get_cleared() <= 7 {
             for i in 0..enemies.len() {
                 (jeff_valid, jeff_attackvalid) = enemies[i].jeff_checkhit(player, jeff_valid, jeff_attackvalid);

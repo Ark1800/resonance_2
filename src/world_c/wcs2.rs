@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: tutorial scene 2
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};

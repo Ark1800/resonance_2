@@ -531,6 +531,11 @@ impl Enemy {
         self
     }
 
+    #[allow(unused)]
+    pub fn get_speed(&self) -> f32 {
+        self.move_speed
+    }
+
     // Getter for position as Vec2
     #[allow(unused)]
     pub fn get_position(&self) -> Vec2 {

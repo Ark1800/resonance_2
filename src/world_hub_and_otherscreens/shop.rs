@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: shop scene, leads to town when leaving
 */
 
 use crate::modules::item::Item;

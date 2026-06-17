@@ -1,9 +1,7 @@
 /*
-By: Andrew Campbell, Dradon L, Leo Allison
+By: Andrew Campbell, Draydon L, Leo Allison
 Date: 2026-04-14
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
-        player.set_player_activedisc(activedisc);
-Program Details:
+Program Details: boss scene w2sb with plant boss PLANTLIST GOES HARD
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};

@@ -1,9 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-        let activedisc = _musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies);
-        player.set_player_activedisc(activedisc);
-Program Details:
+Program Details: third scene w2s3 with two mages, one slime, and one summoner. Cleared starts at 10, goes to 11
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
@@ -120,6 +118,8 @@ pub async fn run(
                         enemies[i].draw();
                     }
                 }
+            let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
+            player.set_player_activedisc(activedisc);
             }
         }
 

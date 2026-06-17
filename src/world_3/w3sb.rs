@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: final cyric bossssssss
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};

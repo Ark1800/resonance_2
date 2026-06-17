@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: second scene w1s2 with two mages, one slime, and one summoner. Cleared starts at 4, goes to 5
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
@@ -99,7 +99,7 @@ pub async fn run(
         use_virtual_resolution(virtual_width, virtual_height);
         clear_background(BLACK);
         background.draw();
-
+        player.handle_keypresses(pause, musicdiscfunctions).await;
         map.draw_map(&tm).await;
          if *pause == false {
         if player.get_cleared() <= 4 {
@@ -137,10 +137,10 @@ pub async fn run(
                     enemies[i].draw();
                 }
             }
-        }
-        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         let activedisc = musicdiscfunctions.handle_musicdiscs(player.get_player_activedisc(), &mut enemies, player, &mut map, tm).await;
         player.set_player_activedisc(activedisc);
+        }
+        let (mlehit, rnghit, index) = player.handle_player_ui(&mut enemies, musicdiscfunctions).await; //dont need to send enemies back because it doesnt get used again until next frame
         if mlehit {
             enemies[index].dmg_enemy(player.get_meleedmg());
             if enemies[index].get_health() <= 0.0 {
@@ -177,8 +177,6 @@ pub async fn run(
             player.add_health(30.0);
             map.change_map(vec![0, 0], vec![vec![7, 0], vec![6, 0]]);
         }
-
-        player.handle_keypresses(pause, musicdiscfunctions).await;
         let old_pos = player.get_oldpos();
         player.move_player(&map, old_pos, &vec![]);
         player.draw();

@@ -1,7 +1,7 @@
 /*
 By: Andrew Campbell, Dradon L, Leo Allison
 Date: 2026-04-14
-Program Details:
+Program Details: tutorial scene 1
 */
 
 use crate::modules::database::{DatabaseClient, DatabaseTable};
@@ -104,6 +104,7 @@ pub async fn run(
         clear_background(BLACK);
         background.draw();
         map.draw_map(&tm).await;
+        player.handle_keypresses(pause, _musicdiscfunctions).await;
         if *pause == false {
         let timer = get_time() - start_time;
         if timer > 0.1 && !tutorial_box.is_active() {
@@ -136,8 +137,6 @@ pub async fn run(
                     }
                 }
             }
-
-            player.handle_keypresses(pause, _musicdiscfunctions).await;
 
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);
