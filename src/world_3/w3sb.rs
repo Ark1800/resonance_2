@@ -93,7 +93,7 @@ pub async fn run(
         "So, it finally came to this.. ".to_string(),
         "I'm sorry it had to be this way, friend, but its what is required. ".to_string(),
         "These disks can do so much, they're wasted being in an unguarded cave. ".to_string(),
-        "You can still leave if you want your life, I don't want to kill you. But if you stay, I will be forced to take your life. ".to_string(),
+        "You can still leave if you want your life, I don't want to kill you.\nBut if you stay, I will be forced to take your life. ".to_string(),
         ".... ".to_string(),
         "You always were stubborn. I'm sorry, my friend. ".to_string(),
     ];
@@ -147,7 +147,7 @@ pub async fn run(
         map.draw_map(&tm).await;
 
 
-        if player.get_cleared() < 17 {
+        if player.get_cleared() <= 17 && speech_done == false {
             current_time = get_time();
             if (current_time - time_dif) > 0.1 {
                 time_dif = current_time;
@@ -174,7 +174,7 @@ pub async fn run(
                     speech_num += 1;
                 }
             }
-        } else if speech_done && *pause == false {
+        } if speech_done == true && *pause == false {
             player.handle_keypresses(pause, musicdiscfunctions).await;
             let old_pos = player.get_oldpos();
             player.move_player(&map, old_pos, &vec![]);

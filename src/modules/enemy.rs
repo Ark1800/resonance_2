@@ -909,19 +909,22 @@ impl Enemy {
         }
         if (get_time() - self.cooldown).abs() > self.cooldown2 {
             self.cooldown = get_time();
-            let attack_choice = rand::gen_range(0, 2);
-            if attack_choice >= 0 {
+            let attack_choice = rand::gen_range(0, 3);
+            if attack_choice == 0 {
                 self.meteors(&tm).await;
-                self.cooldown2 = get_time() + 3.0;
+                self.cooldown2 = 3.0;
             } else {
                 self.shoot(player, 80.0, 80.0).await;
-                self.cooldown2 = get_time() + 2.0;
+                self.cooldown2 = 2.0;
             }
         }
         for i in 0..self.projectiles.len() {
             self.projectiles[i].move_projectiles(player.get_oldpos());
             if self.projectiles[i].check_collide(player) {
                 player.dmgplayer(35.0, true, self);
+            } else if self.projectiles[i].get_y() > VIRTUAL_HEIGHT || self.projectiles[i].get_x() < 0.0 {
+                self.projectiles.remove(i);
+                break;
             }
             self.projectiles[i].draw();
         }

@@ -24,7 +24,6 @@ use macroquad::audio::{PlaySoundParams, play_sound, stop_sound, Sound};
 //2. deleting stuff from text input sometimes causes the program to crash, it gives error for saying Is_char_boundary is off
 
 /*
-//greatest show is BUGGED
 
 
 //Keypresses:
