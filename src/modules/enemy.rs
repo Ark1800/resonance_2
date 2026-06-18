@@ -1024,7 +1024,7 @@ impl Enemy {
         // Direction to move in
         let mut move_dir = vec2(0.0, 0.0);
 
-        self.movement = move_dir * self.move_speed * get_frame_time();
+        self.movement = move_dir * 40.0 * get_frame_time();
 
         if self.get_view_x() < highesthealthenemypos.x {
             move_dir.x += 1.0; // Move right

@@ -83,6 +83,7 @@ pub struct Musicdisc {
     greatestshow_playerhealth: f64,
     greatestshow_timevalid: bool,
     greatestshow_currentime: f64,
+    greatestshowcount: i32,
     disc_elements: (Vec<StillImage>, Vec<StillImage>, Vec<StillImage>), //0 is backinblack, 1 is sixhundredstrike, 2 is greatestshow
     musicdisc_hit: bool,
     issmastervalid: bool,
@@ -160,6 +161,7 @@ impl Musicdisc {
             greatestshow_hit: false,
             greatestshow_cooldown: 0.0,
             greatestshow_cct: 0.0,
+            greatestshowcount: 0,
             greatestshow_playerhealth: 0.0,
             greatestshow_timevalid: true,
             greatestshow_currentime: 0.0,
@@ -243,6 +245,7 @@ impl Musicdisc {
         self.greatestshow_currentime = 0.0;
         self.thickofit = false;
         self.musicdisc_hit = false;
+        self.greatestshowcount = 0;
         self.issmastervalid = false;
     }
 
@@ -532,7 +535,7 @@ impl Musicdisc {
                                 if enemies[i].get_enemy_view_type() == "still" {
                                     if check_collision(enemies[i].view_enemy(), enemies[highesthealthenemyindex].view_enemy(), 1) {
                                         self.musicdisc_hit = true;
-                                        enemies[highesthealthenemyindex].dmg_enemy(3.0);
+                                        enemies[highesthealthenemyindex].dmg_enemy(1.0);
                                         enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
                                     }
                                 }
@@ -543,7 +546,7 @@ impl Musicdisc {
                                         1,
                                     ) {
                                         self.musicdisc_hit = true;
-                                        enemies[highesthealthenemyindex].dmg_enemy(3.0);
+                                        enemies[highesthealthenemyindex].dmg_enemy(1.0);
                                         enemies[i].pushback(enemy_old_pos, highesthealthenemypos);
                                     }
                                 }
@@ -654,8 +657,8 @@ impl Musicdisc {
                             let width = self.disc_elements.2[i].get_width() + (time * 0.01) as f32; 
                             let height = self.disc_elements.2[i].get_height() + (time * 0.01) as f32;
                             let new_position = vec2(
-                                self.disc_elements.2[i].get_x() - (time * 0.0005) as f32,
-                                self.disc_elements.2[i].get_y() - (time * 0.0005) as f32,
+                                self.disc_elements.2[i].get_x() - (time * 0.005) as f32,
+                                self.disc_elements.2[i].get_y() - (time * 0.005) as f32,
                             ); //multiply by half for even growing
                             self.disc_elements.2[i].set_size(width, height);
                             self.disc_elements.2[i].set_position(new_position);
@@ -666,16 +669,20 @@ impl Musicdisc {
                         if self.greatestshow_timevalid == true {
                             self.greatestshow_timevalid = false;
                             self.greatestshow_currentime = time;
+                            self.greatestshowcount = 0;
                         }
                         if self.greatestshow_complete == true {
                             self.greatestshow_hit = false;
                             self.greatestshow_valid = false;
                             self.greatestshow_cooldown = get_time();
                             self.greatestshow_playerhealth = 0.0;
+                            stop_sound(self.get_currently_playing());
                             play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
                             discmatch = "";
-                        } else if time >= self.greatestshow_currentime && time <= self.greatestshow_currentime + 1.0 {
+                        } 
+                        else if time >= self.greatestshow_currentime && time <= self.greatestshow_currentime + 1.0 && self.greatestshowcount == 0 {
                             for i in 0..self.disc_elements.2.len() {
+                                self.disc_elements.2[i].set_opacity(1.0);
                                 self.disc_elements.2[i].set_preload(tm.get_preload("assets/musicdisc_files/effectimages/meteor.png").unwrap());
                                 self.disc_elements.2[i].draw();
                             }
@@ -683,17 +690,21 @@ impl Musicdisc {
                                 if enemies[i].get_enemy_view_type() == "still" {
                                     if enemies[i].check_collision(&self.disc_elements.2[0]) {
                                         self.musicdisc_hit = true;
-                                        enemies[i].dmg_enemy(200.0);
+                                        enemies[i].dmg_enemy(300.0);
+                                        self.musicdisc_hit = true;
                                     }
                                 }
                                 if enemies[i].get_enemy_view_type() == "animated" {
                                     if enemies[i].check_collision(&self.disc_elements.2[0]) {
                                         self.musicdisc_hit = true;
-                                        enemies[i].dmg_enemy(200.0);
+                                        enemies[i].dmg_enemy(300.0);
+                                        self.musicdisc_hit = true;
                                     }
                                 }
                             }
-                        } else if time > 61.0 {
+                            self.greatestshowcount += 1;
+                        } 
+                        if time > 61.0 || time >= self.greatestshow_currentime + 1.0 {
                             self.greatestshow_complete = true;
                         }
                     }
@@ -701,27 +712,29 @@ impl Musicdisc {
             }
             _ => {}
         }
-        if player.get_health() <= 0.0  && self.imstillstanding_valid == true || self.issmastervalid == true {
-            if discmatch == "none" || discmatch == "IS Standing"  || self.issmastervalid == true {
-                if self.imstillstanding_hit == false {
-                    discmatch = "IS Standing";
-                    self.imstillstanding = true;
-                    self.issmastervalid = true;
-                    stop_sound(self.get_bgmusic());
-                    play_sound(&self.sounds[3], PlaySoundParams { looped: false, volume: 1.0 });
-                    self.imstillstanding_hit = true;
-                    self.imstillstanding_starttime = get_time();
-                    player.set_health(30.0);
-                }
-                let time = get_time() - self.imstillstanding_starttime;
-                if time >= 10.0 {
-                    self.imstillstanding = false;
-                    self.imstillstanding_hit = false;
-                    self.issmastervalid = false;
-                    self.imstillstanding_valid = false;
-                    self.imstillstanding_cooldown = get_time();
-                    play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
-                    discmatch = "";
+        if player.get_namescurrentlyequipped().contains(&"IS Standing".to_string()) {
+            if player.get_health() <= 0.0  && self.imstillstanding_valid == true || self.issmastervalid == true {
+                if discmatch == "none" || discmatch == "IS Standing"  || self.issmastervalid == true {
+                    if self.imstillstanding_hit == false {
+                        discmatch = "IS Standing";
+                        self.imstillstanding = true;
+                        self.issmastervalid = true;
+                        stop_sound(self.get_bgmusic());
+                        play_sound(&self.sounds[3], PlaySoundParams { looped: false, volume: 1.0 });
+                        self.imstillstanding_hit = true;
+                        self.imstillstanding_starttime = get_time();
+                        player.set_health(30.0);
+                    }
+                    let time = get_time() - self.imstillstanding_starttime;
+                    if time >= 10.0 {
+                        self.imstillstanding = false;
+                        self.imstillstanding_hit = false;
+                        self.issmastervalid = false;
+                        self.imstillstanding_valid = false;
+                        self.imstillstanding_cooldown = get_time();
+                        play_sound(self.get_bgmusic(), PlaySoundParams { looped: true, volume: 1.0 });
+                        discmatch = "";
+                    }
                 }
             }
         }
@@ -828,7 +841,7 @@ impl Musicdisc {
         )
         .await;
         greatestshow_preimg.set_preload(tm.get_preload("assets/musicdisc_files/effectimages/black.png").unwrap());
-
+        greatestshow_preimg.set_opacity(0.7);
         let bibs = vec![bib_img1, bib_img2, bib_img3, bib_img4, bib_img5, bib_img6];
         let tridents = vec![trident_img];
         let greatestshow = vec![greatestshow_preimg];

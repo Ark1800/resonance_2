@@ -24,6 +24,8 @@ use macroquad::audio::{PlaySoundParams, play_sound, stop_sound, Sound};
 //2. deleting stuff from text input sometimes causes the program to crash, it gives error for saying Is_char_boundary is off
 
 /*
+//greatest show is BUGGED
+
 
 //Keypresses:
 Move Up - W
@@ -385,6 +387,16 @@ impl Player {
 
     pub fn move_y_rev(&mut self) {
         self.view.set_y(self.view.get_y() - self.movement.y);
+    }
+
+    pub fn get_namescurrentlyequipped(&self) -> Vec<String> {
+        let mut names = Vec::new();
+        for &index in &self.equipped_items {
+            if let Some(item) = self.items.get(index) {
+                names.push(item.get_itemtitle().clone());
+            }
+        }
+        names
     }
 
     pub fn move_player(&mut self, map: &Map, old_pos: Vec2, collides: &Vec<StillImage>) {
@@ -769,6 +781,8 @@ impl Player {
         img_arrow.set_preload(preloads[12].clone());
         let mut lbl_arrownum = Label::new("", 427.0, 32.0, 30);
         lbl_arrownum.with_colors(BLACK, None);
+        let mut lbl_arrowkeybind = Label::new(">", 435.0, 75.0, 30);
+        lbl_arrowkeybind.with_colors(BLACK, Some(WHITE));
         let mut img_disc1 = StillImage::new(
             "", 40.0,  // width
             40.0,  // height
@@ -781,6 +795,8 @@ impl Player {
         img_disc1.set_preload(preloads[1].clone());
         let mut lbl_disc1num = Label::new("", 472.0, 32.0, 30);
         lbl_disc1num.with_colors(WHITE, None);
+        let mut lbl_disc1keybind = Label::new("Q", 480.0, 75.0, 30);
+        lbl_disc1keybind.with_colors(BLACK, Some(WHITE));
         let mut img_disc2 = StillImage::new(
             "", 40.0,  // width
             40.0,  // height
@@ -793,6 +809,8 @@ impl Player {
         img_disc2.set_preload(preloads[1].clone());
         let mut lbl_disc2num = Label::new("", 517.0, 32.0, 30);
         lbl_disc2num.with_colors(WHITE, None);
+        let mut lbl_disc2keybind = Label::new("E", 525.0, 75.0, 30);
+        lbl_disc2keybind.with_colors(BLACK, Some(WHITE));
         let mut img_disc3 = StillImage::new(
             "", 40.0,  // width
             40.0,  // height
@@ -805,6 +823,8 @@ impl Player {
         img_disc3.set_preload(preloads[1].clone());
         let mut lbl_disc3num = Label::new("", 562.0, 32.0, 30);
         lbl_disc3num.with_colors(WHITE, None);
+        let mut lbl_disc3keybind = Label::new("X", 570.0, 75.0, 30);
+        lbl_disc3keybind.with_colors(BLACK, Some(WHITE));
         //ATTACK LABELSui();
         let player_x = x;
         let player_y = y;
@@ -955,6 +975,10 @@ impl Player {
                 lbl_disc1num,
                 lbl_disc2num,
                 lbl_disc3num,
+                lbl_arrowkeybind,
+                lbl_disc1keybind,
+                lbl_disc2keybind,
+                lbl_disc3keybind,
             ],
             vec![
                 img_slash_t,
@@ -1750,6 +1774,7 @@ impl Player {
     }
 
     pub fn set_save_data(&mut self, record: &DatabaseTable) {
+        self.reset_allsavedata();
         self.cleared = record.player_clearedvar;
         self.set_x(record.player_x as f32);
         self.set_y(record.player_y as f32);
@@ -1782,6 +1807,22 @@ impl Player {
                 self.add_inventory_item(self.possible_items[iteminteger as usize - 1].clone());
             }
         }
+    }
+
+    pub fn reset_allsavedata(&mut self) {
+        self.cleared = 0;
+        self.set_x(0.0);
+        self.set_y(0.0);
+        self.musicoins = 0;
+        self.set_health(self.maxhealth);
+        self.items.clear();
+        self.itemstats.0.clear();
+        self.itemstats.1.clear();
+        self.itemstats.2.clear();
+        self.itemstats.3.clear();
+        self.item_titles.clear();
+        self.equipped_items.clear();
+        self.inventory.0[0].clear();
     }
 
     pub fn get_currentscreen(&self) -> String {
@@ -1940,7 +1981,7 @@ impl Player {
                     loop {
                         let candidate = rand::gen_range(0, item_count as i32) as usize;
                         let name_list = self.inventory.0[0].get_all_items();
-                        if !used_indices.contains(&candidate) && !name_list.contains(&self.possible_items[candidate].get_itemtitle()) && candidate < 20 {
+                        if !used_indices.contains(&candidate) && !name_list.contains(&self.possible_items[candidate].get_itemtitle()) && candidate < 19 {
                             return candidate;
                         }
                     }
